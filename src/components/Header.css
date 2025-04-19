@@ -1,0 +1,79 @@
+/* src/components/Header.css */
+.header {
+  display: flex;
+  justify-content: space-between; /* Распределяет элементы по краям и центру */
+  align-items: center; /* Выравнивает элементы по вертикали */
+  padding: 10px 15px;
+  background-color: #333; /* Темный фон для хедера */
+  color: white;
+  border-bottom: 1px solid #555;
+  font-size: 0.9em; /* Немного уменьшим шрифт */
+}
+
+.player-info {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Отступ между элементами */
+}
+
+.player-level {
+  font-weight: bold;
+  background-color: #555;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.xp-bar-container {
+  width: 80px; /* Ширина полосы опыта */
+  height: 8px;
+  background-color: #555;
+  border-radius: 4px;
+  overflow: hidden; /* Скрыть выходящую за пределы часть */
+  margin-left: 5px;
+}
+
+.xp-bar-fill {
+  height: 100%;
+  background-color: #4caf50; /* Зеленый цвет для XP */
+  transition: width 0.3s ease; /* Плавная анимация изменения ширины */
+}
+
+
+.resources {
+  display: flex;
+  gap: 15px; /* Отступ между ресурсами */
+}
+
+.resource-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: bold;
+}
+
+.header-actions {
+  display: flex;
+  gap: 15px;
+}
+
+.header-icon {
+  cursor: pointer; /* Показываем, что на иконки можно нажать */
+  font-size: 1.2em;
+}
+
+/* Добавим немного адаптивности для маленьких экранов */
+@media (max-width: 400px) {
+  .header {
+    font-size: 0.8em;
+    padding: 8px 10px;
+  }
+  .xp-bar-container {
+    display: none; /* Скроем XP бар на очень маленьких экранах */
+  }
+  .resources {
+    gap: 10px;
+  }
+   .header-actions {
+    gap: 10px;
+  }
+}
