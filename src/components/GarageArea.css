@@ -1,0 +1,86 @@
+/* src/components/GarageArea.css */
+.garage-area {
+  display: flex;
+  flex-direction: column; /* Располагаем элементы друг под другом */
+  align-items: center; /* Центрируем по горизонтали */
+  padding: 15px; /* Немного уменьшим вертикальные падинги */
+  margin-top: 15px; /* Отступ от хедера */
+  background-color: white; /* Сделаем фон чисто белым для контраста */
+  border-radius: 12px; /* Чуть больше скругления */
+  width: 90%; /* Ширина области */
+  max-width: 450px; /* Можно немного уменьшить макс. ширину, если хедер широкий */
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* Чуть мягче тень */
+}
+
+.car-display {
+  text-align: center;
+  margin-bottom: 15px;
+  width: 100%; /* Занимаем всю ширину для картинки */
+}
+
+.car-image {
+  /* Увеличиваем максимальные размеры */
+  max-width: 90%; /* Почти вся ширина блока */
+  height: auto; /* Сохраняем пропорции */
+  max-height: 250px; /* Значительно увеличиваем макс. высоту */
+  display: block;
+  margin: 0 auto 10px auto;
+  object-fit: contain;
+}
+
+.car-name {
+  margin: 0;
+  font-size: 1.4em;
+  color: #333; /* Делаем текст темнее */
+  font-weight: 500; /* Чуть жирнее */
+}
+
+.car-stats {
+  display: flex;
+  justify-content: center; /* Центрируем статы */
+  width: 100%;
+  margin-bottom: 25px; /* Больше отступ перед кнопкой */
+  font-size: 1em; /* Сделаем статы чуть крупнее */
+  color: #555; /* Цвет текста статов */
+  flex-wrap: wrap;
+  gap: 8px; /* Отступы между статами */
+}
+
+.car-stats span {
+  background-color: #f0f0f0; /* Светло-серый фон для блока статов */
+  padding: 6px 12px; /* Увеличим паддинги */
+  border-radius: 6px;
+  min-width: 70px; /* Минимальная ширина */
+  text-align: center;
+  cursor: default;
+  border: 1px solid #e0e0e0; /* Легкая граница */
+  font-weight: 500;
+  /* Убедимся, что цвет текста виден! */
+  color: #333; /* Темный цвет для текста статов */
+}
+
+.tune-button {
+  padding: 12px 35px; /* Чуть больше по горизонтали */
+  font-size: 1.15em; /* Немного крупнее текст кнопки */
+  font-weight: bold;
+  color: white;
+  background: linear-gradient(145deg, #ff8c00, #ff5722); /* Оранжевый градиент */
+  border: none;
+  border-radius: 25px; /* Скругленные края */
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 8px rgba(255, 100, 0, 0.3);
+}
+
+.tune-button:hover {
+  background: linear-gradient(145deg, #ffa500, #ff6f43);
+  box-shadow: 0 6px 12px rgba(255, 100, 0, 0.4);
+  transform: translateY(-2px); /* Легкий подъем при наведении */
+}
+
+.tune-button:active {
+   transform: translateY(0);
+   box-shadow: 0 2px 4px rgba(255, 100, 0, 0.2);
+}
