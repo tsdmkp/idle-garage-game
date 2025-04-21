@@ -1,112 +1,133 @@
 /* src/components/IncomeArea.css */
+
 .income-area {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 15px 20px;
-  margin-top: 20px; /* Отступ от гаража */
-  background-color: rgba(0, 0, 0, 0.1); /* Полупрозрачный темный фон */
-  border-radius: 8px;
-  width: 90%;
-  max-width: 450px; /* Синхронизируем с GarageArea */
-  margin-left: auto;
+  /* --- Layout & Box Model --- */
+  display: flex;                  /* Flex-контейнер */
+  flex-direction: column;         /* Элементы в столбец */
+  align-items: center;            /* Центрируем по горизонтали */
+  padding: 15px 20px;             /* Внутренние отступы */
+  margin-top: 20px;               /* Отступ сверху от гаража */
+  width: 90%;                     /* Ширина блока */
+  max-width: 480px;               /* Макс. ширина (как у гаража) */
+  margin-left: auto;              /* Центрируем блок */
   margin-right: auto;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.3); /* Тень внутрь */
+  box-sizing: border-box;
+
+  /* --- Appearance & Background --- */
+  border-radius: 8px;             /* Скругление углов */
+  box-shadow: 0 4px 10px rgba(0,0,0, 0.15); /* Внешняя тень */
+  position: relative;             /* Для позиционирования */
+  overflow: hidden;               /* Обрезаем фон по границам */
+  border: 1px solid rgba(255, 255, 255, 0.08); /* Легкая светлая граница */
+
+  /* --- Background Image --- */
+  /* Путь к файлу фона в папке /public/ */
+  /* Добавлен полупрозрачный темный градиент поверх картинки */
+  /* Настрой цвет rgba(R, G, B, Alpha) и прозрачность Alpha под свой фон */
+  background-image: linear-gradient(rgba(40, 45, 55, 0.75), rgba(40, 45, 55, 0.75)), url('/income-background.jpg');
+  background-size: cover;           /* Масштабируем фон */
+  background-position: center center; /* Центрируем фон */
+  background-repeat: no-repeat;     /* Не повторяем фон */
 }
 
+/* --- Info Row (Доход в час: +XX) --- */
 .income-info {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  margin-bottom: 10px;
-  color: #ddd; /* Общий цвет текста в этой строке */
-  font-size: 0.9em;
+  display: flex;                  /* Flex-контейнер для строки */
+  justify-content: space-between; /* Элементы по краям */
+  width: 100%;                    /* Занимает всю ширину */
+  margin-bottom: 12px;            /* Отступ снизу до прогресс-бара */
+  font-size: 0.9em;               /* Размер шрифта */
 }
 
+/* Текст "Доход в час:" */
 .income-label {
-  /* opacity: 0.8; */ /* <<< Можно закомментировать или удалить эту строку, если текст все еще бледный */
-  color: #ffd700; /* <<< ИЗМЕНЕНИЕ: Сделаем цвет светлее (светло-серый) */
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.4); /* <<< ДОБАВЛЕНИЕ: Легкая тень */
+  color: #ccc; /* Светло-серый */
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5); /* Тень */
 }
 
+/* Текст "+XX" */
 .income-value {
-  font-weight: bold;
-  color: #f0e68c; /* Светло-золотой */
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+  font-weight: bold;              /* Жирный шрифт */
+  color: #f0e68c; /* Оставляем желтоватый для акцента */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6); /* Тень */
 }
 
-
-/* Используем общие стили для прогресс-бара, но можем переопределить цвет */
+/* --- Progress Bar Area --- */
+/* Контейнер прогресс-бара */
 .income-progress {
-  width: 100%; /* Занимает всю ширину income-area */
-  height: 28px; /* Делаем бар повыше */
-  background-color: #555; /* Фон бара */
-  border-radius: 6px;
-  margin-bottom: 15px;
-  position: relative; /* Для позиционирования текста */
-  overflow: hidden; /* Скрываем выходящую за пределы часть */
+  width: 100%;                    /* Вся ширина */
+  height: 28px;                   /* Высота бара */
+  background-color: rgba(0, 0, 0, 0.35); /* Полупрозрачный темный фон */
+  border-radius: 6px;             /* Скругление */
+  margin-bottom: 15px;            /* Отступ снизу до кнопки */
+  position: relative;             /* Для позиционирования текста */
+  overflow: hidden;               /* Обрезаем заливку */
+  border: 1px solid rgba(255, 255, 255, 0.1); /* Легкая светлая рамка */
 }
 
+/* Заливка прогресс-бара */
 .income-fill {
-  height: 100%;
+  height: 100%;                   /* Вся высота контейнера */
   background: linear-gradient(90deg, #4caf50, #8bc34a); /* Зеленый градиент */
-  transition: width 0.5s linear; /* Плавная анимация */
-  border-radius: 6px 0 0 6px; /* Скругляем только левые углы заливки */
+  transition: width 0.5s linear;  /* Плавная анимация изменения ширины */
+  border-radius: 6px 0 0 6px;     /* Скругляем левые углы */
 }
 /* Если заполнено на 100%, скругляем и правые */
 .income-fill[style*="width: 100%"] {
     border-radius: 6px;
 }
 
-
+/* Текст поверх прогресс-бара ("Накоплено: X GC") */
 .progress-bar-text {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
+    position: absolute;             /* Позиционируем поверх */
+    top: 0; left: 0; width: 100%; height: 100%; /* Занимает всю область */
+    display: flex;                  /* Центрируем текст */
     justify-content: center;
     align-items: center;
-    color: white;
-    font-size: 0.85em;
-    font-weight: bold;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7); /* Тень для читаемости */
-    pointer-events: none; /* Чтобы текст не мешал кликам, если они будут */
+    color: white;                   /* Белый цвет текста */
+    font-size: 0.85em;              /* Размер шрифта */
+    font-weight: bold;              /* Жирный шрифт */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8); /* Сильная тень для читаемости */
+    pointer-events: none;           /* Чтобы текст не мешал событиям мыши */
 }
 
-
+/* --- Collect Button --- */
 .collect-button {
-  padding: 10px 25px;
-  font-size: 1.1em;
-  font-weight: bold;
-  color: #333; /* Темный текст */
+  padding: 10px 25px;             /* Внутренние отступы */
+  font-size: 1.1em;               /* Размер шрифта */
+  font-weight: bold;              /* Жирный шрифт */
+  color: #333;                     /* Темный цвет текста */
   background: linear-gradient(145deg, #ffd700, #ffec8b); /* Золотой градиент */
-  border: 1px solid #e0b700;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  width: 80%; /* Ширина кнопки */
-  box-shadow: 0 3px 6px rgba(255, 215, 0, 0.3);
+  border: 1px solid #e0b700;      /* Золотая рамка */
+  border-radius: 20px;            /* Скругление */
+  cursor: pointer;                /* Курсор-указатель */
+  transition: all 0.2s ease;      /* Плавные переходы */
+  width: 85%;                     /* Ширина кнопки */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), 0 0 10px rgba(255, 215, 0, 0.2); /* Тень и свечение */
+  /* Чтобы кнопка была чуть выше фона */
+  position: relative;
+  z-index: 1;
 }
 
+/* Состояние кнопки при наведении (если не disabled) */
 .collect-button:hover:not(:disabled) {
-  background: linear-gradient(145deg, #ffeb3b, #fff59d);
-  box-shadow: 0 4px 8px rgba(255, 215, 0, 0.4);
-  transform: translateY(-1px);
+  background: linear-gradient(145deg, #ffeb3b, #fff59d); /* Светлее градиент */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4), 0 0 15px rgba(255, 215, 0, 0.3); /* Усиленная тень */
+  transform: translateY(-1px);    /* Легкий подъем */
 }
 
+/* Состояние кнопки при нажатии (если не disabled) */
 .collect-button:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(255, 215, 0, 0.2);
+  transform: translateY(0);       /* Возвращаем на место */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 5px rgba(255, 215, 0, 0.1); /* Уменьшенная тень */
 }
 
-/* Стиль для неактивной кнопки */
+/* Стиль для неактивной (disabled) кнопки */
 .collect-button:disabled {
-  background: linear-gradient(145deg, #aaa, #ccc);
-  border-color: #999;
-  color: #777;
-  cursor: not-allowed;
-  box-shadow: none;
-  opacity: 0.6;
+  background: linear-gradient(145deg, #aaa, #ccc); /* Серый градиент */
+  border-color: #999;             /* Серая рамка */
+  color: #777;                     /* Серый текст */
+  cursor: not-allowed;            /* Курсор "запрещено" */
+  box-shadow: none;               /* Без тени */
+  opacity: 0.6;                   /* Полупрозрачность */
 }

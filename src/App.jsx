@@ -1,180 +1,291 @@
-import React, { useState, useEffect, useRef } from 'react'; // Импортируем useState, useEffect, useRef
-import Header from './components/Header';       // Импорт компонента Header
-import GarageArea from './components/GarageArea'; // Импорт компонента GarageArea
-import IncomeArea from './components/IncomeArea'; // Импорт компонента IncomeArea
-import './App.css';                             // Импорт глобальных стилей
+import React, { useState, useEffect, useRef } from 'react';
+// Импорты компонентов
+import Header from './components/Header';
+import GarageArea from './components/GarageArea';
+import IncomeArea from './components/IncomeArea';
+import BuildingArea from './components/BuildingArea';
+import NavBar from './components/NavBar';
+import TuningScreen from './components/TuningScreen';
+import RaceScreen from './components/RaceScreen';
+// Импорт утилит (убедись, что utils.js есть и актуален)
+import {
+    calculateUpgradeCost,
+    recalculateStatsAndIncomeBonus,
+    calculateTotalIncomeRate,
+    BASE_CAR_STATS
+} from './utils';
+import './App.css'; // Глобальные стили
 
-// Константы для настройки пассивного дохода
-const MAX_OFFLINE_HOURS = 2; // Макс. часов, за которые копится доход оффлайн
-const UPDATE_INTERVAL = 1000; // Как часто обновлять расчет накопления (1000мс = 1с)
-
-function App() {
-  // --- Состояния, связанные с Telegram ---
-  const [tgUserData, setTgUserData] = useState(null); // Данные пользователя из Telegram
-  const [isTgApp, setIsTgApp] = useState(false);      // Флаг: запущено ли в Telegram
-
-  // --- Основное состояние игры ---
-  const [playerLevel, setPlayerLevel] = useState(1);         // Уровень игрока
-  const [playerName, setPlayerName] = useState("Игрок");     // Имя игрока (по умолчанию)
-  const [gameCoins, setGameCoins] = useState(100);           // Внутриигровая валюта
-  const [jetCoins, setJetCoins] = useState(0);             // P2E токен
-  const [currentXp, setCurrentXp] = useState(10);            // Текущий опыт
-  const [xpToNextLevel, setXpToNextLevel] = useState(100);   // Опыта до следующего уровня
-
-  // --- Состояние Гаража ---
-  const [currentCar, setCurrentCar] = useState({ // Состояние для текущей отображаемой машины
-    id: 'car_001',                            // Уникальный ID машины
-    name: 'Ржавая "Копейка"',                 // Название машины
-    imageUrl: '/placeholder-car.png',         // Путь к изображению (в папке /public/)
-    stats: {                                  // Характеристики машины
-      power: 50,
-      speed: 80,
-      style: 10,
-      reliability: 30,
+// --- Константы Игры ---
+const MAX_OFFLINE_HOURS = 2; // Макс. часов накопления оффлайн
+const UPDATE_INTERVAL = 1000; // Интервал обновления дохода (1с)
+const STARTING_COINS = 100000; // Начальные монеты для теста
+const INITIAL_BUILDINGS = [ // Начальное состояние зданий
+    { id: 'wash', name: 'Автомойка', level: 1, icon: '🧼', isLocked: false },
+    { id: 'service', name: 'Сервис', level: 0, icon: '🔧', isLocked: false },
+    { id: 'tires', name: 'Шиномонтаж', level: 0, icon: '🔘', isLocked: true },
+    { id: 'drift', name: 'Шк. Дрифта', level: 0, icon: '🏫', isLocked: true },
+];
+const INITIAL_CAR = { // Начальное состояние машины
+    id: 'car_001', name: 'Ржавая "Копейка"', imageUrl: '/placeholder-car.png',
+    stats: { power: 40, speed: 70, style: 5, reliability: 25 }, // Базовые статы, будут пересчитаны
+    parts: { // Начальные детали
+      engine: { level: 1, name: 'Двигатель' },
+      tires: { level: 0, name: 'Шины' },
+      style_body: { level: 0, name: 'Кузов (Стиль)' },
+      reliability_base: { level: 1, name: 'Надежность (База)' },
     }
-  });
+};
+const BOT_STATS = { // Параметры ботов для гонок
+  easy:   { power: 35, speed: 65, reliability: 55 },
+  medium: { power: 62, speed: 92, reliability: 45 },
+  hard:   { power: 90, speed: 120, reliability: 35 },
+};
 
-  // --- Состояния для пассивного дохода ---
-  const [incomeRatePerHour, setIncomeRatePerHour] = useState(50); // Ставка дохода в час (пока фиксированная)
-  // Используем useRef для времени последнего сбора, чтобы его изменение не вызывало перерисовку
-  const lastCollectedTimeRef = useRef(Date.now()); // Хранит timestamp последнего сбора
-  const [accumulatedIncome, setAccumulatedIncome] = useState(0); // Сколько монет накоплено с последнего сбора
+// ========= КОМПОНЕНТ APP =========
+function App() {
+  // --- Состояния Игры ---
+  const [tgUserData, setTgUserData] = useState(null);
+  const [isTgApp, setIsTgApp] = useState(false);
+  const [playerLevel, setPlayerLevel] = useState(1);
+  const [playerName, setPlayerName] = useState("Игрок");
+  const [gameCoins, setGameCoins] = useState(STARTING_COINS);
+  const [jetCoins, setJetCoins] = useState(0);
+  const [currentXp, setCurrentXp] = useState(10);
+  const [xpToNextLevel, setXpToNextLevel] = useState(100);
+  const [incomeRatePerHour, setIncomeRatePerHour] = useState(0);
+  const lastCollectedTimeRef = useRef(Date.now());
+  const [accumulatedIncome, setAccumulatedIncome] = useState(0);
+  const [buildings, setBuildings] = useState(INITIAL_BUILDINGS);
+  const [currentCar, setCurrentCar] = useState(INITIAL_CAR); // Используем начальное значение
 
-  // --- Эффект для инициализации Telegram и Загрузки Данных ---
+  // --- Состояния UI ---
+  const [activeScreen, setActiveScreen] = useState('garage');
+  const [isTuningVisible, setIsTuningVisible] = useState(false);
+
+  // --- Эффект Инициализации Приложения и Загрузки Данных ---
   useEffect(() => {
-    // Получаем объект WebApp
-    const tg = window.Telegram?.WebApp;
+    console.log("App Init useEffect running...");
 
-    // Определяем, где запущено приложение
+    // --- Инициализация Telegram Web App ---
+    const tg = window.Telegram?.WebApp;
     if (tg) {
       setIsTgApp(true);
-      tg.ready(); // Сообщаем, что приложение готово
+      tg.ready();
       if (tg.initDataUnsafe?.user) {
-        const user = tg.initDataUnsafe.user;
-        setTgUserData(user);
-        setPlayerName(user.first_name || user.username || "Игрок");
+        setTgUserData(tg.initDataUnsafe.user);
+        setPlayerName(tg.initDataUnsafe.user.first_name || tg.initDataUnsafe.user.username || "Игрок");
       } else {
         setTgUserData({ id: 123, first_name: "TG User", username: "tg_user"});
         setPlayerName("TG User");
-        console.warn("Запущено в Telegram, но данные initDataUnsafe.user отсутствуют.");
       }
-      tg.expand(); // Расширяем окно
+      tg.expand();
     } else {
       setIsTgApp(false);
       setTgUserData({ id: 987, first_name: "Dev", username: "dev_user"});
       setPlayerName("Dev User");
-      console.log("Скрипт Telegram WebApp не загружен или приложение запущено вне Telegram (Режим разработки).");
     }
 
-    // --- Загрузка сохраненных данных ---
-    // ВАЖНО: Здесь должна быть логика загрузки из localStorage или с сервера
-    // Пример для localStorage:
+    // --- Загрузка Сохраненных Данных из Local Storage ---
+    console.log("--- Loading Saved Data ---");
     const savedTime = localStorage.getItem('idleGarage_lastCollectedTime');
     const savedCoins = localStorage.getItem('idleGarage_gameCoins');
-    // (добавьте загрузку уровня, xp, jetcoins и т.д.)
+    const savedBuildingsData = localStorage.getItem('idleGarage_buildings');
+    const savedCarData = localStorage.getItem('idleGarage_currentCar');
+    const savedXp = localStorage.getItem('idleGarage_currentXp');
+    const savedLevel = localStorage.getItem('idleGarage_playerLevel');
+    // TODO: Загрузить jetCoins, xpToNextLevel
 
-    // Устанавливаем время последнего сбора (загруженное или текущее)
+    // --- Установка Начальных Значений ---
     const loadedTime = savedTime ? parseInt(savedTime, 10) : Date.now();
     lastCollectedTimeRef.current = loadedTime;
 
-    // Устанавливаем монеты (загруженные или начальные)
-    setGameCoins(savedCoins ? parseInt(savedCoins, 10) : 100);
+    let initialCoinsValue = STARTING_COINS;
+    if (savedCoins !== null && !isNaN(parseInt(savedCoins, 10))) { initialCoinsValue = parseInt(savedCoins, 10); }
+    setGameCoins(initialCoinsValue);
 
-    // Рассчитываем доход, накопленный за время отсутствия
+    let loadedBuildings = INITIAL_BUILDINGS;
+    if (savedBuildingsData) { try { const p = JSON.parse(savedBuildingsData); if(Array.isArray(p)) loadedBuildings = p; } catch(e){} }
+    setBuildings(loadedBuildings);
+
+    let loadedCar = INITIAL_CAR;
+    if (savedCarData) { try { const p = JSON.parse(savedCarData); if(p && p.id && p.parts && p.stats) loadedCar = p; } catch(e){} }
+    // Не устанавливаем машину сразу
+
+    setCurrentXp(savedXp ? parseInt(savedXp, 10) : 10);
+    setPlayerLevel(savedLevel ? parseInt(savedLevel, 10) : 1);
+    // TODO: Установить xpToNextLevel, jetCoins
+
+    // --- Пересчет Статов Машины и Ставки Дохода ---
+    const baseStats = BASE_CAR_STATS[loadedCar.id] || BASE_CAR_STATS['car_001'];
+    const { stats: calculatedStats } = recalculateStatsAndIncomeBonus(loadedCar.id, loadedCar.parts);
+    const finalInitialCar = { ...loadedCar, stats: calculatedStats };
+    setCurrentCar(finalInitialCar); // Устанавливаем машину с правильными статами
+
+    const initialTotalRate = calculateTotalIncomeRate(loadedBuildings, finalInitialCar);
+    setIncomeRatePerHour(initialTotalRate);
+
+    // --- Расчет Оффлайн Дохода ---
     const now = Date.now();
-    const offlineTimeMs = now - loadedTime; // Время в миллисекундах, пока игра была закрыта
-
-    if (offlineTimeMs > 0) {
-      const offlineSeconds = offlineTimeMs / 1000;
-      const maxOfflineSeconds = MAX_OFFLINE_HOURS * 3600; // Макс. секунд накопления оффлайн
-      const effectiveOfflineSeconds = Math.min(offlineSeconds, maxOfflineSeconds); // Учитываем лимит
-      const incomePerSecond = incomeRatePerHour / 3600; // Доход в секунду
-      const offlineIncome = incomePerSecond * effectiveOfflineSeconds; // Накопленный оффлайн доход
-
-      // Устанавливаем начальное значение накопленного дохода
-      setAccumulatedIncome(offlineIncome);
-      console.log(`Рассчитано ${offlineIncome.toFixed(2)} GC, накопленных оффлайн.`);
-    } else {
-      setAccumulatedIncome(0); // Если время не прошло, начинаем с нуля
+    const offlineTimeMs = now - loadedTime;
+    let offlineIncome = 0;
+    if (offlineTimeMs > 0 && initialTotalRate > 0) {
+        const incomePerSecond = initialTotalRate / 3600;
+        const maxOfflineSeconds = MAX_OFFLINE_HOURS * 3600;
+        const effectiveOfflineSeconds = Math.min(offlineTimeMs / 1000, maxOfflineSeconds);
+        offlineIncome = incomePerSecond * effectiveOfflineSeconds;
     }
+    setAccumulatedIncome(offlineIncome);
 
-    // Загрузить остальные данные...
+    console.log("--- Initialization useEffect finished ---");
+  }, []); // Пустой массив зависимостей
 
-  }, []); // Пустой массив зависимостей - этот useEffect выполнится один раз при старте
-
-  // --- Эффект для Таймера Пассивного Дохода ---
+  // --- Эффект Таймера Пассивного Дохода ---
   useEffect(() => {
-    // Рассчитываем константы для интервала
+    if (incomeRatePerHour <= 0) return;
     const incomePerSecond = incomeRatePerHour / 3600;
-    const maxAccumulationCap = incomeRatePerHour * MAX_OFFLINE_HOURS; // Макс. накопление
-
-    // Запускаем интервал, который будет обновлять накопленный доход
+    const maxAccumulationCap = incomeRatePerHour * MAX_OFFLINE_HOURS;
+    // console.log(`Starting income timer: Rate ${incomeRatePerHour}/hour`); // Можно раскомментировать для отладки
     const intervalId = setInterval(() => {
       const now = Date.now();
-      // Общее время, прошедшее с момента ПОСЛЕДНЕГО СБОРА (или старта)
-      const timePassedTotalMs = now - lastCollectedTimeRef.current;
-      const timePassedTotalSeconds = timePassedTotalMs / 1000;
-
-      // Сколько могло бы накопиться за это время
+      const timePassedTotalSeconds = (now - lastCollectedTimeRef.current) / 1000;
       const potentialTotalIncome = timePassedTotalSeconds * incomePerSecond;
-
-      // Ограничиваем накопление максимальной планкой
       const newAccumulated = Math.min(potentialTotalIncome, maxAccumulationCap);
+      setAccumulatedIncome(newAccumulated); // Простое обновление
+    }, UPDATE_INTERVAL);
+    return () => { clearInterval(intervalId); /* console.log("Income timer stopped."); */ }; // Очистка
+  }, [incomeRatePerHour]); // Зависимость от ставки
 
-      // Обновляем состояние накопленного дохода (это вызовет перерисовку IncomeArea)
-      setAccumulatedIncome(newAccumulated);
-
-    }, UPDATE_INTERVAL); // Повторяем каждую секунду
-
-    // Функция очистки: выполняется при размонтировании компонента или перед перезапуском эффекта
-    return () => {
-      clearInterval(intervalId); // Останавливаем интервал, чтобы избежать утечек памяти
-      // --- Сохранение данных при выходе/очистке ---
-      // ВАЖНО: Сохранить важные данные здесь или по другому событию
-      // localStorage.setItem('idleGarage_lastCollectedTime', lastCollectedTimeRef.current.toString());
-      // localStorage.setItem('idleGarage_gameCoins', gameCoins.toString());
-      // ... сохранить другие данные ...
-      console.log("Таймер дохода остановлен, очистка выполнена.");
-    };
-
-    // Зависимости: если изменится ставка дохода, эффект перезапустится
-  }, [incomeRatePerHour]);
-
-  // --- Функция для Сбора Дохода ---
+  // --- Функция Сбора Дохода ---
   const handleCollect = () => {
-    const incomeToAdd = Math.floor(accumulatedIncome); // Собираем только целые монеты
+    const incomeToAdd = Math.floor(accumulatedIncome);
+    // console.log("Collect attempt. Accumulated:", accumulatedIncome, "ToAdd:", incomeToAdd); // Лог для отладки
     if (incomeToAdd > 0) {
-      // Добавляем собранное к основному балансу
       const newTotalCoins = gameCoins + incomeToAdd;
       setGameCoins(newTotalCoins);
-
-      // Сбрасываем накопленный доход
-      setAccumulatedIncome(0);
-
-      // Обновляем время последнего сбора на ТЕКУЩЕЕ время
+      setAccumulatedIncome(0); // Сброс накопленного
       const collectionTime = Date.now();
-      lastCollectedTimeRef.current = collectionTime;
-
-      // --- Сохранение данных после сбора ---
-      // Сохраняем новое кол-во монет и время сбора (пример для localStorage)
+      lastCollectedTimeRef.current = collectionTime; // Обновление времени
+      // Сохранение
       localStorage.setItem('idleGarage_gameCoins', newTotalCoins.toString());
       localStorage.setItem('idleGarage_lastCollectedTime', collectionTime.toString());
-
-      console.log(`Собрано ${incomeToAdd} GC. Новое время сбора: ${collectionTime}`);
-      // TODO: Добавить визуальный эффект (анимацию монет и т.п.)
+      console.log(`Collected ${incomeToAdd} GC.`);
     } else {
-      console.log("Нечего собирать.");
+      console.log("Nothing to collect.");
     }
   };
 
-  // Рассчитываем процент заполнения полосы опыта для хедера
-  const xpPercentage = xpToNextLevel > 0 ? (currentXp / xpToNextLevel) * 100 : 0;
+  // --- Функция Улучшения Здания ---
+  const handleBuildingClick = (buildingName) => {
+      const targetBuilding = buildings.find(b => b.name === buildingName);
+      if (!targetBuilding || targetBuilding.isLocked) return;
+      const cost = 100 * Math.pow(2, targetBuilding.level); // Примерная стоимость
+      if (gameCoins >= cost) {
+          const newCoins = gameCoins - cost;
+          setGameCoins(newCoins);
+          const updatedBuildings = buildings.map(b => b.name === buildingName ? { ...b, level: b.level + 1 } : b);
+          setBuildings(updatedBuildings);
+          const newTotalRate = calculateTotalIncomeRate(updatedBuildings, currentCar); // Пересчет ставки
+          setIncomeRatePerHour(newTotalRate);
+          // Сохранение
+          localStorage.setItem('idleGarage_gameCoins', newCoins.toString());
+          localStorage.setItem('idleGarage_buildings', JSON.stringify(updatedBuildings));
+          console.log(`Building ${buildingName} upgraded. New rate: ${newTotalRate}/hour`);
+      } else { console.log(`Not enough coins for ${buildingName}`); }
+  };
 
-  // --- Отрисовка (рендер) компонента ---
+  // --- Функции для Окна Тюнинга ---
+  const handleOpenTuning = () => setIsTuningVisible(true);
+  const handleCloseTuning = () => setIsTuningVisible(false);
+  const handleUpgradePart = (partId) => {
+      if (!currentCar?.parts?.[partId]) return;
+      const part = currentCar.parts[partId];
+      const cost = calculateUpgradeCost(partId, part.level);
+      if (gameCoins >= cost) {
+          const newCoins = gameCoins - cost;
+          setGameCoins(newCoins);
+          const updatedParts = { ...currentCar.parts, [partId]: { ...part, level: part.level + 1 } };
+          const baseStats = BASE_CAR_STATS[currentCar.id] || BASE_CAR_STATS['car_001'];
+          const { stats: newStats } = recalculateStatsAndIncomeBonus(currentCar.id, updatedParts); // Пересчет статов
+          const updatedCar = { ...currentCar, parts: updatedParts, stats: newStats };
+          setCurrentCar(updatedCar); // Обновляем машину
+          const newTotalRate = calculateTotalIncomeRate(buildings, updatedCar); // Пересчет ставки
+          setIncomeRatePerHour(newTotalRate);
+          // Сохранение
+          localStorage.setItem('idleGarage_gameCoins', newCoins.toString());
+          localStorage.setItem('idleGarage_currentCar', JSON.stringify(updatedCar));
+          console.log(`Part ${part.name} upgraded. New rate: ${newTotalRate}/hour. New Stats:`, newStats);
+      } else { console.log(`Not enough coins for ${part.name}`); }
+  };
+
+  // --- Функция Симуляции Гонки ---
+  const handleStartRace = async (difficulty) => {
+    if (!currentCar?.stats) { console.error("Race Error: Car/Stats missing."); return null; }
+    console.log(`Starting race: ${difficulty}`);
+    const baseBotStats = BOT_STATS[difficulty];
+    if (!baseBotStats) { console.error(`Race Error: Invalid difficulty "${difficulty}"`); return null; }
+    // Расчет статов бота с разбросом
+    const currentBot = {
+        power: baseBotStats.power * (0.9 + Math.random() * 0.2),
+        speed: baseBotStats.speed * (0.9 + Math.random() * 0.2),
+        reliability: baseBotStats.reliability * (0.9 + Math.random() * 0.2)
+    };
+    // Расчет "силы"
+    const playerPowerScore = (currentCar.stats.power * 0.5) + (currentCar.stats.speed * 0.4) + (currentCar.stats.reliability * 0.1 * (0.8 + Math.random() * 0.4));
+    const botPowerScore = (currentBot.power * 0.5) + (currentBot.speed * 0.4) + (currentBot.reliability * 0.1 * (0.8 + Math.random() * 0.4));
+    console.log(`Scores - Player: ${playerPowerScore.toFixed(1)}, Bot: ${botPowerScore.toFixed(1)}`);
+    // Задержка
+    await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
+    // Результат
+    let result = 'lose';
+    let reward = { coins: 0, xp: 0 }; // Чистая награда для UI
+    let finalCoins = gameCoins;      // Итоговый баланс
+    let finalXp = currentXp;         // Итоговый XP
+
+    if (playerPowerScore > botPowerScore) { // Победа
+      result = 'win';
+      const baseWinCoins = { easy: 25, medium: 75, hard: 150 };
+      const baseWinXp = { easy: 5, medium: 15, hard: 30 };
+      const coinsWon = Math.floor(baseWinCoins[difficulty] * (0.9 + Math.random() * 0.2));
+      const xpWon = Math.floor(baseWinXp[difficulty] * (0.9 + Math.random() * 0.2));
+      reward = { coins: coinsWon, xp: xpWon }; // Награда
+      finalCoins += coinsWon; // Обновляем итог
+      finalXp += xpWon;       // Обновляем итог
+      console.log(`Win! +${coinsWon} GC, +${xpWon} XP`);
+      // TODO: Проверка Level Up
+    } else { // Поражение
+      result = 'lose';
+      const consolationCoins = Math.floor(( { easy: 2, medium: 5, hard: 10 }[difficulty] || 0) * Math.random() );
+      reward = { coins: consolationCoins, xp: 0 }; // Награда
+       if (consolationCoins > 0) {
+           finalCoins += consolationCoins; // Обновляем итог
+           console.log(`Lose. +${consolationCoins} GC consolation.`);
+       } else {
+           console.log("Lose. No consolation prize.");
+       }
+       finalXp = currentXp; // XP не меняется
+    }
+    // Обновляем состояние ОДИН раз
+    setGameCoins(finalCoins);
+    setCurrentXp(finalXp);
+    // Сохраняем ФИНАЛЬНЫЕ значения
+    localStorage.setItem('idleGarage_gameCoins', finalCoins.toString());
+    localStorage.setItem('idleGarage_currentXp', finalXp.toString());
+    console.log("Race finished. Final Coins:", finalCoins, "Final XP:", finalXp);
+    // Возвращаем результат и чистую награду для UI
+    return { result, reward };
+  };
+
+  // --- Функция Навигации ---
+  const handleNavClick = (screenId) => setActiveScreen(screenId);
+
+  // --- Расчеты для Рендера ---
+  const xpPercentage = xpToNextLevel > 0 ? Math.min((currentXp / xpToNextLevel) * 100, 100) : 0; // Не больше 100%
+
+  // --- Рендер Компонента ---
   return (
-    <div className="App"> {/* Основной контейнер приложения */}
-
-      {/* Компонент Header: отображает информацию об игроке и ресурсы */}
+    <div className="App" style={{ paddingBottom: '70px' }}>
+      {/* Хедер */}
       <Header
         level={playerLevel}
         playerName={playerName}
@@ -183,28 +294,66 @@ function App() {
         xpPercentage={xpPercentage}
       />
 
-      {/* Компонент GarageArea: отображает текущую машину и её характеристики */}
-      <GarageArea car={currentCar} />
+      {/* Основной Контент */}
+      <main>
+        {/* Экран Гаража */}
+        {activeScreen === 'garage' && (
+          <>
+            <GarageArea car={currentCar} onTuneClick={handleOpenTuning} />
+            <IncomeArea
+              incomeRate={incomeRatePerHour}
+              accumulatedIncome={accumulatedIncome}
+              maxAccumulation={incomeRatePerHour * MAX_OFFLINE_HOURS}
+              onCollect={handleCollect}
+            />
+            <BuildingArea
+              buildings={buildings}
+              onBuildingClick={handleBuildingClick}
+            />
+          </>
+        )}
 
-      {/* Компонент IncomeArea: пассивный доход и кнопка сбора */}
-      <IncomeArea
-        incomeRate={incomeRatePerHour} // Ставка дохода в час
-        accumulatedIncome={accumulatedIncome} // Текущее накопление
-        maxAccumulation={incomeRatePerHour * MAX_OFFLINE_HOURS} // Макс. для прогресс-бара
-        onCollect={handleCollect} // Функция, вызываемая при клике на сбор
+        {/* Экран Гонок */}
+        {activeScreen === 'race' && (
+            <RaceScreen
+                playerCar={currentCar}
+                onStartRace={handleStartRace}
+            />
+        )}
+
+        {/* Заглушки для других экранов */}
+        {activeScreen === 'shop' && <div className="placeholder-screen" style={placeholderStyle}>Экран "Магазин"</div>}
+        {activeScreen === 'staff' && <div className="placeholder-screen" style={placeholderStyle}>Экран "Персонал"</div>}
+        {activeScreen === 'p2e' && <div className="placeholder-screen" style={placeholderStyle}>Экран "P2E"</div>}
+      </main>
+
+      {/* Окно Тюнинга (поверх всего) */}
+      {isTuningVisible && (
+        <TuningScreen
+          car={currentCar}
+          gameCoins={gameCoins}
+          onUpgradePart={handleUpgradePart}
+          onClose={handleCloseTuning}
+        />
+      )}
+
+      {/* Нижняя Навигационная Панель */}
+      <NavBar
+        activeScreen={activeScreen}
+        onNavClick={handleNavClick}
       />
-
-      {/* Место для будущих компонентов */}
-      {/* <BuildingArea /> */}
-      {/* <NavBar /> */}
-
-      {/* Необязательный футер для отображения статуса запуска */}
-      <footer style={{ marginTop: '20px', fontSize: '0.8em', color: '#aaa', textAlign: 'center', paddingBottom: '10px' }}>
-        {isTgApp ? 'Запущено в Telegram' : 'Запущено в браузере (Dev Mode)'}
-      </footer>
-
     </div>
   );
 }
 
-export default App; // Экспортируем компонент App для использования в index.js/main.jsx
+// Стиль для заглушек (можно вынести в CSS)
+const placeholderStyle = {
+    padding: '40px 20px',
+    textAlign: 'center',
+    color: 'white',
+    fontSize: '1.2em',
+    opacity: 0.7
+};
+
+// Экспортируем компонент App
+export default App;

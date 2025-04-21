@@ -1,0 +1,134 @@
+/* src/components/RaceScreen.css */
+
+.race-screen {
+    padding: 20px;
+    text-align: center;
+    color: #eee;
+    /* Добавим фон, похожий на другие экраны, но можно сделать свой */
+    background-image: linear-gradient(rgba(40, 40, 50, 0.8), rgba(40, 40, 50, 0.8)), url('/race-background.jpg'); /* Замени на свой фон для гонок */
+    background-size: cover;
+    background-position: center;
+    min-height: calc(100vh - 60px - 70px); /* Занимает высоту экрана минус хедер и навбар */
+    box-sizing: border-box;
+  }
+  
+  .race-screen h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #ffc107; /* Акцентный цвет */
+  }
+  
+  .player-car-info {
+    background-color: rgba(0, 0, 0, 0.3);
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .player-car-info h3 {
+      margin: 0 0 5px 0;
+      font-size: 1.1em;
+      color: #eee;
+  }
+  .player-car-info p {
+      margin: 0;
+      font-size: 0.9em;
+      color: #ccc;
+  }
+  
+  
+  .difficulty-selector {
+    margin-bottom: 25px;
+  }
+  .difficulty-selector h4 {
+      margin: 0 0 10px 0;
+      font-weight: 500;
+      color: #ccc;
+  }
+  
+  .difficulty-selector button {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ccc;
+    padding: 8px 15px;
+    margin: 0 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .difficulty-selector button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+  
+  .difficulty-selector button.active {
+    background-color: #ffc107; /* Активный цвет */
+    color: #333;
+    border-color: #ffa000;
+    font-weight: bold;
+  }
+  
+  .start-race-button {
+    padding: 12px 30px;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #333;
+    background: linear-gradient(145deg, #4caf50, #8bc34a); /* Зеленый */
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 20px;
+    min-width: 180px;
+  }
+  
+  .start-race-button:hover:not(:disabled) {
+    background: linear-gradient(145deg, #66bb6a, #9ccc65);
+    box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+  }
+  
+  .start-race-button:disabled {
+    background: linear-gradient(145deg, #aaa, #ccc);
+    color: #777;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+  
+  .race-in-progress {
+      font-size: 1.1em;
+      color: #ffc107;
+      padding: 15px;
+      background-color: rgba(0,0,0,0.2);
+      border-radius: 5px;
+      display: inline-block;
+  }
+  
+  .race-result {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.4);
+    border: 1px solid;
+  }
+  
+  .race-result.win {
+    border-color: #4caf50; /* Зеленая рамка для победы */
+  }
+  .race-result.win h3 {
+      color: #81c784; /* Зеленый текст */
+      margin: 0 0 10px 0;
+  }
+  
+  .race-result.lose {
+    border-color: #f44336; /* Красная рамка для поражения */
+  }
+  .race-result.lose h3 {
+      color: #e57373; /* Красный текст */
+      margin: 0 0 10px 0;
+  }
+  
+  .race-result p {
+      margin: 0;
+      color: #eee;
+  }
