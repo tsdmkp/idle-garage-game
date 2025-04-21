@@ -1,0 +1,112 @@
+/* src/components/IncomeArea.css */
+.income-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px 20px;
+  margin-top: 20px; /* Отступ от гаража */
+  background-color: rgba(0, 0, 0, 0.1); /* Полупрозрачный темный фон */
+  border-radius: 8px;
+  width: 90%;
+  max-width: 450px; /* Синхронизируем с GarageArea */
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.3); /* Тень внутрь */
+}
+
+.income-info {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 10px;
+  color: #ddd; /* Общий цвет текста в этой строке */
+  font-size: 0.9em;
+}
+
+.income-label {
+  /* opacity: 0.8; */ /* <<< Можно закомментировать или удалить эту строку, если текст все еще бледный */
+  color: #ffd700; /* <<< ИЗМЕНЕНИЕ: Сделаем цвет светлее (светло-серый) */
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.4); /* <<< ДОБАВЛЕНИЕ: Легкая тень */
+}
+
+.income-value {
+  font-weight: bold;
+  color: #f0e68c; /* Светло-золотой */
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+}
+
+
+/* Используем общие стили для прогресс-бара, но можем переопределить цвет */
+.income-progress {
+  width: 100%; /* Занимает всю ширину income-area */
+  height: 28px; /* Делаем бар повыше */
+  background-color: #555; /* Фон бара */
+  border-radius: 6px;
+  margin-bottom: 15px;
+  position: relative; /* Для позиционирования текста */
+  overflow: hidden; /* Скрываем выходящую за пределы часть */
+}
+
+.income-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4caf50, #8bc34a); /* Зеленый градиент */
+  transition: width 0.5s linear; /* Плавная анимация */
+  border-radius: 6px 0 0 6px; /* Скругляем только левые углы заливки */
+}
+/* Если заполнено на 100%, скругляем и правые */
+.income-fill[style*="width: 100%"] {
+    border-radius: 6px;
+}
+
+
+.progress-bar-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 0.85em;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7); /* Тень для читаемости */
+    pointer-events: none; /* Чтобы текст не мешал кликам, если они будут */
+}
+
+
+.collect-button {
+  padding: 10px 25px;
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #333; /* Темный текст */
+  background: linear-gradient(145deg, #ffd700, #ffec8b); /* Золотой градиент */
+  border: 1px solid #e0b700;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 80%; /* Ширина кнопки */
+  box-shadow: 0 3px 6px rgba(255, 215, 0, 0.3);
+}
+
+.collect-button:hover:not(:disabled) {
+  background: linear-gradient(145deg, #ffeb3b, #fff59d);
+  box-shadow: 0 4px 8px rgba(255, 215, 0, 0.4);
+  transform: translateY(-1px);
+}
+
+.collect-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(255, 215, 0, 0.2);
+}
+
+/* Стиль для неактивной кнопки */
+.collect-button:disabled {
+  background: linear-gradient(145deg, #aaa, #ccc);
+  border-color: #999;
+  color: #777;
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.6;
+}
