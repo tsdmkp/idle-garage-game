@@ -7,7 +7,7 @@ function NavBar({ activeScreen, onNavClick }) {
   const navItems = [
     { id: 'garage', icon: '🚗', label: 'Гараж' }, // Гараж - это наш главный экран
     { id: 'race', icon: '🏁', label: 'Гонки' },
-    { id: 'shop', icon: '🛒', label: 'Магазин' },
+    { id: 'shop', icon: '🛒', label: 'Автосалон' },
     { id: 'staff', icon: '👥', label: 'Персонал' },
     { id: 'p2e', icon: '💎', label: 'P2E' }, // Или Турниры/Кошелек
   ];
