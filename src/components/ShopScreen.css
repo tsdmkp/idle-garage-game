@@ -1,0 +1,163 @@
+/* src/components/ShopScreen.css */
+
+.shop-screen {
+    padding: 20px 15px; /* Внутренние отступы */
+    padding-bottom: 30px; /* Дополнительный отступ снизу */
+    color: #eee; /* Цвет текста по умолчанию */
+    position: relative; /* Для возможного позиционирования */
+    min-height: calc(100vh - 60px - 70px - 30px); /* Примерная высота экрана минус хедер, навбар, падинги */
+    box-sizing: border-box; /* Учитываем padding в высоте */
+  
+    /* --- Стили для фона --- */
+    /* Замени '/shop-background.jpg' на путь к твоему файлу в папке /public/ */
+    /* Градиент затемняет фон для лучшей читаемости текста. Настрой цвет и прозрачность (0.7) */
+    background-image: linear-gradient(rgba(60, 70, 80, 0.3), rgba(60, 70, 80, 0.3)), url('/shop-background.jpg');
+    background-size: cover;           /* Масштабируем фон */
+    background-position: center center; /* Центрируем фон */
+    background-repeat: no-repeat;     /* Не повторяем фон */
+    background-attachment: fixed;     /* Фон фиксирован при прокрутке (можно убрать) */
+    /* --- -------------------- --- */
+  }
+  
+  /* Заголовок "Автосалон" */
+  .shop-screen h2 {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 25px;
+    color: #ffeb3b; /* Желтый акцентный цвет */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6); /* Тень для читаемости */
+  }
+  
+  /* Сетка для карточек машин */
+  .shop-items {
+    display: grid;
+    /* Адаптивная сетка: колонки шириной минимум 180px */
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px; /* Отступы между карточками */
+  }
+  
+  /* Стиль для отдельной карточки машины */
+  .shop-item {
+    background-color: rgba(30, 32, 40, 0.75); /* Полупрозрачный темный фон карточки */
+    border: 1px solid rgba(255, 255, 255, 0.15); /* Светлая рамка */
+    border-radius: 10px; /* Скругление углов */
+    padding: 15px;
+    display: flex;
+    flex-direction: column; /* Элементы в столбец */
+    align-items: center; /* Центрируем по горизонтали */
+    text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease; /* Плавные переходы */
+    backdrop-filter: blur(2px); /* Легкое размытие фона под карточкой (если поддерживается) */
+  }
+  
+  /* Эффект при наведении на карточку */
+  .shop-item:hover {
+      transform: translateY(-4px); /* Легкий подъем */
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); /* Усиленная тень */
+  }
+  
+  /* Изображение машины в карточке */
+  .shop-item-image {
+    width: 130px;
+    height: 90px;
+    object-fit: contain; /* Масштабирование без искажений */
+    margin-bottom: 12px;
+  }
+  
+  /* Название машины в карточке */
+  .shop-item h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.1em;
+    color: #fff; /* Белый цвет */
+  }
+  
+  /* Блок с характеристиками машины */
+  .shop-item-stats {
+    font-size: 0.8em;
+    color: #ccc; /* Светло-серый цвет */
+    margin-bottom: 15px;
+    display: flex;
+    flex-wrap: wrap; /* Разрешаем перенос */
+    justify-content: center; /* Центрируем */
+    gap: 8px; /* Отступы между статами */
+  }
+  
+  /* Плашка с отдельной характеристикой */
+  .shop-item-stats span {
+      background-color: rgba(0, 0, 0, 0.3); /* Темный фон для статов */
+      padding: 3px 7px;
+      border-radius: 4px;
+  }
+  
+  /* Блок с ценой и кнопкой покупки */
+  .shop-item-buy {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Элементы по краям */
+    width: 100%;
+    margin-top: auto; /* Прижимает блок к низу карточки */
+    border-top: 1px solid rgba(255, 255, 255, 0.1); /* Разделительная линия */
+    padding-top: 10px; /* Отступ над блоком */
+  }
+  
+  /* Цена машины */
+  .shop-item-price {
+    font-weight: bold;
+    color: #ffd700; /* Золотой цвет */
+    font-size: 1em; /* Размер шрифта цены */
+  }
+  
+  /* Стиль цены, если не хватает монет */
+  .shop-item-price.insufficient {
+    color: #ff6b6b; /* Красный цвет */
+    text-decoration: line-through; /* Перечеркивание */
+  }
+  
+  /* Кнопка "Купить" */
+  .buy-button {
+    padding: 8px 16px; /* Внутренние отступы */
+    font-size: 0.95em; /* Размер шрифта */
+    font-weight: bold;
+    color: #333; /* Темный цвет текста */
+    background: linear-gradient(145deg, #4caf50, #8bc34a); /* Зеленый градиент */
+    border: 1px solid #388e3c; /* Зеленая рамка */
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  /* Эффект кнопки при наведении */
+  .buy-button:hover:not(:disabled) {
+    background: linear-gradient(145deg, #66bb6a, #9ccc65); /* Светлее */
+    box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+  }
+  
+  /* Стиль неактивной кнопки */
+  .buy-button:disabled {
+    background: linear-gradient(145deg, #aaa, #ccc); /* Серый */
+    border-color: #999;
+    color: #777;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  
+  /* Метка "В гараже" для купленных машин */
+  .owned-label {
+    font-weight: bold;
+    color: #8bc34a; /* Светло-зеленый */
+    width: 100%; /* Занимает всю ширину блока покупки */
+    text-align: center;
+    font-size: 1em;
+  }
+  
+  /* Стиль для карточки уже купленной машины */
+  .shop-item.owned {
+     opacity: 0.65; /* Делаем купленные тусклее */
+     border-color: rgba(76, 175, 80, 0.5); /* Полупрозрачная зеленая рамка */
+  }
+  
+  /* Убираем эффекты при наведении для купленных */
+  .shop-item.owned:hover {
+      transform: none;
+      box-shadow: none;
+  }
