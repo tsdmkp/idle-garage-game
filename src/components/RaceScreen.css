@@ -1,42 +1,48 @@
 /* src/components/RaceScreen.css */
 
 .race-screen {
-    padding: 20px;
-    text-align: center;
-    color: #eee;
-    /* Добавим фон, похожий на другие экраны, но можно сделать свой */
-    background-image: linear-gradient(rgba(40, 40, 50, 0.8), rgba(40, 40, 50, 0.8)), url('/race-background.jpg'); /* Замени на свой фон для гонок */
-    background-size: cover;
-    background-position: center;
-    min-height: calc(100vh - 60px - 70px); /* Занимает высоту экрана минус хедер и навбар */
-    box-sizing: border-box;
+    padding: 15px; /* Внутренние отступы */
+    padding-bottom: 30px; /* Добавим больше отступа снизу */
+    text-align: center; /* Центрируем текст по умолчанию */
+    color: #eee; /* Светлый цвет текста */
+    /* Фоновое изображение (замени /race-background.jpg на свой путь в папке /public/) */
+    background-image: linear-gradient(rgba(40, 40, 50, 0.85), rgba(40, 40, 50, 0.85)), url('/race-background.jpg');
+    background-size: cover; /* Масштабируем */
+    background-position: center; /* Центрируем */
+    background-attachment: fixed; /* Фиксируем фон при прокрутке */
+    min-height: calc(100vh - 60px - 70px); /* Высота экрана минус хедер и навбар */
+    box-sizing: border-box; /* Учитываем padding в высоте */
   }
   
   .race-screen h2 {
     margin-top: 0;
-    margin-bottom: 20px;
-    color: #ffc107; /* Акцентный цвет */
+    margin-bottom: 15px;
+    color: #ffc107; /* Желтый акцентный */
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
   }
   
+  /* Блок информации о машине игрока */
   .player-car-info {
-    background-color: rgba(0, 0, 0, 0.3);
-    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.4); /* Полупрозрачный темный фон */
+    padding: 12px 15px;
     border-radius: 8px;
     margin-bottom: 20px;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    display: inline-block; /* Ширина по содержимому */
+    max-width: 90%; /* Ограничение ширины */
   }
   .player-car-info h3 {
-      margin: 0 0 5px 0;
+      margin: 0 0 8px 0;
       font-size: 1.1em;
-      color: #eee;
+      color: #fff; /* Белый цвет */
   }
   .player-car-info p {
       margin: 0;
-      font-size: 0.9em;
+      font-size: 0.95em; /* Чуть крупнее статы */
       color: #ccc;
   }
   
-  
+  /* Блок выбора сложности */
   .difficulty-selector {
     margin-bottom: 25px;
   }
@@ -45,7 +51,6 @@
       font-weight: 500;
       color: #ccc;
   }
-  
   .difficulty-selector button {
     background-color: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -56,25 +61,115 @@
     cursor: pointer;
     transition: all 0.2s ease;
   }
-  
-  .difficulty-selector button:hover {
+  .difficulty-selector button:hover:not(:disabled) {
     background-color: rgba(255, 255, 255, 0.2);
     color: #fff;
   }
-  
   .difficulty-selector button.active {
     background-color: #ffc107; /* Активный цвет */
     color: #333;
     border-color: #ffa000;
     font-weight: bold;
   }
+  .difficulty-selector button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+  }
   
+  /* --- СТИЛИ ДЛЯ АНИМАЦИИ --- */
+  .race-animation-area {
+    width: 100%;
+    padding: 15px 0; /* Вертикальные отступы */
+    margin-bottom: 20px; /* Отступ до кнопки старта */
+    display: flex;      /* Используем flex для центрирования трека */
+    justify-content: center;
+  }
+  
+  .race-track {
+    width: 95%;             /* Ширина трека */
+    max-width: 500px;       /* Ограничиваем макс. ширину */
+    height: 60px;           /* Высота трека */
+    background: linear-gradient(to bottom, #525252, #737373); /* Серый асфальт */
+    border: 2px solid #333; /* Темный бордюр */
+    border-radius: 5px;     /* Скругление */
+    position: relative;     /* Для позиционирования элементов внутри */
+    overflow: hidden;       /* Скрываем то, что выезжает за пределы */
+  }
+  
+  .race-car {
+    position: absolute;      /* Абсолютное позиционирование внутри трека */
+    bottom: 5px;           /* Отступ от нижнего края трека */
+    left: 3%;              /* Начальная позиция немного правее края */
+    width: 45px;           /* Ширина машинки */
+    height: 30px;          /* Высота машинки */
+    /* Плавный переход для свойства transform (движения) */
+    transition: transform 2.5s cubic-bezier(0.4, 0, 0.2, 1); /* Плавность (можно настроить) */
+    transform: translateX(0); /* Начальное положение (не сдвинута) */
+    /* Для отображения контента внутри (картинки или эмодзи) */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* Стили для картинки машины игрока */
+  .race-car img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* Масштабируем картинку без искажений */
+    filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.4)); /* Тень */
+  }
+  
+  /* Стили для эмодзи/текста машины */
+  .race-car span {
+    font-size: 24px;        /* Размер эмодзи */
+    line-height: 1;
+  }
+  
+  /* Стили для машины оппонента */
+  .opponent-car {
+    /* Смещаем оппонента чуть выше или ниже для визуального разделения */
+    /* Например, выше: */
+    bottom: 45px;
+    /* Можно сделать его чуть меньше или другого цвета */
+    /* transform: scale(0.9); */
+    /* filter: sepia(50%); */
+  }
+  
+  /* Класс, который добавляется для запуска анимации */
+  .race-car.animate {
+    /* Двигаем машинку вправо почти до конца трека */
+    /* Значение нужно подобрать! */
+    /* Пример расчета: 85% ширины трека минус половина ширины машинки */
+     transform: translateX(320px);
+    /* Или фиксированное значение (подберите): */
+    /* transform: translateX(350px); */
+  }
+  
+  /* Финишная черта */
+  .finish-line {
+    position: absolute;
+    right: 12%; /* Положение финишной черты (от правого края трека) */
+    top: 0;
+    bottom: 0;
+    width: 5px; /* Ширина */
+    /* Шашечки */
+    background: repeating-linear-gradient(
+        0deg, /* Угол наклона */
+        #fff, #fff 5px, /* Белый 5px */
+        #000, #000 10px /* Черный 5px */
+    );
+    box-shadow: 0 0 3px rgba(0,0,0,0.5);
+  }
+  /* --- КОНЕЦ СТИЛЕЙ ДЛЯ АНИМАЦИИ --- */
+  
+  
+  /* Кнопка старта гонки */
   .start-race-button {
     padding: 12px 30px;
     font-size: 1.2em;
     font-weight: bold;
     color: #333;
-    background: linear-gradient(145deg, #4caf50, #8bc34a); /* Зеленый */
+    background: linear-gradient(145deg, #4caf50, #8bc34a);
     border: none;
     border-radius: 25px;
     cursor: pointer;
@@ -82,12 +177,10 @@
     margin-bottom: 20px;
     min-width: 180px;
   }
-  
   .start-race-button:hover:not(:disabled) {
     background: linear-gradient(145deg, #66bb6a, #9ccc65);
     box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
   }
-  
   .start-race-button:disabled {
     background: linear-gradient(145deg, #aaa, #ccc);
     color: #777;
@@ -95,40 +188,49 @@
     opacity: 0.7;
   }
   
-  .race-in-progress {
-      font-size: 1.1em;
-      color: #ffc107;
-      padding: 15px;
-      background-color: rgba(0,0,0,0.2);
-      border-radius: 5px;
-      display: inline-block;
-  }
   
+  /* Блок с результатом гонки */
   .race-result {
     margin-top: 20px;
     padding: 15px;
     border-radius: 8px;
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: rgba(0, 0, 0, 0.5); /* Темный фон для результата */
     border: 1px solid;
+    display: inline-block; /* Ширина по содержимому */
+    min-width: 200px; /* Минимальная ширина */
+    max-width: 90%;   /* Ограничение ширины */
   }
   
+  /* Стили для победы */
   .race-result.win {
-    border-color: #4caf50; /* Зеленая рамка для победы */
+    border-color: #4caf50; /* Зеленая рамка */
   }
   .race-result.win h3 {
       color: #81c784; /* Зеленый текст */
       margin: 0 0 10px 0;
   }
   
+  /* Стили для поражения */
   .race-result.lose {
-    border-color: #f44336; /* Красная рамка для поражения */
+    border-color: #f44336; /* Красная рамка */
   }
   .race-result.lose h3 {
       color: #e57373; /* Красный текст */
       margin: 0 0 10px 0;
   }
   
+  /* Стили для ошибки */
+  .race-result.error {
+    border-color: #ff9800; /* Оранжевая рамка */
+  }
+  .race-result.error h3 {
+      color: #ffb74d; /* Оранжевый текст */
+      margin: 0 0 10px 0;
+  }
+  
+  /* Текст награды */
   .race-result p {
       margin: 0;
       color: #eee;
+      font-size: 0.95em;
   }
