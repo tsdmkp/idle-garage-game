@@ -83,8 +83,27 @@ const calculateTotalIncomeRate = (buildingsState, carState, currentStaffState = 
 };
 
 const calculateUpgradeCost = (partType, currentLevel) => {
-    const baseCost = { engine: 100, tires: 50, style_body: 75, reliability_base: 60 };
-    return Math.floor((baseCost[partType] || 100) * Math.pow(1.5, currentLevel));
+  // --- Настройки стоимости для разных типов деталей ---
+  const partCostSettings = {
+      engine:           { base: 150, multiplier: 1.18 }, // Двигатель - дороже и рост чуть быстрее
+      tires:            { base: 70,  multiplier: 1.15 }, // Шины - дешевле, рост медленнее
+      style_body:       { base: 100, multiplier: 1.12 }, // Стиль - рост медленный
+      reliability_base: { base: 80,  multiplier: 1.16 }, // Надежность - средний рост
+      default:          { base: 100, multiplier: 1.15 }  // Значение по умолчанию
+  };
+  // ---------------------------------------------------
+
+  const settings = partCostSettings[partType] || partCostSettings.default;
+  const baseCost = settings.base;
+  const multiplier = settings.multiplier;
+
+  // Рассчитываем стоимость по формуле: База * (Множитель ^ Уровень)
+  // Math.pow(multiplier, currentLevel) - возводит множитель в степень текущего уровня
+  // Округляем до ближайшего целого
+  const cost = Math.round(baseCost * Math.pow(multiplier, currentLevel));
+
+  // Добавим минимальную стоимость, чтобы улучшения всегда стоили хоть сколько-то
+  return Math.max(cost, 10); // Минимальная стоимость - 10 монет
 };
 
 // --- Функция инициализации первой машины ---
