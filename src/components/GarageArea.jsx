@@ -1,8 +1,11 @@
 import React from 'react';
-import './GarageArea.css'; // Подключаем стили
+import './GarageArea.css'; // Убедись, что стили подключены и обновлены
 
-// Компонент принимает объект 'car' и функцию 'onTuneClick' в качестве props
-function GarageArea({ car, onTuneClick }) {
+// Компонент принимает:
+// car - объект текущей машины
+// onTuneClick - функция для открытия окна тюнинга
+// onOpenCarSelector - функция для открытия окна выбора машины
+function GarageArea({ car, onTuneClick, onOpenCarSelector }) {
 
   // Проверка наличия данных машины
   if (!car || !car.stats) {
@@ -17,25 +20,48 @@ function GarageArea({ car, onTuneClick }) {
   const { name, imageUrl, stats } = car;
   const { power, speed, style, reliability } = stats;
 
-  // Обработчик клика по кнопке "ТЮНИНГ" вызывает функцию из props
+  // Обработчик для кнопки тюнинга остается прежним
   const handleTuneButtonClick = () => {
       if (onTuneClick) {
-          onTuneClick(); // Вызываем функцию, переданную из App.jsx
+          onTuneClick();
       } else {
           console.warn("Обработчик onTuneClick не передан в GarageArea");
       }
   };
 
+   // Обработчик для кнопки смены машины
+   const handleChangeCarButtonClick = () => {
+        if (onOpenCarSelector) {
+            onOpenCarSelector(); // Вызываем функцию из App.jsx
+        } else {
+            console.warn("Обработчик onOpenCarSelector не передан в GarageArea");
+        }
+   };
+
   return (
+    // Основной контейнер гаража
     <div className="garage-area">
-      {/* ИЗМЕНЕН ПОРЯДОК: Сначала название, потом картинка */}
+
+      {/* Блок отображения машины */}
       <div className="car-display">
-        <h2 className="car-name">{name}</h2> {/* Название машины */}
+        {/* Обёртка для названия и кнопки смены */}
+        <div className="car-header">
+          <h2 className="car-name">{name}</h2>
+          {/* Кнопка смены машины */}
+          <button
+            onClick={handleChangeCarButtonClick} // Привязываем новый обработчик
+            className="change-car-button"
+            title="Сменить машину" // Всплывающая подсказка
+          >
+            🔄 {/* Иконка */}
+          </button>
+        </div>
+        {/* Изображение машины */}
         <img
-          src={imageUrl}
+          src={imageUrl || '/placeholder-car.png'} // Используем плейсхолдер, если нет картинки
           alt={name}
           className="car-image"
-          onError={(e) => { e.target.onerror = null; e.target.src="/placeholder-car.png" }}
+          onError={(e) => { e.target.onerror = null; e.target.src="/placeholder-car.png" }} // Обработка ошибки загрузки
         />
       </div>
 
@@ -50,11 +76,11 @@ function GarageArea({ car, onTuneClick }) {
       {/* Кнопка тюнинга */}
       <button
         className="tune-button"
-        onClick={handleTuneButtonClick}
+        onClick={handleTuneButtonClick} // Используем старый обработчик
       >
         ТЮНИНГ
       </button>
-    </div>
+    </div> // Закрываем .garage-area
   );
 }
 

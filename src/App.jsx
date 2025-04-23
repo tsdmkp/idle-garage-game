@@ -8,14 +8,15 @@ import NavBar from './components/NavBar';
 import TuningScreen from './components/TuningScreen';
 import RaceScreen from './components/RaceScreen';
 import ShopScreen from './components/ShopScreen';
-import StaffScreen from './components/StaffScreen'; // Импорт экрана персонала
-// Утилиты НЕ импортируем, логика внутри
+import StaffScreen from './components/StaffScreen';
+import CarSelector from './components/CarSelector'; // Импорт селектора машин
+// Утилиты НЕ импортируем, вся логика здесь для надежности
 import './App.css'; // Глобальные стили
 
 // --- Константы Игры ---
 const MAX_OFFLINE_HOURS = 2;
 const UPDATE_INTERVAL = 1000;
-const STARTING_COINS = 100000;
+const STARTING_COINS = 100000; // Стартовые монеты для теста
 
 // --- Начальное состояние зданий ---
 const INITIAL_BUILDINGS = [
@@ -53,7 +54,7 @@ const STAFF_CATALOG = {
 };
 
 
-// --- Вспомогательные Функции Расчета ---
+// --- Вспомогательные Функции Расчета (ВНУТРИ МОДУЛЯ, ПЕРЕД APP) ---
 const recalculateStatsAndIncomeBonus = (carId, parts) => {
     const baseStats = BASE_CAR_STATS[carId] || { power: 0, speed: 0, style: 0, reliability: 0 };
     if (!parts || typeof parts !== 'object') { return { stats: { ...baseStats }, carIncomeBonus: 0 }; }
@@ -86,6 +87,7 @@ const calculateUpgradeCost = (partType, currentLevel) => {
     return Math.floor((baseCost[partType] || 100) * Math.pow(1.5, currentLevel));
 };
 
+// --- Функция инициализации первой машины ---
 const getInitialPlayerCar = () => {
     const carData = CAR_CATALOG.find(c => c.id === 'car_001');
     if (!carData) return {id: 'error', name:'Error Car', stats:{power:0,speed:0,style:0,reliability:0}, parts:{}};
@@ -109,11 +111,16 @@ function App() {
   const lastCollectedTimeRef = useRef(Date.now());
   const [accumulatedIncome, setAccumulatedIncome] = useState(0);
   const [buildings, setBuildings] = useState(INITIAL_BUILDINGS);
-  const [playerCars, setPlayerCars] = useState([getInitialPlayerCar()]);
+  const [playerCars, setPlayerCars] = useState([getInitialPlayerCar()]); // Используем функцию
   const [selectedCarId, setSelectedCarId] = useState('car_001');
-  const [hiredStaff, setHiredStaff] = useState({ mechanic: 0, manager: 0 });
+  const [hiredStaff, setHiredStaff] = useState(() => { // Инициализация персонала
+      const initialStaff = {};
+      for (const staffId in STAFF_CATALOG) { initialStaff[staffId] = 0; }
+      return initialStaff;
+  });
   const [activeScreen, setActiveScreen] = useState('garage');
   const [isTuningVisible, setIsTuningVisible] = useState(false);
+  const [isCarSelectorVisible, setIsCarSelectorVisible] = useState(false); // Для выбора машины
 
   // --- Вычисляемая переменная для текущей машины ---
   const currentCar = playerCars.find(car => car.id === selectedCarId) || playerCars[0] || getInitialPlayerCar();
@@ -130,7 +137,7 @@ function App() {
     let initialCoinsValue = STARTING_COINS; if (savedCoins !== null && !isNaN(parseInt(savedCoins, 10))) { initialCoinsValue = parseInt(savedCoins, 10); } setGameCoins(initialCoinsValue);
     let loadedBuildings = INITIAL_BUILDINGS; if (savedBuildingsData) { try { const p=JSON.parse(savedBuildingsData); if(Array.isArray(p)) loadedBuildings = p; } catch(e){} } setBuildings(loadedBuildings);
     setCurrentXp(savedXp ? parseInt(savedXp, 10) : 10); setPlayerLevel(savedLevel ? parseInt(savedLevel, 10) : 1);
-    let loadedHiredStaff = { mechanic: 0, manager: 0 }; if (savedHiredStaffData) { try { const p = JSON.parse(savedHiredStaffData); if(p && typeof p === 'object'){ const v={}; for(const id in STAFF_CATALOG){ v[id] = p[id] || 0; } loadedHiredStaff = v; } } catch(e){} } setHiredStaff(loadedHiredStaff);
+    let loadedHiredStaff = {}; for(const id in STAFF_CATALOG){ loadedHiredStaff[id] = 0; } if (savedHiredStaffData) { try { const p = JSON.parse(savedHiredStaffData); if(p && typeof p === 'object'){ for(const id in STAFF_CATALOG){ loadedHiredStaff[id] = p[id] || 0; } } } catch(e){} } setHiredStaff(loadedHiredStaff);
     let initialPlayerCars = [getInitialPlayerCar()]; if (savedPlayerCarsData) { try { const p = JSON.parse(savedPlayerCarsData); if (Array.isArray(p) && p.length > 0) { initialPlayerCars = p.map(sc => sc && sc.id && sc.parts ? { ...sc, stats: recalculateStatsAndIncomeBonus(sc.id, sc.parts).stats } : null).filter(Boolean); } } catch (e) {} } setPlayerCars(initialPlayerCars.length > 0 ? initialPlayerCars : [getInitialPlayerCar()]);
     const finalSelectedCarId = savedSelectedCarId && initialPlayerCars.some(c => c.id === savedSelectedCarId) ? savedSelectedCarId : initialPlayerCars[0]?.id || 'car_001'; setSelectedCarId(finalSelectedCarId);
     // Пересчет Ставки Дохода...
@@ -150,19 +157,23 @@ function App() {
   }, [incomeRatePerHour]);
 
   // --- Функции Обработчики ---
+  // Сбор дохода
   const handleCollect = () => {
     const incomeToAdd = Math.floor(accumulatedIncome);
     if (incomeToAdd > 0) { const newTotalCoins = gameCoins + incomeToAdd; setGameCoins(newTotalCoins); setAccumulatedIncome(0); const collectionTime = Date.now(); lastCollectedTimeRef.current = collectionTime; localStorage.setItem('idleGarage_gameCoins', newTotalCoins.toString()); localStorage.setItem('idleGarage_lastCollectedTime', collectionTime.toString()); }
   };
 
+  // Улучшение здания
   const handleBuildingClick = (buildingName) => {
       const targetBuilding = buildings.find(b => b.name === buildingName); if (!targetBuilding || targetBuilding.isLocked) return; const cost = 100 * Math.pow(2, targetBuilding.level);
       if (gameCoins >= cost) { const newCoins = gameCoins - cost; setGameCoins(newCoins); const updatedBuildings = buildings.map(b => b.name === buildingName ? { ...b, level: b.level + 1 } : b); setBuildings(updatedBuildings); const newTotalRate = calculateTotalIncomeRate(updatedBuildings, currentCar, hiredStaff); setIncomeRatePerHour(newTotalRate); localStorage.setItem('idleGarage_gameCoins', newCoins.toString()); localStorage.setItem('idleGarage_buildings', JSON.stringify(updatedBuildings)); }
   };
 
+  // Открытие/закрытие тюнинга
   const handleOpenTuning = () => setIsTuningVisible(true);
   const handleCloseTuning = () => setIsTuningVisible(false);
 
+  // Улучшение детали
   const handleUpgradePart = (partId) => {
       if (!currentCar?.parts?.[partId]) return; const part = currentCar.parts[partId]; const cost = calculateUpgradeCost(partId, part.level);
       if (gameCoins >= cost) { const newCoins = gameCoins - cost; setGameCoins(newCoins); const updatedParts = { ...currentCar.parts, [partId]: { ...part, level: part.level + 1 } }; const { stats: newStats } = recalculateStatsAndIncomeBonus(currentCar.id, updatedParts);
@@ -173,6 +184,7 @@ function App() {
           localStorage.setItem('idleGarage_gameCoins', newCoins.toString()); localStorage.setItem('idleGarage_playerCars', JSON.stringify(updatedPlayerCars)); }
   };
 
+  // Старт гонки
   const handleStartRace = async (difficulty) => {
     if (!currentCar?.stats) { return null; } const baseBotStats = BOT_STATS[difficulty]; if (!baseBotStats) { return null; }
     const currentBot = { power: baseBotStats.power * (0.9 + Math.random() * 0.2), speed: baseBotStats.speed * (0.9 + Math.random() * 0.2), reliability: baseBotStats.reliability * (0.9 + Math.random() * 0.2) };
@@ -187,6 +199,7 @@ function App() {
     return { result, reward };
   };
 
+  // Покупка машины
   const handleBuyCar = (carIdToBuy) => {
       const carFromCatalog = CAR_CATALOG.find(c => c.id === carIdToBuy); if (!carFromCatalog) return;
       const alreadyOwned = playerCars.some(c => c.id === carIdToBuy); if (alreadyOwned) return;
@@ -195,62 +208,56 @@ function App() {
       const { stats: initialStats } = recalculateStatsAndIncomeBonus(carFromCatalog.id, carFromCatalog.initialParts);
       const newPlayerCar = { id: carFromCatalog.id, name: carFromCatalog.name, imageUrl: carFromCatalog.imageUrl, stats: initialStats, parts: { ...carFromCatalog.initialParts } };
       const updatedPlayerCars = [...playerCars, newPlayerCar]; setPlayerCars(updatedPlayerCars);
-      setSelectedCarId(newPlayerCar.id);
+      setSelectedCarId(newPlayerCar.id); // Сразу делаем активной
       const newTotalRate = calculateTotalIncomeRate(buildings, newPlayerCar, hiredStaff); setIncomeRatePerHour(newTotalRate);
       localStorage.setItem('idleGarage_gameCoins', newCoins.toString()); localStorage.setItem('idleGarage_playerCars', JSON.stringify(updatedPlayerCars)); localStorage.setItem('idleGarage_selectedCarId', newPlayerCar.id);
+      console.log(`Car "${newPlayerCar.name}" purchased!`);
   };
 
-  // --- ИСПРАВЛЕННАЯ: Функция расчета стоимости персонала ---
+  // Найм/улучшение персонала
   const calculateStaffCost = (staffId) => {
     const staffInfo = STAFF_CATALOG[staffId];
-    // Проверка staffInfo и его полей
-    if (!staffInfo || typeof staffInfo.maxLevel !== 'number' || typeof staffInfo.baseHireCost !== 'number' || typeof staffInfo.costMultiplier !== 'number') {
-        console.error(`Invalid staffInfo for id: ${staffId}`, staffInfo); return Infinity;
-    }
-    // Проверка и получение currentLevel
-    let currentLevel = 0; const levelFromState = hiredStaff[staffId];
-    if (typeof levelFromState === 'number' && !isNaN(levelFromState)) { currentLevel = levelFromState; }
-    else if (levelFromState !== undefined) { console.warn(`Invalid level type for ${staffId}:`, levelFromState); }
-    // Проверка на максимальный уровень
+    if (!staffInfo || typeof staffInfo.maxLevel !== 'number' || typeof staffInfo.baseHireCost !== 'number' || typeof staffInfo.costMultiplier !== 'number') { return Infinity; }
+    let currentLevel = 0; const levelFromState = hiredStaff[staffId]; if (typeof levelFromState === 'number' && !isNaN(levelFromState)) { currentLevel = levelFromState; }
     if (currentLevel >= staffInfo.maxLevel) { return Infinity; }
-    // Расчет стоимости
-    let cost;
-    if (currentLevel === 0) { cost = staffInfo.baseHireCost; }
-    else { cost = Math.floor(staffInfo.baseHireCost * Math.pow(staffInfo.costMultiplier, currentLevel)); }
-    // Проверка на NaN
-    if (isNaN(cost)) { console.error(`NaN cost calculated for ${staffId}`); return Infinity; }
-    return cost;
+    let cost; if (currentLevel === 0) { cost = staffInfo.baseHireCost; } else { cost = Math.floor(staffInfo.baseHireCost * Math.pow(staffInfo.costMultiplier, currentLevel)); }
+    if (isNaN(cost)) { return Infinity; } return cost;
   };
 
-  // --- ИСПРАВЛЕННАЯ: Функция найма/улучшения персонала ---
   const handleHireOrUpgradeStaff = (staffId) => {
-    const staffInfo = STAFF_CATALOG[staffId];
-    // Проверка на максимальный уровень выполняется внутри calculateStaffCost
-    const cost = calculateStaffCost(staffId); // Используем исправленную функцию
-    // Если стоимость бесконечна (макс. уровень или ошибка), выходим
-    if (cost === Infinity) { console.log(`Cannot hire/upgrade ${staffId}, cost is Infinity.`); return; }
-    // Проверяем монеты
+    const cost = calculateStaffCost(staffId); if (cost === Infinity) return;
     if (gameCoins >= cost) {
-        const newCoins = gameCoins - cost;
-        const currentLevel = hiredStaff[staffId] || 0;
-        const newLevel = currentLevel + 1;
-        const updatedHiredStaff = { ...hiredStaff, [staffId]: newLevel };
-        setHiredStaff(updatedHiredStaff); // Обновляем персонал
-        setGameCoins(newCoins); // Списываем монеты
-        // Пересчет ставки дохода (передаем НОВОЕ состояние персонала)
-        const newTotalRate = calculateTotalIncomeRate(buildings, currentCar, updatedHiredStaff);
-        setIncomeRatePerHour(newTotalRate);
-        // Сохранение
-        localStorage.setItem('idleGarage_gameCoins', newCoins.toString());
-        localStorage.setItem('idleGarage_hiredStaff', JSON.stringify(updatedHiredStaff));
-        console.log(`Staff "${staffInfo.name}" ${currentLevel === 0 ? 'hired' : 'upgraded'} to level ${newLevel}. New rate: ${newTotalRate}/hour.`);
-    } else {
-        console.log(`Not enough coins for ${staffInfo?.name || staffId}. Need ${cost} GC.`);
+        const newCoins = gameCoins - cost; const currentLevel = hiredStaff[staffId] || 0; const newLevel = currentLevel + 1;
+        const updatedHiredStaff = { ...hiredStaff, [staffId]: newLevel }; setHiredStaff(updatedHiredStaff); setGameCoins(newCoins);
+        const newTotalRate = calculateTotalIncomeRate(buildings, currentCar, updatedHiredStaff); setIncomeRatePerHour(newTotalRate);
+        localStorage.setItem('idleGarage_gameCoins', newCoins.toString()); localStorage.setItem('idleGarage_hiredStaff', JSON.stringify(updatedHiredStaff));
+        console.log(`Staff "${STAFF_CATALOG[staffId]?.name}" upgraded. New rate: ${newTotalRate}/hour.`);
     }
   };
 
   // Навигация
-  const handleNavClick = (screenId) => setActiveScreen(screenId);
+  const handleNavClick = (screenId) => {
+    setIsTuningVisible(false); // Закрываем тюнинг при смене экрана
+    setIsCarSelectorVisible(false); // Закрываем выбор машины
+    setActiveScreen(screenId);
+  };
+
+  // --- Функции для выбора машины ---
+  const handleOpenCarSelector = () => setIsCarSelectorVisible(true);
+  const handleCloseCarSelector = () => setIsCarSelectorVisible(false);
+  const handleSelectCar = (carId) => {
+    if (carId !== selectedCarId) {
+        console.log("Selecting car:", carId);
+        setSelectedCarId(carId);
+        const newSelectedCar = playerCars.find(c => c.id === carId);
+        if (newSelectedCar) {
+            const newTotalRate = calculateTotalIncomeRate(buildings, newSelectedCar, hiredStaff);
+            setIncomeRatePerHour(newTotalRate);
+        }
+        localStorage.setItem('idleGarage_selectedCarId', carId);
+    }
+    setIsCarSelectorVisible(false); // Закрываем окно после выбора
+  };
 
   // --- Расчеты для Рендера ---
   const xpPercentage = xpToNextLevel > 0 ? Math.min((currentXp / xpToNextLevel) * 100, 100) : 0;
@@ -258,15 +265,38 @@ function App() {
   // --- Рендер Компонента ---
   return (
     <div className="App" style={{ paddingBottom: '70px' }}>
-      <div className="header-container"> <Header level={playerLevel} playerName={playerName} gameCoins={gameCoins} jetCoins={jetCoins} xpPercentage={xpPercentage} /> </div>
+      {/* Хедер в контейнере */}
+      <div className="header-container">
+        <Header level={playerLevel} playerName={playerName} gameCoins={gameCoins} jetCoins={jetCoins} xpPercentage={xpPercentage} />
+      </div>
+
+      {/* Основной контент в контейнере */}
       <main className="main-content">
-        {activeScreen === 'garage' && ( <> <GarageArea car={currentCar} onTuneClick={handleOpenTuning} /> <IncomeArea incomeRate={incomeRatePerHour} accumulatedIncome={accumulatedIncome} maxAccumulation={incomeRatePerHour * MAX_OFFLINE_HOURS} onCollect={handleCollect} /> <BuildingArea buildings={buildings} onBuildingClick={handleBuildingClick} /> </> )}
+        {/* Экран Гаража */}
+        {activeScreen === 'garage' && (
+          <>
+            {/* Передаем обработчик открытия селектора */}
+            <GarageArea car={currentCar} onTuneClick={handleOpenTuning} onOpenCarSelector={handleOpenCarSelector}/>
+            <IncomeArea incomeRate={incomeRatePerHour} accumulatedIncome={accumulatedIncome} maxAccumulation={incomeRatePerHour * MAX_OFFLINE_HOURS} onCollect={handleCollect} />
+            <BuildingArea buildings={buildings} onBuildingClick={handleBuildingClick} />
+          </>
+        )}
+        {/* Экран Гонок */}
         {activeScreen === 'race' && ( <RaceScreen playerCar={currentCar} onStartRace={handleStartRace} /> )}
+        {/* Экран Автосалона */}
         {activeScreen === 'shop' && ( <ShopScreen catalog={CAR_CATALOG} playerCars={playerCars} gameCoins={gameCoins} onBuyCar={handleBuyCar} /> )}
+        {/* Экран Персонала */}
         {activeScreen === 'staff' && ( <StaffScreen staffCatalog={STAFF_CATALOG} hiredStaff={hiredStaff} gameCoins={gameCoins} onHireOrUpgrade={handleHireOrUpgradeStaff} calculateCost={calculateStaffCost} /> )}
+        {/* Экран P2E (заглушка) */}
         {activeScreen === 'p2e' && <div className="placeholder-screen" style={placeholderStyle}>P2E</div>}
       </main>
+
+      {/* Окно Тюнинга (поверх всего) */}
       {isTuningVisible && ( <TuningScreen car={currentCar} gameCoins={gameCoins} onUpgradePart={handleUpgradePart} onClose={handleCloseTuning} /> )}
+      {/* Окно Выбора Машины (поверх всего) */}
+      {isCarSelectorVisible && ( <CarSelector playerCars={playerCars} selectedCarId={selectedCarId} onSelectCar={handleSelectCar} onClose={handleCloseCarSelector} /> )}
+
+      {/* Нижняя Навигационная Панель */}
       <NavBar activeScreen={activeScreen} onNavClick={handleNavClick} />
     </div>
   );
