@@ -4,26 +4,29 @@ html, body, #root {
   height: 100%;
 }
 
+body {
+  overflow-y: scroll; /* Всегда показываем полосу прокрутки */
+}
+
 .race-screen {
   margin: 0;
   padding: 0;
   background-image: linear-gradient(rgba(40, 40, 50, 0.15), rgba(40, 40, 50, 0.15)), url('/race-background.jpg');
   background-size: cover;
-  background-position: center;
+  background-position: center center; /* Точное центрирование */
   background-attachment: fixed;
   min-height: 100vh;
   height: 100%;
+  width: 100%; /* Полная ширина */
   box-sizing: border-box;
   color: #eee;
   text-align: center;
-  overflow-y: auto; /* Полоса прокрутки только при необходимости */
 }
 
 .race-screen__content {
   padding: 15px;
-  padding-top: 60px; /* Учёт хедера, если есть */
-  padding-bottom: 30px;
-  padding-right: 17px; /* Компенсация полосы прокрутки */
+  padding-top: 60px; /* Учёт хедера */
+  padding-bottom: 90px; /* Учёт навигационного бара (60px + запас) */
   box-sizing: border-box;
   min-height: 100vh;
 }
@@ -198,8 +201,8 @@ html, body, #root {
   display: inline-block;
   min-width: 200px;
   max-width: 90%;
-  max-height: 150px; /* Ограничиваем высоту */
-  overflow-y: auto; /* Прокрутка внутри, если контент длинный */
+  max-height: 150px;
+  overflow-y: auto;
 }
 
 .race-result.win {
