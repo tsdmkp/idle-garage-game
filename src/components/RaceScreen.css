@@ -1,3 +1,6 @@
+/* src/components/RaceScreen.css */
+
+/* --- Базовые стили для страницы --- */
 html, body, #root {
   margin: 0;
   padding: 0;
@@ -8,232 +11,211 @@ body {
   overflow-y: scroll; /* Всегда показываем полосу прокрутки */
 }
 
+/* --- Основной контейнер экрана гонок --- */
 .race-screen {
   margin: 0;
-  padding: 0;
-  background-image: linear-gradient(rgba(40, 40, 50, 0.15), rgba(40, 40, 50, 0.15)), url('/race-background.jpg');
+  padding: 0; /* Убираем внутренний padding, если он не нужен самому экрану */
+  background-image: linear-gradient(rgba(40, 40, 50, 0.8), rgba(40, 40, 50, 0.8)), url('/race-background.jpg'); /* Путь к фону гонок */
   background-size: cover;
-  background-position: center center; /* Точное центрирование */
-  background-attachment: fixed;
-  min-height: 100vh;
-  height: 100%;
-  width: 100%; /* Полная ширина */
+  background-position: center center;
+  background-attachment: fixed; /* Фон не скроллится вместе с контентом */
+  min-height: 100vh; /* Минимальная высота во весь экран */
+  width: 100%;
   box-sizing: border-box;
-  color: #eee;
-  text-align: center;
+  color: #eee; /* Цвет текста по умолчанию */
+  text-align: center; /* Текст по центру */
 }
 
+/* Контейнер для контента с отступами под хедер и навбар */
 .race-screen__content {
   padding: 15px;
-  padding-top: 60px; /* Учёт хедера */
-  padding-bottom: 90px; /* Учёт навигационного бара (60px + запас) */
+  padding-top: 75px; /* Отступ под хедер (60px + 15px запас) */
+  padding-bottom: 75px; /* Отступ под навбар (60px + 15px запас) */
   box-sizing: border-box;
-  min-height: 100vh;
+  min-height: 100vh; /* Растягиваем контент на всю высоту */
+  display: flex;
+  flex-direction: column; /* Элементы в столбец */
+  align-items: center; /* Центрируем по горизонтали */
 }
 
+/* Заголовок экрана */
 .race-screen h2 {
   margin-top: 0;
   margin-bottom: 15px;
-  color: #ffc107;
+  color: #ffc107; /* Желтый акцент */
   text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
 }
 
-.player-car-info {
-  background-color: rgba(0, 0, 0, 0.4);
-  padding: 12px 15px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  display: inline-block;
-  max-width: 90%;
-}
-
-.player-car-info h3 {
-  margin: 0 0 8px 0;
-  font-size: 1.1em;
-  color: #fff;
-}
-
-.player-car-info p {
-  margin: 0;
-  font-size: 0.95em;
-  color: #ccc;
-}
-
-.difficulty-selector {
+/* --- Блок информации об игроке и противнике --- */
+.race-participants {
+  display: flex;
+  flex-wrap: wrap; /* Разрешаем перенос на маленьких экранах */
+  justify-content: space-around;
+  align-items: flex-start;
+  gap: 15px;
+  width: 100%; /* Занимает всю ширину */
+  max-width: 600px; /* Ограничим ширину */
   margin-bottom: 25px;
-}
-
-.difficulty-selector h4 {
-  margin: 0 0 10px 0;
-  font-weight: 500;
-  color: #ccc;
-}
-
-.difficulty-selector button {
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #ccc;
-  padding: 8px 15px;
-  margin: 0 5px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.difficulty-selector button:hover:not(:disabled) {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: #fff;
-}
-
-.difficulty-selector button.active {
-  background-color: #ffc107;
-  color: #333;
-  border-color: #ffa000;
-  font-weight: bold;
-}
-
-.difficulty-selector button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.race-animation-area {
-  width: 100%;
-  padding: 15px 0;
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: center;
-  box-sizing: border-box;
-}
-
-.race-track {
-  width: 95%;
-  max-width: 500px;
-  height: 60px;
-  background: linear-gradient(to bottom, #525252, #737373);
-  border: 2px solid #333;
-  border-radius: 5px;
-  position: relative;
-  overflow: hidden;
-  box-sizing: border-box;
-}
-
-.race-car {
-  position: absolute;
-  bottom: 5px;
-  left: 3%;
-  width: 45px;
-  height: 30px;
-  transition: transform 2.5s cubic-bezier(0.4, 0, 0.2, 1);
-  transform: translateX(0);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.race-car img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.4));
-}
-
-.race-car span {
-  font-size: 24px;
-  line-height: 1;
-}
-
-.opponent-car {
-  bottom: 45px;
-}
-
-.race-car.animate {
-  transform: translateX(320px);
-}
-
-.finish-line {
-  position: absolute;
-  right: 12%;
-  top: 0;
-  bottom: 0;
-  width: 5px;
-  background: repeating-linear-gradient(
-      0deg,
-      #fff, #fff 5px,
-      #000, #000 10px
-  );
-  box-shadow: 0 0 3px rgba(0,0,0,0.5);
-}
-
-.start-race-button {
-  padding: 12px 30px;
-  font-size: 1.2em;
-  font-weight: bold;
-  color: #333;
-  background: linear-gradient(145deg, #4caf50, #8bc34a);
-  border: none;
-  border-radius: 25px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-bottom: 20px;
-  min-width: 180px;
-}
-
-.start-race-button:hover:not(:disabled) {
-  background: linear-gradient(145deg, #66bb6a, #9ccc65);
-  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
-}
-
-.start-race-button:disabled {
-  background: linear-gradient(145deg, #aaa, #ccc);
-  color: #777;
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-.race-result {
-  margin-top: 20px;
+  background-color: rgba(0, 0, 0, 0.2);
   padding: 15px;
   border-radius: 8px;
-  background-color: rgba(0, 0, 0, 0.5);
-  border: 1px solid;
-  display: inline-block;
-  min-width: 200px;
-  max-width: 90%;
-  max-height: 150px;
-  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-sizing: border-box;
 }
 
-.race-result.win {
-  border-color: #4caf50;
+.participant {
+  flex: 1; /* Растягиваемся поровну */
+  min-width: 150px; /* Минимальная ширина */
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0.2); /* Легкий фон для каждого участника */
+  padding: 10px;
+  border-radius: 6px;
+}
+.participant h3 { margin: 0 0 8px 0; font-size: 1.1em; color: #eee; }
+.participant p { margin-bottom: 5px; font-size: 0.9em; color: #ccc; }
+
+.vs-separator {
+  font-size: 1.5em; font-weight: bold; color: #ffc107;
+  align-self: center; padding: 0 10px;
+  flex-basis: 100%; /* На маленьких экранах VS будет на новой строке */
+  order: 1; /* Ставим VS между участниками */
+  text-align: center;
+  margin: 5px 0; /* Добавляем отступы при переносе */
+  display: none; /* Скрываем по умолчанию, показываем в @media */
 }
 
-.race-result.win h3 {
-  color: #81c784;
-  margin: 0 0 10px 0;
+/* Отображение картинки противника */
+.opponent-car-image {
+  width: 100%; max-width: 120px; height: auto; max-height: 70px; /* Чуть меньше */
+  object-fit: contain; margin: 5px auto 10px auto; background-color: rgba(0,0,0,0.1);
+  border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.race-result.lose {
-  border-color: #f44336;
+/* Блок выбора сложности */
+.difficulty-selector { margin-bottom: 25px; }
+.difficulty-selector h4 { margin: 0 0 10px 0; font-weight: 500; color: #ccc; }
+.difficulty-selector button { background-color: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: #ccc; padding: 8px 15px; margin: 0 5px; border-radius: 5px; cursor: pointer; transition: all 0.2s ease; }
+.difficulty-selector button:hover:not(:disabled) { background-color: rgba(255, 255, 255, 0.2); color: #fff; }
+.difficulty-selector button.active { background-color: #ffc107; color: #333; border-color: #ffa000; font-weight: bold; }
+.difficulty-selector button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Зона анимации гонки */
+.race-animation-area {
+  width: 100%; padding: 15px 0; /* margin-bottom: 20px; */ /* Убран отступ */
+  display: flex; justify-content: center; box-sizing: border-box;
 }
 
-.race-result.lose h3 {
-  color: #e57373;
-  margin: 0 0 10px 0;
+/* Дорожка */
+.race-track {
+  width: 95%; max-width: 500px; height: 80px; /* Сделали дорожку выше */
+  background: linear-gradient(to bottom, #4a4a4a, #6b6b6b); /* Чуть светлее */
+  border: 2px solid #222; border-radius: 5px; position: relative;
+  overflow: hidden; box-sizing: border-box;
 }
 
-.race-result.error {
-  border-color: #ff9800;
+/* Общие стили для машинок */
+.race-car {
+  position: absolute;
+  /* bottom: 5px; */ /* Убрали общее правило bottom */
+  width: 60px;  /* <<< Увеличили ширину */
+  height: 40px; /* <<< Увеличили высоту */
+  transition: transform 2.5s cubic-bezier(0.4, 0, 0.2, 1); /* Анимация */
+  transform: translateX(0); /* Начальное смещение 0 */
+}
+.race-car img {
+  display: block; width: 100%; height: 100%;
+  object-fit: contain; filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.4));
 }
 
-.race-result.error h3 {
-  color: #ffb74d;
-  margin: 0 0 10px 0;
+/* --- ИСПРАВЛЕНИЕ: Позиционирование машинок --- */
+.player-car {
+  bottom: 1px;  /* <<< Игрок НИЖЕ */
+  left: 3%;     /* <<< Старт игрока */
+  z-index: 2;
+}
+.opponent-car {
+  bottom: 35px; /* <<< Противник ВЫШЕ */
+  left: 5%;     /* <<< Старт противника чуть правее */
+  z-index: 1;
+}
+/* ------------------------------------------- */
+
+/* --- ИСПРАВЛЕНИЕ: Анимация движения машинок --- */
+.race-car.animate {
+  /* Двигаем машинку почти до конца трека */
+  /* Ширина трека max 500px, ширина машинки 60px */
+  /* Финишная линия на left: 90% */
+  /* Двигаем на 90% ширины трека минус ~ширину машинки */
+  transform: translateX(calc(550% - 60px)); /* Примерный расчет в процентах */
+  /* ИЛИ подберите значение в пикселях, например: */
+  /* transform: translateX(420px); */ /* <<< Увеличили значение */
+}
+/* ----------------------------------------- */
+
+/* --- ИСПРАВЛЕНИЕ: Финишная линия --- */
+.finish-line {
+  position: absolute;
+  left: 90%;    /* <<< Финишная линия */
+  top: 0; bottom: 0; width: 5px;
+  background: repeating-linear-gradient(0deg, #fff, #fff 5px, #000, #000 10px);
+  box-shadow: 0 0 3px rgba(0,0,0,0.5);
+}
+/* ---------------------------------- */
+
+/* --- Контейнер для кнопки и результата (из предыдущего шага) --- */
+.race-controls-area {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 15px; margin-top: 25px; width: 100%;
 }
 
-.race-result p {
-  margin: 0;
-  color: #eee;
-  font-size: 0.95em;
+/* Кнопка "Начать Заезд!" */
+.start-race-button {
+  padding: 12px 30px; font-size: 1.2em; font-weight: bold;
+  color: #333; background: linear-gradient(145deg, #4caf50, #8bc34a);
+  border: none; border-radius: 25px; cursor: pointer;
+  transition: all 0.2s ease;
+  /* margin-bottom: 0; */ /* Убрали отступ, т.к. есть gap */
+  min-width: 180px;
+}
+.start-race-button:hover:not(:disabled) { background: linear-gradient(145deg, #66bb6a, #9ccc65); box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3); }
+.start-race-button:disabled { background: linear-gradient(145deg, #aaa, #ccc); color: #777; cursor: not-allowed; opacity: 0.7; }
+
+/* Блок результата гонки */
+.race-result {
+  /* margin-top: 0; */ /* Убрали отступ, т.к. есть gap */
+  padding: 15px; border-radius: 8px; background-color: rgba(0, 0, 0, 0.5);
+  border: 1px solid; display: inline-block; min-width: 200px; max-width: 90%;
+  /* Убрали max-height */
+}
+.race-result.win { border-color: #4caf50; }
+.race-result.win h3 { color: #81c784; margin: 0 0 10px 0; }
+.race-result.lose { border-color: #f44336; }
+.race-result.lose h3 { color: #e57373; margin: 0 0 10px 0; }
+.race-result.error { border-color: #ff9800; }
+.race-result.error h3 { color: #ffb74d; margin: 0 0 10px 0; }
+.race-result p { margin: 0; color: #eee; font-size: 0.95em; }
+
+
+/* --- Адаптация для маленьких экранов --- */
+@media (max-width: 480px) { /* Увеличил порог */
+  .race-participants {
+      flex-direction: column; /* Ставим друг под другом */
+      align-items: stretch; /* Растягиваем по ширине */
+      gap: 10px;
+  }
+  .vs-separator {
+      margin: 5px 0;
+      display: block; /* Показываем VS на маленьких экранах */
+      order: 1; /* Ставим между участниками */
+      flex-basis: auto; /* Сбрасываем основу */
+  }
+  .participant {
+      flex-basis: auto; /* Авто-ширина */
+      width: auto; /* Сбрасываем ширину */
+      min-width: 0; /* Сбрасываем мин. ширину */
+      order: 0; /* Игрок первый */
+  }
+   .opponent-car-display { /* Класс для блока инфо противника */
+       order: 2; /* Противник после VS */
+   }
 }

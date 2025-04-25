@@ -109,18 +109,57 @@ export const calculateStaffCost = (staffId, hiredStaff) => {
 
 // --- Функция Симуляции Гонки ---
 export const simulateRace = async (playerCar, difficulty, currentCoins, currentXp) => {
-    if (!playerCar?.stats) { console.error("SimulateRace: Player car/stats missing."); return null; }
-    const baseBotStats = BOT_STATS[difficulty]; if (!baseBotStats) { console.error(`SimulateRace: Invalid difficulty: "${difficulty}"`); return null; }
-    const currentBot = { power: baseBotStats.power*(0.9+Math.random()*0.2), speed: baseBotStats.speed*(0.9+Math.random()*0.2), reliability: baseBotStats.reliability*(0.9+Math.random()*0.2) };
-    const playerPowerScore = (playerCar.stats.power*0.5) + (playerCar.stats.speed*0.4) + (playerCar.stats.reliability*0.1*(0.8+Math.random()*0.4));
-    const botPowerScore = (currentBot.power*0.5) + (currentBot.speed*0.4) + (currentBot.reliability*0.1*(0.8+Math.random()*0.4));
-    console.log(`SimulateRace Scores - Player: ${playerPowerScore.toFixed(1)}, Bot: ${botPowerScore.toFixed(1)}`);
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000)); // Уменьшил задержку
-    let result = 'lose'; let reward = { coins: 0, xp: 0 }; let newGameCoins = currentCoins; let newCurrentXp = currentXp;
-    if (playerPowerScore > botPowerScore) { result = 'win'; const baseWinCoins={easy:25,medium:75,hard:150}; const baseWinXp={easy:5,medium:15,hard:30}; const coinsWon=Math.floor(baseWinCoins[difficulty]*(0.9+Math.random()*0.2)); const xpWon=Math.floor(baseWinXp[difficulty]*(0.9+Math.random()*0.2)); reward={coins:coinsWon,xp:xpWon}; newGameCoins+=coinsWon; newCurrentXp+=xpWon; }
-    else { result = 'lose'; const consolationCoins = Math.floor(({easy:2,medium:5,hard:10}[difficulty]||0)*Math.random()); reward={coins:consolationCoins,xp:0}; if(consolationCoins>0){ newGameCoins+=consolationCoins;} newCurrentXp=currentXp; }
-    console.log(`SimulateRace: ${result}. Reward: ${reward.coins} GC, ${reward.xp} XP. New State: ${newGameCoins} GC, ${newCurrentXp} XP.`);
-    return { result, reward, newGameCoins, newCurrentXp };
+  if (!playerCar?.stats) { console.error("SimulateRace: Player car/stats missing."); return null; }
+  console.log(`Simulating race logic for difficulty: ${difficulty}`);
+  const baseBotStats = BOT_STATS[difficulty];
+  if (!baseBotStats) { console.error(`SimulateRace: Invalid difficulty: "${difficulty}"`); return null; }
+  // Расчет статов бота
+  const currentBot = { power: baseBotStats.power*(0.9+Math.random()*0.2), speed: baseBotStats.speed*(0.9+Math.random()*0.2), reliability: baseBotStats.reliability*(0.9+Math.random()*0.2) };
+  // Расчет силы
+  const playerPowerScore = (playerCar.stats.power*0.5) + (playerCar.stats.speed*0.4) + (playerCar.stats.reliability*0.1*(0.8+Math.random()*0.4));
+  const botPowerScore = (currentBot.power*0.5) + (currentBot.speed*0.4) + (currentBot.reliability*0.1*(0.8+Math.random()*0.4));
+  console.log(`SimulateRace Scores - Player: ${playerPowerScore.toFixed(1)}, Bot: ${botPowerScore.toFixed(1)}`);
+  // Задержка
+  await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+
+  // --- НОВАЯ ЛОГИКА НАГРАД И ШТРАФОВ ---
+  let result = 'lose';
+  let reward = { coins: 0, xp: 0 }; // Чистая награда/штраф для UI
+  let coinsChange = 0; // Сколько монет добавить или отнять
+  let xpChange = 0;    // Сколько XP добавить
+
+  // Определяем награду/штраф за монеты
+  const coinRewards = { easy: 1, medium: 2, hard: 3 };
+  const coinPenalty = { easy: -1, medium: -2, hard: -3 }; // Штраф за проигрыш
+
+  // Определяем награду за XP (только за победу)
+  const xpRewards = { easy: 5, medium: 15, hard: 30 };
+
+  if (playerPowerScore > botPowerScore) { // Победа
+    result = 'win';
+    coinsChange = coinRewards[difficulty] || 1; // Награда монетами
+    xpChange = xpRewards[difficulty] || 5;      // Награда XP
+    reward = { coins: coinsChange, xp: xpChange }; // Записываем награду для UI
+    console.log(`SimulateRace: Win! +${coinsChange} GC, +${xpChange} XP`);
+    // TODO: Проверка Level Up
+  } else { // Поражение
+    result = 'lose';
+    coinsChange = coinPenalty[difficulty] || -1; // Штраф монетами
+    xpChange = 0; // Нет XP за поражение
+    reward = { coins: coinsChange, xp: xpChange }; // Записываем ШТРАФ для UI
+    console.log(`SimulateRace: Lose. Penalty: ${coinsChange} GC.`);
+  }
+
+  // Рассчитываем НОВЫЙ итоговый баланс монет (не уходим в минус)
+  const newGameCoins = Math.max(0, currentCoins + coinsChange);
+  // Рассчитываем НОВЫЙ итоговый XP
+  const newCurrentXp = currentXp + xpChange;
+  // ----------------------------------------
+
+  console.log(`SimulateRace finished. Result: ${result}. Returning new state: Coins=${newGameCoins}, XP=${newCurrentXp}, Reward=${JSON.stringify(reward)}`);
+  // Возвращаем результат, ЧИСТУЮ награду/штраф, и НОВЫЕ значения монет и XP
+  return { result, reward, newGameCoins, newCurrentXp };
+  // -----------------------------------------------------------------------
 };
 
 console.log("--- utils.js finished defining exports ---");
