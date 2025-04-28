@@ -211,6 +211,7 @@ function App() {
   );
 }
 
+
 // Стиль для заглушек
 const placeholderStyle = { padding: '40px 20px', textAlign: 'center', color: 'white', fontSize: '1.2em', opacity: 0.7 };
 
