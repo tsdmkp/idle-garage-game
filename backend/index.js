@@ -13,7 +13,7 @@ app.get('/game_state', (req, res) => {
     userData[userId] = {
       player_level: 1,
       first_name: 'Игрок',
-      game_coins: 100000, // Синхронизировано с STARTING_COINS
+      game_coins: 100000,
       jet_coins: 0,
       current_xp: 10,
       xp_to_next_level: 100,
@@ -37,10 +37,10 @@ app.get('/game_state', (req, res) => {
             reliability_base: { level: 1, name: 'Надежность (База)' }
           },
           stats: {
-            power: 45, // 40 + 1*5
+            power: 45,
             speed: 70,
             style: 5,
-            reliability: 30 // 25 + 1*5
+            reliability: 30
           }
         }
       ],
@@ -50,4 +50,24 @@ app.get('/game_state', (req, res) => {
   res.json(userData[userId]);
 });
 
-app.listen(3000, () => console.log('Server running on port 3000'));
+app.post('/game_state', (req, res) => {
+  const userId = req.query.userId || 'default';
+  const updates = req.body;
+  if (!userData[userId]) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+  userData[userId] = {
+    ...userData[userId],
+    ...updates,
+    buildings: updates.buildings || userData[userId].buildings,
+    player_cars: updates.player_cars || userData[userId].player_cars,
+    hired_staff: updates.hired_staff || userData[userId].hired_staff,
+    selected_car_id: updates.selected_car_id || userData[userId].selected_car_id,
+    last_collected_time: updates.last_collected_time || userData[userId].last_collected_time
+  };
+  console.log(`Updated user state for ${userId}:`, userData[userId]);
+  res.json(userData[userId]);
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
