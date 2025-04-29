@@ -5,7 +5,7 @@ console.log("--- utils.js loading ---");
 // --- Константы Игры ---
 export const MAX_OFFLINE_HOURS = 2;
 export const UPDATE_INTERVAL = 1000;
-export const STARTING_COINS = 100000; // Вернул 100к для теста
+export const STARTING_COINS = 1000; // Вернул 100к для теста
 
 // --- Начальное состояние зданий ---
 export const INITIAL_BUILDINGS = [
