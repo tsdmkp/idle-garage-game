@@ -4,7 +4,9 @@ const cors = require('cors');
 const app = express();
 app.use(express.json());
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://idle-garage-game.vercel.app', 'https://t.me']
+  origin: ['http://localhost:5173', 'https://idle-garage-game.vercel.app', 'https://*.vercel.app'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'X-Telegram-Init-Data']
 }));
 
 const userData = {};
@@ -14,7 +16,7 @@ app.get('/game_state', (req, res) => {
   if (!userData[userId]) {
     userData[userId] = {
       player_level: 1,
-      first_name: 'Игрок', // Будет перезаписано фронтендом
+      first_name: 'Игрок',
       game_coins: 1000,
       jet_coins: 0,
       current_xp: 10,
@@ -53,7 +55,7 @@ app.get('/game_state', (req, res) => {
 });
 
 app.post('/game_state', (req, res) => {
-  const userId = req.query.userId || 'default';
+  const userId = req.body.userId || req.query.userId || 'default';
   const updates = req.body;
   if (!userData[userId]) {
     return res.status(404).json({ message: 'User not found' });

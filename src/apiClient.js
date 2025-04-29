@@ -1,16 +1,29 @@
-// src/apiClient.js
-
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-async function apiClient(endpoint, method = 'GET', data = null, userId = 'default') {
+async function apiClient(endpoint, method = 'GET', data = null, userId = null) {
+    let tgUserData = null;
+    try {
+        if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
+            tgUserData = window.Telegram.WebApp.initDataUnsafe.user;
+            console.log('apiClient: Telegram user data:', tgUserData);
+        } else {
+            console.warn('apiClient: Telegram initData not found. Using default userId if not provided.');
+        }
+    } catch (error) {
+        console.error('apiClient: Error accessing Telegram initData:', error);
+    }
+
+    // Используем userId из аргумента, если передан, иначе tgUserData.id или 'default'
+    const effectiveUserId = userId || tgUserData?.id?.toString() || 'default';
+
     // Убираем лишние слэши
     const cleanBaseUrl = API_BASE_URL.replace(/\/$/, ''); // Удаляем слэш в конце
     const cleanEndpoint = endpoint.replace(/^\//, ''); // Удаляем слэш в начале
-    const url = `${cleanBaseUrl}/${cleanEndpoint}${method === 'GET' ? `?userId=${userId}` : ''}`;
+    const url = `${cleanBaseUrl}/${cleanEndpoint}${method === 'GET' ? `?userId=${encodeURIComponent(effectiveUserId)}` : ''}`;
 
     const tgData = window.Telegram?.WebApp?.initData;
-    if (!tgData) {
-        console.warn("apiClient: Telegram initData not found. Request might fail.");
+    if (!tgData && effectiveUserId === 'default') {
+        console.warn('apiClient: Telegram initData not found. Request might fail.');
     }
 
     const config = {
@@ -22,7 +35,7 @@ async function apiClient(endpoint, method = 'GET', data = null, userId = 'defaul
 
     if ((method === 'POST' || method === 'PUT' || method === 'PATCH') && data) {
         config.headers['Content-Type'] = 'application/json';
-        config.body = JSON.stringify(data);
+        config.body = JSON.stringify({ ...data, userId: effectiveUserId });
     }
 
     console.log(`apiClient: Sending ${method} request to ${url}`);
