@@ -3,7 +3,9 @@ const cors = require('cors');
 
 const app = express();
 app.use(express.json());
-app.use(cors()); // Временно для тестов
+app.use(cors({
+  origin: ['http://localhost:5173', 'https://idle-garage-game.vercel.app', 'https://t.me']
+}));
 
 const userData = {};
 
@@ -12,7 +14,7 @@ app.get('/game_state', (req, res) => {
   if (!userData[userId]) {
     userData[userId] = {
       player_level: 1,
-      first_name: 'Игрок',
+      first_name: 'Игрок', // Будет перезаписано фронтендом
       game_coins: 1000,
       jet_coins: 0,
       current_xp: 10,
@@ -63,7 +65,8 @@ app.post('/game_state', (req, res) => {
     player_cars: updates.player_cars || userData[userId].player_cars,
     hired_staff: updates.hired_staff || userData[userId].hired_staff,
     selected_car_id: updates.selected_car_id || userData[userId].selected_car_id,
-    last_collected_time: updates.last_collected_time || userData[userId].last_collected_time
+    last_collected_time: updates.last_collected_time || userData[userId].last_collected_time,
+    first_name: updates.first_name || userData[userId].first_name
   };
   console.log(`Updated user state for ${userId}:`, userData[userId]);
   res.json(userData[userId]);
