@@ -9,7 +9,6 @@ import RaceScreen from './components/RaceScreen';
 import ShopScreen from './components/ShopScreen';
 import StaffScreen from './components/StaffScreen';
 import CarSelector from './components/CarSelector';
-import NameInputModal from './components/NameInputModal';
 import {
     calculateUpgradeCost,
     recalculateStatsAndIncomeBonus,
@@ -58,7 +57,6 @@ function App() {
     const [activeScreen, setActiveScreen] = useState('garage');
     const [isTuningVisible, setIsTuningVisible] = useState(false);
     const [isCarSelectorVisible, setIsCarSelectorVisible] = useState(false);
-    const [isNameModalOpen, setIsNameModalOpen] = useState(false);
 
     const currentCar = playerCars.find(car => car.id === selectedCarId) || playerCars[0] || null;
 
@@ -75,6 +73,7 @@ function App() {
                     if (user) {
                         setTgUserData(user);
                         setIsTgApp(true);
+                        setPlayerName(user.first_name || 'Игрок');
                     } else {
                         console.warn('App: Telegram user data is null or undefined');
                         setIsTgApp(false);
@@ -96,12 +95,6 @@ function App() {
         return () => {};
     }, []);
 
-    useEffect(() => {
-        if (playerName === 'Игрок' && tgUserData && isTgApp) {
-            setIsNameModalOpen(true);
-        }
-    }, [playerName, tgUserData, isTgApp]);
-
     const loadInitialData = async () => {
         console.log("loadInitialData started...");
         let loadedBuildings = buildings;
@@ -115,7 +108,7 @@ function App() {
 
             if (initialState && typeof initialState === 'object') {
                 setPlayerLevel(initialState.player_level ?? playerLevel);
-                setPlayerName(initialState.first_name || initialState.username || playerName);
+                setPlayerName(tgUserData?.first_name || initialState.first_name || 'Игрок');
                 setGameCoins(initialState.game_coins ?? gameCoins);
                 setJetCoins(initialState.jet_coins ?? jetCoins);
                 setCurrentXp(initialState.current_xp ?? currentXp);
@@ -340,21 +333,6 @@ function App() {
         setIsCarSelectorVisible(false);
     };
 
-    const handleSaveName = async (newName) => {
-        if (!newName.trim()) return;
-        try {
-            console.log(`Saving new name: ${newName}`);
-            setPlayerName(newName);
-            await apiClient('/game_state', 'POST', {
-                first_name: newName
-            });
-            setIsNameModalOpen(false);
-        } catch (error) {
-            console.error('Failed to save name:', error);
-            setError(`Ошибка сохранения имени: ${error.message}`);
-        }
-    };
-
     const xpPercentage = xpToNextLevel > 0 ? Math.min((currentXp / xpToNextLevel) * 100, 100) : 0;
 
     if (isLoading) {
@@ -379,7 +357,6 @@ function App() {
                     gameCoins={gameCoins}
                     jetCoins={jetCoins}
                     xpPercentage={xpPercentage}
-                    onChangeName={() => setIsNameModalOpen(true)}
                 />
             </div>
             <main className="main-content">
@@ -445,14 +422,6 @@ function App() {
                     selectedCarId={selectedCarId}
                     onSelectCar={handleSelectCar}
                     onClose={handleCloseCarSelector}
-                />
-            )}
-            {isNameModalOpen && (
-                <NameInputModal
-                    isOpen={isNameModalOpen}
-                    onSave={handleSaveName}
-                    onClose={() => setIsNameModalOpen(false)}
-                    currentName={playerName}
                 />
             )}
             <NavBar
