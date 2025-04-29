@@ -4,12 +4,7 @@ const cors = require('cors');
 const app = express();
 app.use(express.json());
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://idle-garage-game.vercel.app',
-    'https://idle-garage-game-tsdmkps-projects.vercel.app',
-    'https://*.vercel.app'
-  ],
+  origin: ['https://idle-garage-game-tsdmkps-projects.vercel.app', 'http://localhost:5173'],
   methods: ['GET', 'POST', 'PUT', 'PATCH'],
   allowedHeaders: ['Content-Type', 'X-Telegram-Init-Data'],
   credentials: true

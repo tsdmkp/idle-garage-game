@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-// Импорты компонентов
 import Header from './components/Header';
 import GarageArea from './components/GarageArea';
 import IncomeArea from './components/IncomeArea';
@@ -11,7 +10,6 @@ import ShopScreen from './components/ShopScreen';
 import StaffScreen from './components/StaffScreen';
 import CarSelector from './components/CarSelector';
 import NameInputModal from './components/NameInputModal';
-// Импорт утилит
 import {
     calculateUpgradeCost,
     recalculateStatsAndIncomeBonus,
@@ -27,13 +25,10 @@ import {
     UPDATE_INTERVAL,
     STARTING_COINS
 } from './utils';
-// Импорт API клиента
 import apiClient from './apiClient';
 import './App.css';
 
-// Начальное состояние машины (константа)
 const INITIAL_CAR = getInitialPlayerCar();
-// Начальное состояние персонала (константа)
 const INITIAL_HIRED_STAFF = (() => {
     const init = {};
     for (const id in STAFF_CATALOG) {
@@ -42,9 +37,7 @@ const INITIAL_HIRED_STAFF = (() => {
     return init;
 })();
 
-// ========= КОМПОНЕНТ APP =========
 function App() {
-    // --- Состояния ---
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [tgUserData, setTgUserData] = useState(null);
@@ -67,33 +60,48 @@ function App() {
     const [isCarSelectorVisible, setIsCarSelectorVisible] = useState(false);
     const [isNameModalOpen, setIsNameModalOpen] = useState(false);
 
-    // --- Вычисляемая переменная для текущей выбранной машины ---
     const currentCar = playerCars.find(car => car.id === selectedCarId) || playerCars[0] || null;
 
-    // --- Эффект для Telegram и имени ---
     useEffect(() => {
-        const tg = window.Telegram?.WebApp;
-        if (tg) {
-            setIsTgApp(true);
-            setTgUserData(tg.initDataUnsafe?.user || null);
-            tg.ready();
-            tg.expand();
-            console.log('App: Telegram user data:', tg.initDataUnsafe?.user);
-        } else {
-            setIsTgApp(false);
-            console.warn('App: Telegram initData not found.');
-        }
+        const initializeTelegram = () => {
+            const tg = window.Telegram?.WebApp;
+            if (tg) {
+                console.log('App: Telegram WebApp detected, initializing...');
+                try {
+                    tg.ready();
+                    tg.expand();
+                    const user = tg.initDataUnsafe?.user;
+                    console.log('App: Telegram user data:', user);
+                    if (user) {
+                        setTgUserData(user);
+                        setIsTgApp(true);
+                    } else {
+                        console.warn('App: Telegram user data is null or undefined');
+                        setIsTgApp(false);
+                    }
+                } catch (error) {
+                    console.error('App: Error initializing Telegram WebApp:', error);
+                    setIsTgApp(false);
+                }
+            } else {
+                console.warn('App: Telegram WebApp not found');
+                setIsTgApp(false);
+            }
+        };
+
+        initializeTelegram();
+
         loadInitialData();
+
+        return () => {};
     }, []);
 
-    // --- Эффект для открытия модального окна имени ---
     useEffect(() => {
         if (playerName === 'Игрок' && tgUserData && isTgApp) {
             setIsNameModalOpen(true);
         }
     }, [playerName, tgUserData, isTgApp]);
 
-    // --- Асинхронная Функция Загрузки Данных ---
     const loadInitialData = async () => {
         console.log("loadInitialData started...");
         let loadedBuildings = buildings;
@@ -106,7 +114,6 @@ function App() {
             console.log("Received initial state from backend:", initialState);
 
             if (initialState && typeof initialState === 'object') {
-                // --- Установка простых состояний ---
                 setPlayerLevel(initialState.player_level ?? playerLevel);
                 setPlayerName(initialState.first_name || initialState.username || playerName);
                 setGameCoins(initialState.game_coins ?? gameCoins);
@@ -116,7 +123,6 @@ function App() {
                 const loadedTime = initialState.last_collected_time ? new Date(initialState.last_collected_time).getTime() : Date.now();
                 lastCollectedTimeRef.current = loadedTime;
 
-                // --- Обработка сложных состояний ---
                 loadedBuildings = Array.isArray(initialState.buildings) ? initialState.buildings : INITIAL_BUILDINGS;
                 setBuildings(loadedBuildings);
 
@@ -176,7 +182,6 @@ function App() {
         }
     };
 
-    // --- Эффект Таймера Дохода ---
     useEffect(() => {
         if (incomeRatePerHour <= 0 || isLoading) return;
         const incomePerSecond = incomeRatePerHour / 3600;
@@ -191,7 +196,6 @@ function App() {
         return () => clearInterval(intervalId);
     }, [incomeRatePerHour, isLoading]);
 
-    // --- Функции Обработчики ---
     const handleCollect = () => {
         const incomeToAdd = Math.floor(accumulatedIncome);
         if (incomeToAdd > 0) {
@@ -347,23 +351,27 @@ function App() {
             setIsNameModalOpen(false);
         } catch (error) {
             console.error('Failed to save name:', error);
+            setError(`Ошибка сохранения имени: ${error.message}`);
         }
     };
 
-    // --- Расчеты для Рендера ---
     const xpPercentage = xpToNextLevel > 0 ? Math.min((currentXp / xpToNextLevel) * 100, 100) : 0;
 
-    // --- Рендер Компонента ---
     if (isLoading) {
         return <div className="loading-screen">Загрузка данных...</div>;
     }
     if (error) {
-        return <div className="error-screen">Ошибка: {error}</div>;
+        return (
+            <div className="error-screen">
+                <h2>Ошибка</h2>
+                <p>{error}</p>
+                <button onClick={() => window.location.reload()}>Попробовать снова</button>
+            </div>
+        );
     }
 
     return (
         <div className="App" style={{ paddingBottom: '70px' }}>
-            {/* Хедер */}
             <div className="header-container">
                 <Header
                     level={playerLevel}
@@ -374,10 +382,7 @@ function App() {
                     onChangeName={() => setIsNameModalOpen(true)}
                 />
             </div>
-
-            {/* Основной контент */}
             <main className="main-content">
-                {/* Экран Гаража */}
                 {activeScreen === 'garage' && currentCar && (
                     <>
                         <GarageArea
@@ -397,14 +402,12 @@ function App() {
                         />
                     </>
                 )}
-                {/* Экран Гонок */}
                 {activeScreen === 'race' && currentCar && (
                     <RaceScreen
                         playerCar={currentCar}
                         onStartRace={handleStartRace}
                     />
                 )}
-                {/* Экран Автосалона */}
                 {activeScreen === 'shop' && (
                     <ShopScreen
                         catalog={CAR_CATALOG}
@@ -413,7 +416,6 @@ function App() {
                         onBuyCar={handleBuyCar}
                     />
                 )}
-                {/* Экран Персонала */}
                 {activeScreen === 'staff' && (
                     <StaffScreen
                         staffCatalog={STAFF_CATALOG}
@@ -423,15 +425,12 @@ function App() {
                         calculateCost={(id) => calculateStaffCost(id, hiredStaff)}
                     />
                 )}
-                {/* Экран P2E (заглушка) */}
                 {activeScreen === 'p2e' && (
                     <div className="placeholder-screen" style={placeholderStyle}>
                         P2E
                     </div>
                 )}
             </main>
-
-            {/* Окно Тюнинга */}
             {isTuningVisible && currentCar && (
                 <TuningScreen
                     car={currentCar}
@@ -440,7 +439,6 @@ function App() {
                     onClose={handleCloseTuning}
                 />
             )}
-            {/* Окно Выбора Машины */}
             {isCarSelectorVisible && (
                 <CarSelector
                     playerCars={playerCars}
@@ -449,7 +447,6 @@ function App() {
                     onClose={handleCloseCarSelector}
                 />
             )}
-            {/* Окно Ввода Имени */}
             {isNameModalOpen && (
                 <NameInputModal
                     isOpen={isNameModalOpen}
@@ -458,8 +455,6 @@ function App() {
                     currentName={playerName}
                 />
             )}
-
-            {/* Нижняя Навигационная Панель */}
             <NavBar
                 activeScreen={activeScreen}
                 onNavClick={handleNavClick}
@@ -468,7 +463,6 @@ function App() {
     );
 }
 
-// Стиль для заглушек
 const placeholderStyle = {
     padding: '40px 20px',
     textAlign: 'center',
