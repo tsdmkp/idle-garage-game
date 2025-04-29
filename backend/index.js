@@ -13,7 +13,7 @@ app.get('/game_state', (req, res) => {
     userData[userId] = {
       player_level: 1,
       first_name: 'Игрок',
-      game_coins: 100000,
+      game_coins: 1000,
       jet_coins: 0,
       current_xp: 10,
       xp_to_next_level: 100,
