@@ -1,7 +1,14 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
-async function apiClient(endpoint, method = 'GET', body = null) {
-  const url = `${API_BASE_URL}${endpoint}`;
+async function apiClient(endpoint, method = 'GET', { params = null, body = null } = {}) {
+  let url = `${API_BASE_URL}${endpoint}`;
+  
+  // Добавляем query-параметры из params
+  if (params) {
+    const queryString = new URLSearchParams(params).toString();
+    url = queryString ? `${url}?${queryString}` : url;
+  }
+
   const headers = {
     'Content-Type': 'application/json',
     'X-Telegram-Init-Data': window.Telegram?.WebApp?.initData || ''
@@ -11,7 +18,9 @@ async function apiClient(endpoint, method = 'GET', body = null) {
 
   try {
     const options = { method, headers };
-    if (body) {
+
+    // Добавляем тело только для POST/PUT-запросов
+    if (body && ['POST', 'PUT'].includes(method.toUpperCase())) {
       options.body = JSON.stringify(body);
     }
 
