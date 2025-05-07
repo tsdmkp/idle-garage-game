@@ -89,7 +89,6 @@ function App() {
         };
 
         initializeTelegram();
-
         loadInitialData();
 
         return () => {};
@@ -107,32 +106,43 @@ function App() {
             console.log("Received initial state from backend:", initialState);
 
             if (initialState && typeof initialState === 'object') {
-                setPlayerLevel(initialState.player_level ?? playerLevel);
+                setPlayerLevel(Number(initialState.player_level) || playerLevel);
                 setPlayerName(tgUserData?.first_name || initialState.first_name || 'Игрок');
-                setGameCoins(initialState.game_coins ?? gameCoins);
-                setJetCoins(initialState.jet_coins ?? jetCoins);
-                setCurrentXp(initialState.current_xp ?? currentXp);
-                setXpToNextLevel(initialState.xp_to_next_level ?? xpToNextLevel);
-                const loadedTime = initialState.last_collected_time ? new Date(initialState.last_collected_time).getTime() : Date.now();
+                setGameCoins(Number(initialState.game_coins) || gameCoins);
+                setJetCoins(Number(initialState.jet_coins) || jetCoins);
+                setCurrentXp(Number(initialState.current_xp) || currentXp);
+                setXpToNextLevel(Number(initialState.xp_to_next_level) || xpToNextLevel);
+                const loadedTime = initialState.last_collected_time
+                    ? Number(initialState.last_collected_time)
+                    : Date.now();
                 lastCollectedTimeRef.current = loadedTime;
 
-                loadedBuildings = Array.isArray(initialState.buildings) ? initialState.buildings : INITIAL_BUILDINGS;
+                loadedBuildings = Array.isArray(initialState.buildings)
+                    ? initialState.buildings
+                    : INITIAL_BUILDINGS;
                 setBuildings(loadedBuildings);
 
-                loadedHiredStaff = initialState.hired_staff ?? hiredStaff;
+                loadedHiredStaff = initialState.hired_staff || hiredStaff;
                 setHiredStaff(loadedHiredStaff);
 
-                const loadedPlayerCarsRaw = Array.isArray(initialState.player_cars) ? initialState.player_cars : [INITIAL_CAR];
-                const loadedPlayerCars = loadedPlayerCarsRaw.map(sc =>
-                    sc && sc.id && sc.parts ? { ...sc, stats: recalculateStatsAndIncomeBonus(sc.id, sc.parts).stats } : null
-                ).filter(Boolean);
+                const loadedPlayerCarsRaw = Array.isArray(initialState.player_cars)
+                    ? initialState.player_cars
+                    : [INITIAL_CAR];
+                const loadedPlayerCars = loadedPlayerCarsRaw
+                    .map(sc =>
+                        sc && sc.id && sc.parts
+                            ? { ...sc, stats: recalculateStatsAndIncomeBonus(sc.id, sc.parts).stats }
+                            : null
+                    )
+                    .filter(Boolean);
                 const actualPlayerCars = loadedPlayerCars.length > 0 ? loadedPlayerCars : [INITIAL_CAR];
                 setPlayerCars(actualPlayerCars);
 
                 const loadedSelectedCarId = initialState.selected_car_id;
-                const finalSelectedCarId = loadedSelectedCarId && actualPlayerCars.some(c => c.id === loadedSelectedCarId)
-                    ? loadedSelectedCarId
-                    : actualPlayerCars[0]?.id || INITIAL_CAR.id;
+                const finalSelectedCarId =
+                    loadedSelectedCarId && actualPlayerCars.some(c => c.id === loadedSelectedCarId)
+                        ? loadedSelectedCarId
+                        : actualPlayerCars[0]?.id || INITIAL_CAR.id;
                 setSelectedCarId(finalSelectedCarId);
 
                 carToCalculateFrom = actualPlayerCars.find(c => c.id === finalSelectedCarId) || actualPlayerCars[0];
@@ -155,14 +165,15 @@ function App() {
             console.log("Entering finally block...");
             if (carToCalculateFrom) {
                 const initialTotalRate = calculateTotalIncomeRate(loadedBuildings, carToCalculateFrom, loadedHiredStaff);
-                setIncomeRatePerHour(initialTotalRate);
+                setIncomeRatePerHour(Number(initialTotalRate) || 0);
                 const now = Date.now();
                 const offlineTimeMs = now - lastCollectedTimeRef.current;
                 let offlineIncome = 0;
                 if (offlineTimeMs > 0 && initialTotalRate > 0) {
-                    offlineIncome = (initialTotalRate / 3600) * Math.min(offlineTimeMs / 1000, MAX_OFFLINE_HOURS * 3600);
+                    offlineIncome =
+                        (initialTotalRate / 3600) * Math.min(offlineTimeMs / 1000, MAX_OFFLINE_HOURS * 3600);
                 }
-                setAccumulatedIncome(offlineIncome);
+                setAccumulatedIncome(Number(offlineIncome) || 0);
                 console.log(`Final calculated rate: ${initialTotalRate}/h, offline income: ${offlineIncome.toFixed(2)}`);
             } else {
                 console.error("Finally block: carToCalculateFrom is not set!");
@@ -181,18 +192,20 @@ function App() {
         const maxAccumulationCap = incomeRatePerHour * MAX_OFFLINE_HOURS;
         const intervalId = setInterval(() => {
             const now = Date.now();
-            const timePassedTotalSeconds = (now - lastCollectedTimeRef.current) / 1000;
+            const lastTime = Number(lastCollectedTimeRef.current) || now;
+            const timePassedTotalSeconds = (now - lastTime) / 1000;
             const potentialTotalIncome = timePassedTotalSeconds * incomePerSecond;
             const newAccumulated = Math.min(potentialTotalIncome, maxAccumulationCap);
-            setAccumulatedIncome(newAccumulated);
+            setAccumulatedIncome(Number(newAccumulated) || 0);
+            console.log('Accumulated income:', newAccumulated);
         }, UPDATE_INTERVAL);
         return () => clearInterval(intervalId);
     }, [incomeRatePerHour, isLoading]);
 
     const handleCollect = () => {
-        const incomeToAdd = Math.floor(accumulatedIncome);
+        const incomeToAdd = Math.floor(Number(accumulatedIncome) || 0);
         if (incomeToAdd > 0) {
-            const newTotalCoins = gameCoins + incomeToAdd;
+            const newTotalCoins = Number(gameCoins) + incomeToAdd;
             setGameCoins(newTotalCoins);
             setAccumulatedIncome(0);
             const collectionTime = Date.now();
