@@ -1,3 +1,5 @@
+require('dotenv').config();
+console.log('DATABASE_URL:', process.env.DATABASE_URL);
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
@@ -23,10 +25,13 @@ pool.connect()
 app.get('/game_state', async (req, res) => {
   const userId = req.query.userId || 'default';
   try {
+    console.log('Fetching game state for userId:', userId);
     const result = await pool.query('SELECT * FROM users WHERE user_id = $1', [userId]);
+    console.log('Query result:', result.rows);
     let userData = result.rows[0];
 
     if (!userData) {
+      console.log('No user found, creating default data');
       const defaultData = {
         user_id: userId,
         player_level: 1,
@@ -65,7 +70,7 @@ app.get('/game_state', async (req, res) => {
         selected_car_id: 'car_001'
       };
       await pool.query(
-        'INSERT INTO users (user_id, player_level, first_name, game_coins, jet_coins, current_xp, xp_to_next_level, last_collected_time, buildings, hired_staff, player_cars, selected_car_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
+        'INSERT INTO users (user_id, player_level, first_name, game_coins, jet_coins, current_xp, xp_to_next_level, last_collected_time, buildings, hired_staff, player_cars, selected_car_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb, $11::jsonb, $12)',
         [
           defaultData.user_id,
           defaultData.player_level,
@@ -75,68 +80,16 @@ app.get('/game_state', async (req, res) => {
           defaultData.current_xp,
           defaultData.xp_to_next_level,
           defaultData.last_collected_time,
-          defaultData.buildings,
-          defaultData.hired_staff,
-          defaultData.player_cars,
+          JSON.stringify(defaultData.buildings), // Сериализуем в JSON
+          JSON.stringify(defaultData.hired_staff),
+          JSON.stringify(defaultData.player_cars),
           defaultData.selected_car_id
         ]
       );
       userData = defaultData;
+      console.log('Inserted default data:', userData);
     }
     res.json(userData);
   } catch (err) {
     console.error('Error fetching game state:', err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-app.post('/game_state', async (req, res) => {
-  const userId = req.body.userId || req.query.userId || 'default';
-  const updates = req.body;
-  try {
-    const result = await pool.query('SELECT * FROM users WHERE user_id = $1', [userId]);
-    const userData = result.rows[0];
-
-    if (!userData) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    const updatedData = {
-      ...userData,
-      ...updates,
-      buildings: updates.buildings || userData.buildings,
-      player_cars: updates.player_cars || userData.player_cars,
-      hired_staff: updates.hired_staff || userData.hired_staff,
-      selected_car_id: updates.selected_car_id || userData.selected_car_id,
-      last_collected_time: updates.last_collected_time || userData.last_collected_time,
-      first_name: updates.first_name || userData.first_name
-    };
-
-    await pool.query(
-      'UPDATE users SET player_level = $1, first_name = $2, game_coins = $3, jet_coins = $4, current_xp = $5, xp_to_next_level = $6, last_collected_time = $7, buildings = $8, hired_staff = $9, player_cars = $10, selected_car_id = $11 WHERE user_id = $12',
-      [
-        updatedData.player_level,
-        updatedData.first_name,
-        updatedData.game_coins,
-        updatedData.jet_coins,
-        updatedData.current_xp,
-        updatedData.xp_to_next_level,
-        updatedData.last_collected_time,
-        updatedData.buildings,
-        updatedData.hired_staff,
-        updatedData.player_cars,
-        updatedData.selected_car_id,
-        userId
-      ]
-    );
-
-    console.log(`Updated user state for ${userId}:`, updatedData);
-    res.json(updatedData);
-  } catch (err) {
-    console.error('Error updating game state:', err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    res.status(500).
