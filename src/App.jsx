@@ -101,8 +101,9 @@ function App() {
         let carToCalculateFrom = currentCar || INITIAL_CAR;
 
         try {
-            console.log("Attempting apiClient call...");
-            const initialState = await apiClient('/game_state', 'GET');
+            const userId = tgUserData?.id?.toString() || 'default';
+            console.log('Using userId:', userId);
+            const initialState = await apiClient('/game_state', 'GET', { params: { userId } });
             console.log("Received initial state from backend:", initialState);
 
             if (initialState && typeof initialState === 'object') {
@@ -212,6 +213,7 @@ function App() {
             lastCollectedTimeRef.current = collectionTime;
             console.log(`Collected ${incomeToAdd} GC.`);
             apiClient('/game_state', 'POST', {
+                userId: tgUserData?.id?.toString() || 'default',
                 game_coins: newTotalCoins,
                 last_collected_time: collectionTime
             }).catch(err => console.error('Failed to save collect:', err));
@@ -233,6 +235,7 @@ function App() {
             setIncomeRatePerHour(newTotalRate);
             console.log(`Building ${buildingName} upgraded. New rate: ${newTotalRate}/hour.`);
             apiClient('/game_state', 'POST', {
+                userId: tgUserData?.id?.toString() || 'default',
                 game_coins: newCoins,
                 buildings: updatedBuildings
             }).catch(err => console.error('Failed to save building:', err));
@@ -262,6 +265,7 @@ function App() {
             setPlayerCars(updatedPlayerCars);
             console.log(`Part "${part.name}" upgraded. New rate: ${incomeRatePerHour}/hour.`);
             apiClient('/game_state', 'POST', {
+                userId: tgUserData?.id?.toString() || 'default',
                 game_coins: newCoins,
                 player_cars: updatedPlayerCars
             }).catch(err => console.error('Failed to save part upgrade:', err));
@@ -275,6 +279,7 @@ function App() {
             setGameCoins(raceOutcome.newGameCoins);
             setCurrentXp(raceOutcome.newCurrentXp);
             apiClient('/game_state', 'POST', {
+                userId: tgUserData?.id?.toString() || 'default',
                 game_coins: raceOutcome.newGameCoins,
                 current_xp: raceOutcome.newCurrentXp
             }).catch(err => console.error('Failed to save race:', err));
@@ -300,6 +305,7 @@ function App() {
         setPlayerCars(updatedPlayerCars);
         console.log(`Bought car ${carData.name}.`);
         apiClient('/game_state', 'POST', {
+            userId: tgUserData?.id?.toString() || 'default',
             game_coins: newCoins,
             player_cars: updatedPlayerCars
         }).catch(err => console.error('Failed to save car purchase:', err));
@@ -316,6 +322,7 @@ function App() {
             setIncomeRatePerHour(newTotalRate);
             console.log(`Hired/upgraded staff ${staffId}. New rate: ${newTotalRate}/hour.`);
             apiClient('/game_state', 'POST', {
+                userId: tgUserData?.id?.toString() || 'default',
                 game_coins: newCoins,
                 hired_staff: updatedHiredStaff
             }).catch(err => console.error('Failed to save staff:', err));
@@ -340,6 +347,7 @@ function App() {
                 setIncomeRatePerHour(newTotalRate);
             }
             apiClient('/game_state', 'POST', {
+                userId: tgUserData?.id?.toString() || 'default',
                 selected_car_id: carId
             }).catch(err => console.error('Failed to save car selection:', err));
         }
