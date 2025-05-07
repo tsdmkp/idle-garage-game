@@ -80,7 +80,7 @@ app.get('/game_state', async (req, res) => {
           defaultData.current_xp,
           defaultData.xp_to_next_level,
           defaultData.last_collected_time,
-          JSON.stringify(defaultData.buildings), // Сериализуем в JSON
+          JSON.stringify(defaultData.buildings),
           JSON.stringify(defaultData.hired_staff),
           JSON.stringify(defaultData.player_cars),
           defaultData.selected_car_id
@@ -92,4 +92,58 @@ app.get('/game_state', async (req, res) => {
     res.json(userData);
   } catch (err) {
     console.error('Error fetching game state:', err);
-    res.status(500).
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+app.post('/game_state', async (req, res) => {
+  const userId = req.body.userId || req.query.userId || 'default';
+  const updates = req.body;
+  try {
+    console.log('Updating game state for userId:', userId);
+    const result = await pool.query('SELECT * FROM users WHERE user_id = $1', [userId]);
+    const userData = result.rows[0];
+
+    if (!userData) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const updatedData = {
+      ...userData,
+      ...updates,
+      buildings: updates.buildings || userData.buildings,
+      player_cars: updates.player_cars || userData.player_cars,
+      hired_staff: updates.hired_staff || userData.hired_staff,
+      selected_car_id: updates.selected_car_id || userData.selected_car_id,
+      last_collected_time: updates.last_collected_time || userData.last_collected_time,
+      first_name: updates.first_name || userData.first_name
+    };
+
+    await pool.query(
+      'UPDATE users SET player_level = $1, first_name = $2, game_coins = $3, jet_coins = $4, current_xp = $5, xp_to_next_level = $6, last_collected_time = $7, buildings = $8::jsonb, hired_staff = $9::jsonb, player_cars = $10::jsonb, selected_car_id = $11 WHERE user_id = $12',
+      [
+        updatedData.player_level,
+        updatedData.first_name,
+        updatedData.game_coins,
+        updatedData.jet_coins,
+        updatedData.current_xp,
+        updatedData.xp_to_next_level,
+        updatedData.last_collected_time,
+        JSON.stringify(updatedData.buildings),
+        JSON.stringify(updatedData.hired_staff),
+        JSON.stringify(updatedData.player_cars),
+        updatedData.selected_car_id,
+        userId
+      ]
+    );
+
+    console.log(`Updated user state for ${userId}:`, updatedData);
+    res.json(updatedData);
+  } catch (err) {
+    console.error('Error updating game state:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
