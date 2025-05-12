@@ -9,6 +9,7 @@ import RaceScreen from './components/RaceScreen';
 import ShopScreen from './components/ShopScreen';
 import StaffScreen from './components/StaffScreen';
 import CarSelector from './components/CarSelector';
+import LeaderboardScreen from './components/LeaderboardScreen';
 import {
     calculateUpgradeCost,
     recalculateStatsAndIncomeBonus,
@@ -119,6 +120,7 @@ function App() {
                 setJetCoins(Number(initialState.jet_coins) || jetCoins);
                 setCurrentXp(Number(initialState.current_xp) || currentXp);
                 setXpToNextLevel(Number(initialState.xp_to_next_level) || xpToNextLevel);
+                setIncomeRatePerHour(Number(initialState.income_rate_per_hour) || 0);
                 const loadedTime = initialState.last_collected_time
                     ? Number(initialState.last_collected_time)
                     : Date.now();
@@ -221,8 +223,10 @@ function App() {
             apiClient('/game_state', 'POST', {
                 body: {
                     userId: tgUserData?.id?.toString() || 'default',
+                    first_name: tgUserData?.first_name || 'Игрок',
                     game_coins: newTotalCoins,
-                    last_collected_time: collectionTime
+                    last_collected_time: collectionTime,
+                    income_rate_per_hour: incomeRatePerHour
                 }
             }).catch(err => console.error('Failed to save collect:', err));
         }
@@ -245,8 +249,10 @@ function App() {
             apiClient('/game_state', 'POST', {
                 body: {
                     userId: tgUserData?.id?.toString() || 'default',
+                    first_name: tgUserData?.first_name || 'Игрок',
                     game_coins: newCoins,
-                    buildings: updatedBuildings
+                    buildings: updatedBuildings,
+                    income_rate_per_hour: newTotalRate
                 }
             }).catch(err => console.error('Failed to save building:', err));
         }
@@ -277,8 +283,10 @@ function App() {
             apiClient('/game_state', 'POST', {
                 body: {
                     userId: tgUserData?.id?.toString() || 'default',
+                    first_name: tgUserData?.first_name || 'Игрок',
                     game_coins: newCoins,
-                    player_cars: updatedPlayerCars
+                    player_cars: updatedPlayerCars,
+                    income_rate_per_hour: incomeRatePerHour
                 }
             }).catch(err => console.error('Failed to save part upgrade:', err));
         }
@@ -293,8 +301,10 @@ function App() {
             apiClient('/game_state', 'POST', {
                 body: {
                     userId: tgUserData?.id?.toString() || 'default',
+                    first_name: tgUserData?.first_name || 'Игрок',
                     game_coins: raceOutcome.newGameCoins,
-                    current_xp: raceOutcome.newCurrentXp
+                    current_xp: raceOutcome.newCurrentXp,
+                    income_rate_per_hour: incomeRatePerHour
                 }
             }).catch(err => console.error('Failed to save race:', err));
             return { result: raceOutcome.result, reward: raceOutcome.reward };
@@ -321,8 +331,10 @@ function App() {
         apiClient('/game_state', 'POST', {
             body: {
                 userId: tgUserData?.id?.toString() || 'default',
+                first_name: tgUserData?.first_name || 'Игрок',
                 game_coins: newCoins,
-                player_cars: updatedPlayerCars
+                player_cars: updatedPlayerCars,
+                income_rate_per_hour: incomeRatePerHour
             }
         }).catch(err => console.error('Failed to save car purchase:', err));
     };
@@ -340,8 +352,10 @@ function App() {
             apiClient('/game_state', 'POST', {
                 body: {
                     userId: tgUserData?.id?.toString() || 'default',
+                    first_name: tgUserData?.first_name || 'Игрок',
                     game_coins: newCoins,
-                    hired_staff: updatedHiredStaff
+                    hired_staff: updatedHiredStaff,
+                    income_rate_per_hour: newTotalRate
                 }
             }).catch(err => console.error('Failed to save staff:', err));
         }
@@ -367,7 +381,9 @@ function App() {
             apiClient('/game_state', 'POST', {
                 body: {
                     userId: tgUserData?.id?.toString() || 'default',
-                    selected_car_id: carId
+                    first_name: tgUserData?.first_name || 'Игрок',
+                    selected_car_id: carId,
+                    income_rate_per_hour: incomeRatePerHour
                 }
             }).catch(err => console.error('Failed to save car selection:', err));
         }
@@ -443,6 +459,9 @@ function App() {
                         calculateCost={(id) => calculateStaffCost(id, hiredStaff)}
                     />
                 )}
+                {activeScreen === 'leaderboard' && (
+                    <LeaderboardScreen tgUserData={tgUserData} />
+                )}
                 {activeScreen === 'p2e' && (
                     <div className="placeholder-screen" style={placeholderStyle}>
                         P2E
@@ -475,7 +494,7 @@ function App() {
 
 const placeholderStyle = {
     padding: '40px 20px',
-    textAlign: 'center',
+    text-align: center,
     color: 'white',
     fontSize: '1.2em',
     opacity: 0.7
