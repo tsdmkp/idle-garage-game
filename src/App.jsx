@@ -77,22 +77,28 @@ function App() {
                     } else {
                         console.warn('App: Telegram user data is null or undefined');
                         setIsTgApp(false);
+                        setError('Не удалось получить данные пользователя Telegram');
                     }
                 } catch (error) {
                     console.error('App: Error initializing Telegram WebApp:', error);
                     setIsTgApp(false);
+                    setError('Ошибка инициализации Telegram WebApp');
                 }
             } else {
                 console.warn('App: Telegram WebApp not found');
                 setIsTgApp(false);
+                setError('Telegram WebApp не найден');
             }
         };
 
         initializeTelegram();
-        loadInitialData();
-
-        return () => {};
     }, []);
+
+    useEffect(() => {
+        if (tgUserData !== null) {
+            loadInitialData();
+        }
+    }, [tgUserData]);
 
     const loadInitialData = async () => {
         console.log("loadInitialData started...");
