@@ -494,7 +494,7 @@ function App() {
 
 const placeholderStyle = {
     padding: '40px 20px',
-    text-align: center,
+    textAlign: 'center',
     color: 'white',
     fontSize: '1.2em',
     opacity: 0.7
