@@ -450,7 +450,7 @@ function App() {
                         onBuyCar={handleBuyCar}
                     />
                 )}
-                {activeScreen === 'staff' && (
+                {activeScreen == 'staff' && (
                     <StaffScreen
                         staffCatalog={STAFF_CATALOG}
                         hiredStaff={hiredStaff}
