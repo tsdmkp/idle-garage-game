@@ -13,32 +13,28 @@ console.log('DB_HOST:', process.env.DB_HOST);
 console.log('DB_NAME:', process.env.DB_NAME);
 console.log('DB_PORT:', process.env.DB_PORT);
 console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? '[hidden]' : 'undefined');
+console.log('DATABASE_URL:', process.env.DATABASE_URL ? '[hidden]' : 'undefined');
 
 // Настройка PostgreSQL
 const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || undefined,
   user: process.env.DB_USER,
-  host: process.env.DB_HOST,
+  host: process.env.DB_HOST || 'oregon-postgres.render.com',
   database: process.env.DB_NAME,
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT || 5432,
   ssl: {
     rejectUnauthorized: false // Требуется для Render
   },
-  max: 20, // Максимальное количество соединений
-  idleTimeoutMillis: 30000, // Время простоя соединения
-  connectionTimeoutMillis: 5000 // Таймаут подключения
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000
 });
 
 // Проверка подключения к базе
 pool.connect((err, client, release) => {
   if (err) {
     console.error('Error connecting to database:', err.stack);
-    console.error('Connection details:', {
-      user: process.env.DB_USER,
-      host: process.env.DB_HOST,
-      database: process.env.DB_NAME,
-      port: process.env.DB_PORT
-    });
     return;
   }
   console.log('Successfully connected to database');
@@ -69,11 +65,31 @@ app.get('/game_state', async (req, res) => {
 
 // Маршрут /game_state (POST)
 app.post('/game_state', async (req, res) => {
-  const { userId, first_name, game_coins, last_collected_time, buildings, player_cars, hired_staff, selected_car_id, current_xp, jet_coins, player_level, xp_to_next_level, income_rate_per_hour } = req.body;
+  const {
+    userId,
+    first_name,
+    game_coins,
+    last_collected_time,
+    buildings,
+    player_cars,
+    hired_staff,
+    selected_car_id,
+    current_xp,
+    jet_coins,
+    player_level,
+    xp_to_next_level,
+    income_rate_per_hour
+  } = req.body;
+
+  // Преобразование JSON-полей в валидный формат
+  const safeBuildings = buildings ? JSON.stringify(buildings) : '{}';
+  const safePlayerCars = player_cars ? JSON.stringify(player_cars) : '{}';
+  const safeHiredStaff = hired_staff ? JSON.stringify(hired_staff) : '{}';
+
   try {
     await pool.query(
       `INSERT INTO users (user_id, first_name, game_coins, last_collected_time, buildings, player_cars, hired_staff, selected_car_id, current_xp, jet_coins, player_level, xp_to_next_level, income_rate_per_hour)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+       VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7::jsonb, $8, $9, $10, $11, $12, $13)
        ON CONFLICT (user_id)
        DO UPDATE SET
          first_name = EXCLUDED.first_name,
@@ -88,7 +104,21 @@ app.post('/game_state', async (req, res) => {
          player_level = EXCLUDED.player_level,
          xp_to_next_level = EXCLUDED.xp_to_next_level,
          income_rate_per_hour = EXCLUDED.income_rate_per_hour`,
-      [userId, first_name, game_coins, last_collected_time, buildings, player_cars, hired_staff, selected_car_id, current_xp, jet_coins, player_level, xp_to_next_level, income_rate_per_hour]
+      [
+        userId,
+        first_name,
+        game_coins,
+        last_collected_time,
+        safeBuildings,
+        safePlayerCars,
+        safeHiredStaff,
+        selected_car_id,
+        current_xp,
+        jet_coins,
+        player_level,
+        xp_to_next_level,
+        income_rate_per_hour
+      ]
     );
     res.json({ success: true });
   } catch (err) {
@@ -101,23 +131,20 @@ app.post('/game_state', async (req, res) => {
 app.get('/leaderboard', async (req, res) => {
   const { userId } = req.query;
   try {
-    // Проверяем наличие столбца income_rate_per_hour
-    const columnCheck = await pool.query(`
-      SELECT column_name 
-      FROM information_schema.columns 
-      WHERE table_name = 'users' AND column_name = 'income_rate_per_hour'
-    `);
+    const columnCheck = await pool.query(
+      `SELECT column_name 
+       FROM information_schema.columns 
+       WHERE table_name = 'users' AND column_name = 'income_rate_per_hour'`
+    );
     if (columnCheck.rows.length === 0) {
       console.error('Column income_rate_per_hour does not exist in users table');
       return res.status(500).json({ error: 'Database schema error: missing income_rate_per_hour column' });
     }
 
-    // Получаем топ-10 игроков
     const topPlayersResult = await pool.query(
       'SELECT user_id, first_name, income_rate_per_hour FROM users WHERE income_rate_per_hour IS NOT NULL ORDER BY income_rate_per_hour DESC LIMIT 10'
     );
 
-    // Получаем место текущего игрока
     let currentPlayer = null;
     if (userId) {
       const rankResult = await pool.query(
