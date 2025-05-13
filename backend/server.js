@@ -1,34 +1,52 @@
-require('dotenv').config();
 const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
+require('dotenv').config();
+
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Настройка PostgreSQL для Render.com
-const pool = new Pool({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT || 5432,
-    ssl: {
-      rejectUnauthorized: false
-    }
-  });
+// Проверка переменных окружения
+console.log('Environment variables:');
+console.log('DB_USER:', process.env.DB_USER);
+console.log('DB_HOST:', process.env.DB_HOST);
+console.log('DB_NAME:', process.env.DB_NAME);
+console.log('DB_PORT:', process.env.DB_PORT);
+console.log('DB_PASSWORD:', process.env.DB_PASSWORD ? '[hidden]' : 'undefined');
 
-app.use(cors());
-app.use(express.json());
+// Настройка PostgreSQL
+const pool = new Pool({
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT || 5432,
+  ssl: {
+    rejectUnauthorized: false // Требуется для Render
+  },
+  max: 20, // Максимальное количество соединений
+  idleTimeoutMillis: 30000, // Время простоя соединения
+  connectionTimeoutMillis: 5000 // Таймаут подключения
+});
 
 // Проверка подключения к базе
 pool.connect((err, client, release) => {
   if (err) {
     console.error('Error connecting to database:', err.stack);
+    console.error('Connection details:', {
+      user: process.env.DB_USER,
+      host: process.env.DB_HOST,
+      database: process.env.DB_NAME,
+      port: process.env.DB_PORT
+    });
     return;
   }
   console.log('Successfully connected to database');
   release();
 });
+
+app.use(cors());
+app.use(express.json());
 
 // Маршрут /game_state (GET)
 app.get('/game_state', async (req, res) => {
