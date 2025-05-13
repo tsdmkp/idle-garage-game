@@ -1,9 +1,8 @@
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000'; // Для продакшена задайте REACT_APP_API_URL
+const BASE_URL = import.meta.env.VITE_REACT_APP_API_URL || 'http://localhost:3000'; // Используем VITE_ префикс для Vite
 
 async function apiClient(endpoint, method = 'GET', { params = {}, body = null } = {}) {
   const url = new URL(`${BASE_URL}${endpoint}`);
   
-  // Добавляем query-параметры
   Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
   
   const options = {
