@@ -43,7 +43,7 @@ function App() {
     const [tgUserData, setTgUserData] = useState(null);
     const [isTgApp, setIsTgApp] = useState(false);
     const [playerLevel, setPlayerLevel] = useState(1);
-    const [playerName, setPlayerName] = useState("Игрок");
+    const [playerName, setPlayerName] = useState('Игрок');
     const [gameCoins, setGameCoins] = useState(STARTING_COINS);
     const [jetCoins, setJetCoins] = useState(0);
     const [currentXp, setCurrentXp] = useState(10);
@@ -58,35 +58,44 @@ function App() {
     const [activeScreen, setActiveScreen] = useState('garage');
     const [isTuningVisible, setIsTuningVisible] = useState(false);
     const [isCarSelectorVisible, setIsCarSelectorVisible] = useState(false);
+    const [logs, setLogs] = useState([]);
 
     const currentCar = playerCars.find(car => car.id === selectedCarId) || playerCars[0] || null;
 
+    const addLog = (message) => {
+        setLogs((prevLogs) => [...prevLogs, `${new Date().toLocaleTimeString()}: ${message}`]);
+    };
+
     useEffect(() => {
+        addLog('Initializing Telegram WebApp');
         const initializeTelegram = () => {
             const tg = window.Telegram?.WebApp;
             if (tg) {
-                console.log('App: Telegram WebApp detected, initializing...');
+                addLog('Telegram WebApp detected');
                 try {
                     tg.ready();
+                    addLog('Posting web_app_ready event');
                     tg.expand();
+                    addLog('Posting web_app_expand event');
                     const user = tg.initDataUnsafe?.user;
-                    console.log('App: Telegram user data:', user);
+                    addLog(`User data: ${JSON.stringify(user)}`);
                     if (user) {
+                        addLog('User data received, setting tgUserData');
                         setTgUserData(user);
                         setIsTgApp(true);
                         setPlayerName(user.first_name || 'Игрок');
                     } else {
-                        console.warn('App: Telegram user data is null or undefined');
+                        addLog('No user data found, setting error');
                         setIsTgApp(false);
                         setError('Не удалось получить данные пользователя Telegram');
                     }
                 } catch (error) {
-                    console.error('App: Error initializing Telegram WebApp:', error);
+                    addLog(`Error initializing Telegram WebApp: ${error.message}`);
                     setIsTgApp(false);
                     setError('Ошибка инициализации Telegram WebApp');
                 }
             } else {
-                console.warn('App: Telegram WebApp not found');
+                addLog('Telegram WebApp not found');
                 setIsTgApp(false);
                 setError('Telegram WebApp не найден');
             }
@@ -97,21 +106,22 @@ function App() {
 
     useEffect(() => {
         if (tgUserData !== null) {
+            addLog('tgUserData initialized, starting loadInitialData');
             loadInitialData();
         }
     }, [tgUserData]);
 
     const loadInitialData = async () => {
-        console.log("loadInitialData started...");
+        addLog('loadInitialData started...');
         let loadedBuildings = buildings;
         let loadedHiredStaff = hiredStaff;
         let carToCalculateFrom = currentCar || INITIAL_CAR;
 
         try {
             const userId = tgUserData?.id?.toString() || 'default';
-            console.log('Using userId:', userId);
+            addLog(`Using userId: ${userId}`);
             const initialState = await apiClient('/game_state', 'GET', { params: { userId } });
-            console.log("Received initial state from backend:", initialState);
+            addLog(`Received initial state from backend: ${JSON.stringify(initialState)}`);
 
             if (initialState && typeof initialState === 'object') {
                 setPlayerLevel(Number(initialState.player_level) || playerLevel);
@@ -155,23 +165,24 @@ function App() {
                 setSelectedCarId(finalSelectedCarId);
 
                 carToCalculateFrom = actualPlayerCars.find(c => c.id === finalSelectedCarId) || actualPlayerCars[0];
+                addLog(`Loaded carToCalculateFrom: ${JSON.stringify(carToCalculateFrom)}`);
 
-                if (!carToCalculateFrom) throw new Error("Ошибка определения машины после загрузки");
+                if (!carToCalculateFrom) throw new Error('Ошибка определения машины после загрузки');
             } else {
-                console.warn("Backend returned invalid initial state. Using current state as defaults.");
-                setError("Не удалось получить данные игрока.");
+                addLog('Backend returned invalid initial state. Using current state as defaults.');
+                setError('Не удалось получить данные игрока.');
                 loadedBuildings = buildings;
                 carToCalculateFrom = currentCar || INITIAL_CAR;
                 loadedHiredStaff = hiredStaff;
             }
         } catch (err) {
-            console.error("Failed to fetch initial game state:", err.message);
+            addLog(`Failed to fetch initial game state: ${err.message}`);
             setError(`Ошибка загрузки: ${err.message}`);
             loadedBuildings = buildings;
             carToCalculateFrom = currentCar || INITIAL_CAR;
             loadedHiredStaff = hiredStaff;
         } finally {
-            console.log("Entering finally block...");
+            addLog('Entering finally block...');
             if (carToCalculateFrom) {
                 const initialTotalRate = calculateTotalIncomeRate(loadedBuildings, carToCalculateFrom, loadedHiredStaff);
                 setIncomeRatePerHour(Number(initialTotalRate) || 0);
@@ -183,15 +194,15 @@ function App() {
                         (initialTotalRate / 3600) * Math.min(offlineTimeMs / 1000, MAX_OFFLINE_HOURS * 3600);
                 }
                 setAccumulatedIncome(Number(offlineIncome) || 0);
-                console.log(`Final calculated rate: ${initialTotalRate}/h, offline income: ${offlineIncome.toFixed(2)}`);
+                addLog(`Final calculated rate: ${initialTotalRate}/h, offline income: ${offlineIncome.toFixed(2)}`);
             } else {
-                console.error("Finally block: carToCalculateFrom is not set!");
+                addLog('Finally block: carToCalculateFrom is not set!');
                 setIncomeRatePerHour(0);
                 setAccumulatedIncome(0);
-                if (!error) setError("Критическая ошибка инициализации.");
+                if (!error) setError('Критическая ошибка инициализации.');
             }
             setIsLoading(false);
-            console.log("isLoading set to false. Initialization finished.");
+            addLog('isLoading set to false. Initialization finished.');
         }
     };
 
@@ -206,7 +217,7 @@ function App() {
             const potentialTotalIncome = timePassedTotalSeconds * incomePerSecond;
             const newAccumulated = Math.min(potentialTotalIncome, maxAccumulationCap);
             setAccumulatedIncome(Number(newAccumulated) || 0);
-            console.log('Accumulated income:', newAccumulated);
+            addLog(`Accumulated income: ${newAccumulated}`);
         }, UPDATE_INTERVAL);
         return () => clearInterval(intervalId);
     }, [incomeRatePerHour, isLoading]);
@@ -219,7 +230,7 @@ function App() {
             setAccumulatedIncome(0);
             const collectionTime = Date.now();
             lastCollectedTimeRef.current = collectionTime;
-            console.log(`Collected ${incomeToAdd} GC.`);
+            addLog(`Collected ${incomeToAdd} GC.`);
             apiClient('/game_state', 'POST', {
                 body: {
                     userId: tgUserData?.id?.toString() || 'default',
@@ -228,7 +239,7 @@ function App() {
                     last_collected_time: collectionTime,
                     income_rate_per_hour: incomeRatePerHour
                 }
-            }).catch(err => console.error('Failed to save collect:', err));
+            }).catch(err => addLog(`Failed to save collect: ${err.message}`));
         }
     };
 
@@ -245,7 +256,7 @@ function App() {
             setGameCoins(newCoins);
             setBuildings(updatedBuildings);
             setIncomeRatePerHour(newTotalRate);
-            console.log(`Building ${buildingName} upgraded. New rate: ${newTotalRate}/hour.`);
+            addLog(`Building ${buildingName} upgraded. New rate: ${newTotalRate}/hour.`);
             apiClient('/game_state', 'POST', {
                 body: {
                     userId: tgUserData?.id?.toString() || 'default',
@@ -254,7 +265,7 @@ function App() {
                     buildings: updatedBuildings,
                     income_rate_per_hour: newTotalRate
                 }
-            }).catch(err => console.error('Failed to save building:', err));
+            }).catch(err => addLog(`Failed to save building: ${err.message}`));
         }
     };
 
@@ -279,7 +290,7 @@ function App() {
             }
             setGameCoins(newCoins);
             setPlayerCars(updatedPlayerCars);
-            console.log(`Part "${part.name}" upgraded. New rate: ${incomeRatePerHour}/hour.`);
+            addLog(`Part "${part.name}" upgraded. New rate: ${incomeRatePerHour}/hour.`);
             apiClient('/game_state', 'POST', {
                 body: {
                     userId: tgUserData?.id?.toString() || 'default',
@@ -288,7 +299,7 @@ function App() {
                     player_cars: updatedPlayerCars,
                     income_rate_per_hour: incomeRatePerHour
                 }
-            }).catch(err => console.error('Failed to save part upgrade:', err));
+            }).catch(err => addLog(`Failed to save part upgrade: ${err.message}`));
         }
     };
 
@@ -298,6 +309,7 @@ function App() {
         if (raceOutcome) {
             setGameCoins(raceOutcome.newGameCoins);
             setCurrentXp(raceOutcome.newCurrentXp);
+            addLog(`Race result: ${raceOutcome.result}, reward: ${raceOutcome.reward}`);
             apiClient('/game_state', 'POST', {
                 body: {
                     userId: tgUserData?.id?.toString() || 'default',
@@ -306,7 +318,7 @@ function App() {
                     current_xp: raceOutcome.newCurrentXp,
                     income_rate_per_hour: incomeRatePerHour
                 }
-            }).catch(err => console.error('Failed to save race:', err));
+            }).catch(err => addLog(`Failed to save race: ${err.message}`));
             return { result: raceOutcome.result, reward: raceOutcome.reward };
         } else {
             return { result: 'error', reward: null };
@@ -327,7 +339,7 @@ function App() {
         const updatedPlayerCars = [...playerCars, newCar];
         setGameCoins(newCoins);
         setPlayerCars(updatedPlayerCars);
-        console.log(`Bought car ${carData.name}.`);
+        addLog(`Bought car ${carData.name}.`);
         apiClient('/game_state', 'POST', {
             body: {
                 userId: tgUserData?.id?.toString() || 'default',
@@ -336,7 +348,7 @@ function App() {
                 player_cars: updatedPlayerCars,
                 income_rate_per_hour: incomeRatePerHour
             }
-        }).catch(err => console.error('Failed to save car purchase:', err));
+        }).catch(err => addLog(`Failed to save car purchase: ${err.message}`));
     };
 
     const handleHireOrUpgradeStaff = (staffId) => {
@@ -348,7 +360,7 @@ function App() {
             setGameCoins(newCoins);
             setHiredStaff(updatedHiredStaff);
             setIncomeRatePerHour(newTotalRate);
-            console.log(`Hired/upgraded staff ${staffId}. New rate: ${newTotalRate}/hour.`);
+            addLog(`Hired/upgraded staff ${staffId}. New rate: ${newTotalRate}/hour.`);
             apiClient('/game_state', 'POST', {
                 body: {
                     userId: tgUserData?.id?.toString() || 'default',
@@ -357,7 +369,7 @@ function App() {
                     hired_staff: updatedHiredStaff,
                     income_rate_per_hour: newTotalRate
                 }
-            }).catch(err => console.error('Failed to save staff:', err));
+            }).catch(err => addLog(`Failed to save staff: ${err.message}`));
         }
     };
 
@@ -378,6 +390,7 @@ function App() {
                 const newTotalRate = calculateTotalIncomeRate(buildings, newSelectedCar, hiredStaff);
                 setIncomeRatePerHour(newTotalRate);
             }
+            addLog(`Selected car ${carId}. New rate: ${incomeRatePerHour}/hour.`);
             apiClient('/game_state', 'POST', {
                 body: {
                     userId: tgUserData?.id?.toString() || 'default',
@@ -385,7 +398,7 @@ function App() {
                     selected_car_id: carId,
                     income_rate_per_hour: incomeRatePerHour
                 }
-            }).catch(err => console.error('Failed to save car selection:', err));
+            }).catch(err => addLog(`Failed to save car selection: ${err.message}`));
         }
         setIsCarSelectorVisible(false);
     };
@@ -393,14 +406,70 @@ function App() {
     const xpPercentage = xpToNextLevel > 0 ? Math.min((currentXp / xpToNextLevel) * 100, 100) : 0;
 
     if (isLoading) {
-        return <div className="loading-screen">Загрузка данных...</div>;
+        return (
+            <div className="loading-screen">
+                <h2>Загрузка данных...</h2>
+                <p>Логи:</p>
+                <ul className="log-list">
+                    {logs.map((log, index) => (
+                        <li key={index}>{log}</li>
+                    ))}
+                </ul>
+                <style>
+                    {`
+                        .loading-screen {
+                            padding: 20px;
+                            color: #fff;
+                            background-color: #222;
+                            min-height: 100vh;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                        }
+                        .log-list {
+                            list-style: none;
+                            padding: 0;
+                            max-height: 200px;
+                            overflow-y: auto;
+                            width: 90%;
+                        }
+                    `}
+                </style>
+            </div>
+        );
     }
     if (error) {
         return (
             <div className="error-screen">
                 <h2>Ошибка</h2>
                 <p>{error}</p>
+                <p>Логи:</p>
+                <ul className="log-list">
+                    {logs.map((log, index) => (
+                        <li key={index}>{log}</li>
+                    ))}
+                </ul>
                 <button onClick={() => window.location.reload()}>Попробовать снова</button>
+                <style>
+                    {`
+                        .error-screen {
+                            padding: 20px;
+                            color: #fff;
+                            background-color: #222;
+                            min-height: 100vh;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                        }
+                        .log-list {
+                            list-style: none;
+                            padding: 0;
+                            max-height: 200px;
+                            overflow-y: auto;
+                            width: 90%;
+                        }
+                    `}
+                </style>
             </div>
         );
     }
@@ -450,7 +519,7 @@ function App() {
                         onBuyCar={handleBuyCar}
                     />
                 )}
-                {activeScreen == 'staff' && (
+                {activeScreen === 'staff' && (
                     <StaffScreen
                         staffCatalog={STAFF_CATALOG}
                         hiredStaff={hiredStaff}
