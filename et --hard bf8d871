@@ -1,0 +1,70 @@
+* [33mc66065f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mrestore-pre-name-button[m[33m, [m[1;31morigin/restore-pre-name-button[m[33m)[m Sync App.jsx and apiClient.js with deep copy and logging fixes
+* [33m6d5d9f6[m Fix readonly property and reduce error by ensuring buildings is array
+* [33mfe097f6[m Fix readonly property error by using object copies in loadInitialData
+* [33mdefa939[m Add detailed logging to apiClient and fix loadInitialData handling
+* [33m4ad5a83[m Update App.jsx with fixed loadInitialData and improved logging
+* [33md00f09f[m Update apiClient.js with improved logging and fix constant assignment
+* [33m834e99d[m Update CORS origin to match Vercel frontend URL
+* [33m6c211ec[m Add network error logging to apiClient.js
+* [33ma51e151[m Enhance apiClient.js with detailed error logging
+* [33mdab7434[m Add detailed logging and CORS configuration to server.js
+* [33m13663db[m Add debug logs to App.jsx for on-screen display
+* [33m7cbefab[m Update server.js with correct DB_HOST (oregon-postgres.render.com)
+* [33ma42a65b[m Sync changes for Telegram Web App on mobile
+* [33mb7bbe2b[m Update server.js with better connection diagnostics for Render PostgreSQL
+* [33m24e7814[m Update apiClient.js with dynamic BASE_URL
+* [33mbf8d871[m Update server.js to connect to Render PostgreSQL
+* [33ma543001[m Fix apiClient import in LeaderboardScreen.jsx and add apiClient.js
+* [33m83b033d[m Fix placeholderStyle syntax error in App.jsx (text-align to textAlign)
+* [33m26768b8[m Fix placeholderStyle syntax error in App.jsx (text-align to textAlign)
+* [33m3eb8a14[m Update leaderboard: add current player rank, sort by income_rate_per_hour, real-time update, background image
+* [33mcf53747[m Add leaderboard button to NavBar
+* [33m65ee05b[m Fix tgUserData initialization to display player name and userId
+* [33m861992c[m Fix GET request error by handling params in apiClient
+* [33mdd65682[m Add userId from tgUserData to game_state requests
+* [33m774ca18[m Fix NaN in accumulatedIncome by converting last_collected_time
+* [33m8938cbc[m Add dotenv to backend dependencies
+* [33m24643a6[m Fix syntax error in index.js
+* [33m2fb75e6[m Fix JSON serialization for PostgreSQL
+* [33m1684a0e[m Add PostgreSQL support to backend
+* [33mca28ff3[m Restore project before name change button
+* [33m33ce843[m Restore version before name change button
+* [33m2a71cc3[m Restore version before name change button
+* [33maf970f1[m[33m ([m[1;31morigin/restore-working-version[m[33m, [m[1;32mrestore-working-version[m[33m)[m Restore working version with NameInputModal and basic CORS
+* [33m1764fe0[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m Add request logging to backend for CORS debugging
+* [33mbb3c300[m Update frontend and backend with Telegram ID, name input, and CORS fixes
+* [33m11f26f7[m Support custom first_name in backend
+* [33m056897a[m Fix .gitignore by removing echo command
+* [33me692975[m Change initial game_coins to 1000 for better economy
+* [33mb5b496d[m Add POST endpoint for /game_state
+* [33meefc814[m Update backend to return buildings as array
+* [33ma457062[m Fix apiClient URL formation and add userId support
+*   [33m2ee78d4[m Merge branch 'main' of https://github.com/tsdmkp/idle-garage-game
+[32m|[m[33m\[m  
+[32m|[m *   [33md9e737c[m Merge branch 'main' of https://github.com/tsdmkp/idle-garage-game
+[32m|[m [34m|[m[35m\[m  
+[32m|[m [34m|[m *   [33mf1c4d2c[m Merge branch 'main' of https://github.com/tsdmkp/idle-garage-game
+[32m|[m [34m|[m [36m|[m[1;31m\[m  
+[32m|[m [34m|[m * [1;31m|[m [33m9185569[m online
+[32m|[m * [1;31m|[m [1;31m|[m [33m6ad117f[m Remove GitHub Pages Actions workflow (using Vercel)
+[32m|[m [1;31m|[m [1;31m|[m[1;31m/[m  
+[32m|[m [1;31m|[m[1;31m/[m[1;31m|[m   
+[32m|[m * [1;31m|[m [33m4d445b1[m Create static.yml
+[32m|[m [1;31m|[m[1;31m/[m  
+* [1;31m/[m [33mafa3d57[m Add backend index.js and package.json in backend folder
+[1;31m|[m[1;31m/[m  
+* [33m6318096[m feat: Implement fixed race rewards and penalties
+* [33m0b30cf4[m feat: Implement fixed race rewards and penalties
+* [33md44ea21[m refactor: Move game logic and constants to utils.js, fix ShopScreen stats
+* [33m83365f7[m Checkpoint: Stable version before refactoring utils
+* [33m70a498d[m Checkpoint: Stable version before refactoring
+* [33m6b7c913[m Checkpoint: Stable version before refactoring utils
+* [33m8973c97[m feat: Implement car selector and finalize core gameplay loop
+* [33me5cde04[m feat: Implement Staff screen with hiring/upgrading logic
+* [33mea761d5[m feat: Implement ShopScreen (Autosalon), add backgrounds, refactor cars state
+* [33mf1ef8e6[m feat: Add RaceScreen component with basic PvE race simulation and animation
+* [33m0fdc45f[m feat: Implement RaceScreen, tuning logic, background images, and fix bugs
+* [33mdad06eb[m feat: Add IncomeArea component with passive income accumulation and collection
+* [33m9e739a2[m feat: Add GarageArea component to display current car and stats
+* [33m4fdd059[m feat: Add Header component with player info and resources
+* [33m3a5254d[m Initial project setup with Vite (React + TS)
