@@ -220,7 +220,7 @@ function App() {
             const collectionTime = Date.now();
             lastCollectedTimeRef.current = collectionTime;
             console.log(`Collected ${incomeToAdd} GC.`);
-            apiClient('/game_state', 'POST', {
+            apiClient('/game_state', 'PATCH', {
                 body: {
                     userId: tgUserData?.id?.toString() || 'default',
                     first_name: tgUserData?.first_name || 'Игрок',
@@ -246,7 +246,7 @@ function App() {
             setBuildings(updatedBuildings);
             setIncomeRatePerHour(newTotalRate);
             console.log(`Building ${buildingName} upgraded. New rate: ${newTotalRate}/hour.`);
-            apiClient('/game_state', 'POST', {
+            apiClient('/game_state', 'PATCH', {
                 body: {
                     userId: tgUserData?.id?.toString() || 'default',
                     first_name: tgUserData?.first_name || 'Игрок',
@@ -261,34 +261,41 @@ function App() {
     const handleOpenTuning = () => setIsTuningVisible(true);
     const handleCloseTuning = () => setIsTuningVisible(false);
 
-    const handleUpgradePart = (partId) => {
-        if (!currentCar?.parts?.[partId]) return;
-        const part = currentCar.parts[partId];
+    const handleUpgradePart = (carId, partId) => {
+        const car = playerCars.find(c => c.id === carId);
+        if (!car || !car.parts?.[partId]) {
+            console.log(`Деталь ${partId} не найдена у машины ${carId}.`);
+            return;
+        }
+        const part = car.parts[partId];
         const cost = calculateUpgradeCost(partId, part.level);
         if (gameCoins >= cost) {
             const newCoins = gameCoins - cost;
-            const updatedParts = { ...currentCar.parts, [partId]: { ...part, level: part.level + 1 } };
-            const { stats: newStats } = recalculateStatsAndIncomeBonus(currentCar.id, updatedParts);
-            const updatedPlayerCars = playerCars.map(car =>
-                car.id === selectedCarId ? { ...car, parts: updatedParts, stats: newStats } : car
+            const updatedParts = { ...car.parts, [partId]: { ...part, level: part.level + 1 } };
+            const { stats: newStats, incomeBonus: newIncomeBonus } = recalculateStatsAndIncomeBonus(car.id, updatedParts);
+            const updatedPlayerCars = playerCars.map(c =>
+                c.id === carId ? { ...c, parts: updatedParts, stats: newStats, incomeBonus: newIncomeBonus } : c
             );
-            const updatedCarForRate = updatedPlayerCars.find(c => c.id === selectedCarId);
+            const updatedCarForRate = updatedPlayerCars.find(c => c.id === carId);
+            let newTotalRate = incomeRatePerHour;
             if (updatedCarForRate) {
-                const newTotalRate = calculateTotalIncomeRate(buildings, updatedCarForRate, hiredStaff);
-                setIncomeRatePerHour(newTotalRate);
+                newTotalRate = calculateTotalIncomeRate(buildings, updatedCarForRate, hiredStaff);
             }
+            setIncomeRatePerHour(newTotalRate);
             setGameCoins(newCoins);
             setPlayerCars(updatedPlayerCars);
-            console.log(`Part "${part.name}" upgraded. New rate: ${incomeRatePerHour}/hour.`);
-            apiClient('/game_state', 'POST', {
+            console.log(`Деталь "${partId}" улучшена. Новый доход: ${newTotalRate}/час.`);
+            apiClient('/game_state', 'PATCH', {
                 body: {
                     userId: tgUserData?.id?.toString() || 'default',
                     first_name: tgUserData?.first_name || 'Игрок',
                     game_coins: newCoins,
                     player_cars: updatedPlayerCars,
-                    income_rate_per_hour: incomeRatePerHour
+                    income_rate_per_hour: newTotalRate
                 }
             }).catch(err => console.error('Failed to save part upgrade:', err));
+        } else {
+            console.log(`Недостаточно средств для улучшения детали "${partId}". Нужно: ${cost}, есть: ${gameCoins}`);
         }
     };
 
@@ -298,7 +305,7 @@ function App() {
         if (raceOutcome) {
             setGameCoins(raceOutcome.newGameCoins);
             setCurrentXp(raceOutcome.newCurrentXp);
-            apiClient('/game_state', 'POST', {
+            apiClient('/game_state', 'PATCH', {
                 body: {
                     userId: tgUserData?.id?.toString() || 'default',
                     first_name: tgUserData?.first_name || 'Игрок',
@@ -328,7 +335,7 @@ function App() {
         setGameCoins(newCoins);
         setPlayerCars(updatedPlayerCars);
         console.log(`Bought car ${carData.name}.`);
-        apiClient('/game_state', 'POST', {
+        apiClient('/game_state', 'PATCH', {
             body: {
                 userId: tgUserData?.id?.toString() || 'default',
                 first_name: tgUserData?.first_name || 'Игрок',
@@ -349,7 +356,7 @@ function App() {
             setHiredStaff(updatedHiredStaff);
             setIncomeRatePerHour(newTotalRate);
             console.log(`Hired/upgraded staff ${staffId}. New rate: ${newTotalRate}/hour.`);
-            apiClient('/game_state', 'POST', {
+            apiClient('/game_state', 'PATCH', {
                 body: {
                     userId: tgUserData?.id?.toString() || 'default',
                     first_name: tgUserData?.first_name || 'Игрок',
@@ -378,7 +385,7 @@ function App() {
                 const newTotalRate = calculateTotalIncomeRate(buildings, newSelectedCar, hiredStaff);
                 setIncomeRatePerHour(newTotalRate);
             }
-            apiClient('/game_state', 'POST', {
+            apiClient('/game_state', 'PATCH', {
                 body: {
                     userId: tgUserData?.id?.toString() || 'default',
                     first_name: tgUserData?.first_name || 'Игрок',
