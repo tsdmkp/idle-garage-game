@@ -1,40 +1,37 @@
-const BASE_URL = import.meta.env.VITE_REACT_APP_API_URL || 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL || 'http://localhost:3000';
 
-const apiClient = async (endpoint, method = 'GET', { body } = {}) => {
-    const url = `${BASE_URL}${endpoint}`;
-    const options = {
-        method,
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Telegram-Init-Data': window.Telegram?.WebApp?.initData || ''
-        }
-    };
+  const apiClient = async (endpoint, method = 'GET', { body, params } = {}) => {
+      const url = new URL(`${API_URL}${endpoint}`);
+      if (params) {
+          Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
+      }
 
-    // Убедимся, что body — это корректный JSON
-    if (body) {
-        try {
-            options.body = JSON.stringify(body);
-            console.log(`[apiClient] Sending ${method} request to ${url} with body:`, JSON.stringify(body, null, 2));
-        } catch (e) {
-            console.error('[apiClient] Failed to stringify body:', body, e);
-            throw new Error('Invalid request body');
-        }
-    }
+      console.log(`[apiClient] Sending ${method} request to ${url.toString()}`, body || '');
+      console.log('[apiClient] Platform:', navigator.userAgent);
 
-    try {
-        const response = await fetch(url, options);
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`[apiClient] Error fetching ${endpoint}: HTTP error! Status: ${response.status}, Response: ${errorText}`);
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        const data = await response.json();
-        console.log(`[apiClient] Response from ${endpoint}:`, JSON.stringify(data, null, 2));
-        return data;
-    } catch (err) {
-        console.error(`[apiClient] Error fetching ${endpoint}:`, err);
-        throw err;
-    }
-};
+      const options = {
+          method,
+          headers: {
+              'Content-Type': 'application/json',
+              'X-Telegram-Init-Data': window.Telegram?.WebApp?.initData || ''
+          }
+      };
 
-export default apiClient;
+      if (body) {
+          options.body = JSON.stringify(body);
+      }
+
+      try {
+          const response = await fetch(url.toString(), options);
+          console.log(`[apiClient] Response status: ${response.status}`);
+          if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return await response.json();
+      } catch (error) {
+          console.error(`[apiClient] Error fetching ${endpoint}:`, error.message, error.stack);
+          throw error;
+      }
+  };
+
+  export default apiClient;
