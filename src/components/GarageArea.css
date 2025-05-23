@@ -1,162 +1,163 @@
-/* src/components/GarageArea.css */
-
+/* Обновленный GarageArea.css */
 .garage-area {
-  /* --- Layout & Box Model --- */
-  display: flex;                  /* Flex-контейнер */
-  flex-direction: column;         /* Элементы в столбец */
-  align-items: center;            /* Центрируем по горизонтали */
-  padding: 20px 15px 25px 15px;   /* Отступы: Сверху Право Низ Лево */
-  margin-top: 15px;               /* Отступ сверху от хедера */
-  width: 90%;                     /* Ширина блока */
-  max-width: 480px;               /* Максимальная ширина */
-  margin-left: auto;              /* Авто-отступы по бокам для центрирования */
-  margin-right: auto;
-  box-sizing: border-box;         /* Учитываем padding и border в размерах */
-
-  /* --- Appearance & Background --- */
-  border-radius: 12px;            /* Скругление углов */
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); /* Тень */
-  position: relative;             /* Для позиционирования оверлея или других элементов */
-  overflow: hidden;               /* Обрезаем все, что выходит за рамки скругления */
-
-  /* --- Background Image Settings --- */
-  /* Путь к файлу фона в папке /public/ */
-  /* Добавлен полупрозрачный темный градиент поверх картинки */
-  background-image: linear-gradient(rgba(30, 30, 40, 0.0), rgba(30, 30, 40, 0.0)), url('/garage-background.jpg'); /* Пример затемнения 60% */
-  background-size: cover;           /* Масштабируем фон, чтобы покрыть контейнер */
-  background-position: center center; /* Центрируем фон */
-  background-repeat: no-repeat;     /* Не повторяем фон */
+  width: 100%;
+  max-width: 370px; /* Единая ширина */
+  margin: 0 auto 20px auto;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-/* --- Кнопка смены машины --- */
-.change-car-button {
-  background: none;       /* Убираем фон */
-  border: none;           /* Убираем рамку */
-  color: #cccccc;         /* Цвет иконки (светло-серый) */
-  font-size: 1.6em;       /* Размер иконки (подбери под размер заголовка) */
-  line-height: 1;         /* Выравниваем иконку по вертикали */
-  cursor: pointer;        /* Курсор-указатель */
-  padding: 0 5px;         /* Небольшие отступы по бокам */
-  margin: 0;              /* Убираем лишние внешние отступы */
-  vertical-align: middle; /* Попытка выровнять с текстом */
-  transition: color 0.2s ease, transform 0.2s ease; /* Плавные переходы */
-}
-.change-car-button:hover {
-  color: #ffffff;         /* Белый цвет при наведении */
-  transform: rotate(90deg); /* Эффект вращения */
-}
-
-/* Обёртка для центрирования имени и кнопки */
+/* Заголовок с кнопкой смены */
 .car-header {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px; /* Отступ между именем и кнопкой */
-  margin-bottom: 15px; /* Отступ до картинки */
+  margin-bottom: 15px;
+  gap: 10px;
 }
 
-/* Убираем нижний отступ у имени, т.к. он теперь у .car-header */
 .car-name {
-  margin: 0; /* Убрали margin-bottom */
-  font-size: 1.6em;
-  color: #f5f5f5;
-  font-weight: 600;
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
-}
-
-/* --- Car Display Area --- */
-.car-display {
-  text-align: center;             /* Текст по центру */
-  margin-bottom: 10px;            /* Уменьшен отступ после картинки */
-  width: 100%;                    /* Занимает всю ширину */
-}
-
-/* --- Car Name (Теперь сверху) --- */
-.car-name {
-  margin: 0 0 15px 0; /* Отступ снизу до картинки */
-  font-size: 1.6em;
-  color: #f5f5f5;
-  font-weight: 600;
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
-}
-
-/* --- Car Image --- */
-.car-image {
-  max-width: 95%;
-  height: auto;
-  max-height: 450px; /* Оставляем большой размер */
-  display: block;
-  margin: 0 auto 15px auto; /* Уменьшен нижний отступ до статов */
-  object-fit: contain;
-}
-
-/* --- Car Stats Area --- */
-.car-stats {
-  display: flex;                  /* Flex-контейнер */
-  justify-content: center;        /* Центрируем статы */
-  flex-wrap: nowrap;              /* ЗАПРЕЩАЕМ перенос на новую строку */
-  gap: 5px;                       /* Уменьшен отступ между плашками */
-  width: auto;                    /* Ширина по содержимому */
-  max-width: 100%;                /* Не шире родителя */
-  margin: 0 auto 20px auto;       /* Уменьшен нижний отступ до кнопки */
-  overflow-x: auto;               /* ДОБАВЛЯЕМ горизонтальный скролл, если не помещается */
-  padding-bottom: 5px;            /* Небольшой отступ снизу для тени скроллбара */
-  -webkit-overflow-scrolling: touch; /* Плавный скролл на iOS */
-  scrollbar-width: thin;          /* Тонкий скроллбар для Firefox */
-  scrollbar-color: rgba(255, 255, 255, 0.2) transparent; /* Цвет скролла и трека для Firefox */
-}
-/* Стилизация скроллбара для Webkit (Chrome, Safari) */
-.car-stats::-webkit-scrollbar {
-  height: 4px; /* Высота горизонтального скролла */
-}
-.car-stats::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.3); /* Цвет ползунка */
-  border-radius: 2px; /* Скругление ползунка */
-}
-.car-stats::-webkit-scrollbar-track {
-  background: transparent; /* Фон трека */
-}
-
-
-/* --- Individual Stat Item (Уменьшенные) --- */
-.car-stats span {
-  background-color: rgba(0, 0, 0, 0.4);
-  color: #eee;
-  padding: 4px 8px;     /* Уменьшены внутренние отступы */
-  border-radius: 4px;   /* Уменьшено скругление */
-  /* min-width убрали */
-  text-align: center;
-  font-size: 0.85em;    /* Уменьшен шрифт */
-  font-weight: 500;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
-  cursor: default;
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
-  white-space: nowrap; /* Запрещаем перенос текста ВНУТРИ плашки */
-  flex-shrink: 0;       /* Запрещаем плашкам сжиматься */
-}
-
-/* --- Tuning Button --- */
-.tune-button {
-  padding: 12px 35px;
-  font-size: 1.15em;
+  margin: 0;
+  color: #fff;
+  font-size: 1.4em;
   font-weight: bold;
-  color: white;
-  background: linear-gradient(145deg, #ff8c00, #ff5722);
-  border: none;
-  border-radius: 25px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4), 0 0 10px rgba(255, 100, 0, 0.3);
-  position: relative;
-  z-index: 1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  flex: 1;
+  text-align: left;
 }
-.tune-button:hover {
-  background: linear-gradient(145deg, #ffa500, #ff6f43);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 100, 0, 0.4);
+
+.change-car-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 1.2em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  min-width: 45px;
+}
+
+.change-car-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}
+
+.change-car-button:active {
+  transform: translateY(0);
+}
+
+/* Отображение машины */
+.car-display {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.car-image {
+  width: 100%;
+  max-width: 250px;
+  height: auto;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 10px;
+}
+
+.car-image:hover {
+  transform: scale(1.02);
+}
+
+/* Характеристики */
+.car-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.car-stats span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #fff;
+  font-weight: bold;
+  font-size: 0.9em;
+  transition: all 0.3s ease;
+  cursor: help;
+}
+
+.car-stats span:hover {
+  background: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
 }
+
+/* Кнопка тюнинга */
+.tune-button {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(238, 90, 36, 0.3);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.tune-button:hover {
+  background: linear-gradient(135deg, #ee5a24 0%, #d63031 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(238, 90, 36, 0.4);
+}
+
 .tune-button:active {
-   transform: translateY(0);
-   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 5px rgba(255, 100, 0, 0.2);
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(238, 90, 36, 0.3);
+}
+
+/* Responsive для маленьких экранов */
+@media (max-width: 350px) {
+  .garage-area {
+    padding: 12px;
+    max-width: 100%;
+  }
+  
+  .car-name {
+    font-size: 1.2em;
+  }
+  
+  .change-car-button {
+    padding: 6px 10px;
+    font-size: 1em;
+    min-width: 40px;
+  }
+  
+  .car-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 12px;
+  }
+  
+  .tune-button {
+    padding: 12px;
+    font-size: 1em;
+  }
 }

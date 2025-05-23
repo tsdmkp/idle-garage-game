@@ -1,20 +1,28 @@
+/* Единые настройки для всей игры */
 #root {
-  max-width: 1280px;
+  width: 100%;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 0;
   text-align: center;
+  box-sizing: border-box;
 }
 
+/* Основной контейнер - ЕДИНАЯ ШИРИНА для всех страниц */
 .app {
-  max-width: 600px;
+  width: 100%;
+  max-width: 400px; /* Оптимально для Telegram */
   margin: 0 auto;
-  padding: 20px;
+  padding: 15px;
   font-family: Arial, sans-serif;
+  box-sizing: border-box;
+  min-height: 100vh;
 }
 
+/* Header фиксированный размер */
 header {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
+  width: 100%;
 }
 
 .player-info {
@@ -23,27 +31,72 @@ header {
   justify-content: center;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap; /* На маленьких экранах переносится */
 }
 
 .player-info button {
-  padding: 5px 10px;
+  padding: 8px 12px;
   background: #007bff;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.player-info button:hover {
+  background: #0056b3;
+}
+
+/* Основной контент - единая ширина */
+.main-content {
+  width: 100%;
+  margin-bottom: 80px; /* Место для NavBar */
+}
+
+/* Экраны ошибок и загрузки */
+.loading-screen, .error-screen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 50vh;
+  padding: 20px;
+  text-align: center;
+}
+
+.error-screen button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
   cursor: pointer;
 }
 
+/* Placeholder для P2E экрана */
+.placeholder-screen {
+  padding: 40px 20px;
+  text-align: center;
+  color: white;
+  fontSize: 1.2em;
+  opacity: 0.7;
+}
 
+/* Убираем старые стили логотипов */
 .logo {
   height: 6em;
   padding: 1.5em;
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
@@ -69,4 +122,21 @@ header {
 
 .read-the-docs {
   color: #888;
+}
+
+/* Responsive для очень маленьких экранов */
+@media (max-width: 350px) {
+  .app {
+    max-width: 100%;
+    padding: 10px;
+  }
+  
+  .player-info {
+    gap: 5px;
+  }
+  
+  .player-info button {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
 }
