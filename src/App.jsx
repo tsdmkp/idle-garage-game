@@ -50,7 +50,7 @@ import React, { useState, useEffect, useRef } from 'react';
       const [xpToNextLevel, setXpToNextLevel] = useState(100);
       const [incomeRatePerHour, setIncomeRatePerHour] = useState(0);
       const lastCollectedTimeRef = useRef(Date.now());
-      const [accumulatedIncome, setAccumulatedIncome] = useState(0); // Теперь это будет обновляться только при загрузке
+      const [accumulatedIncome, setAccumulatedIncome] = useState(0);
       const [buildings, setBuildings] = useState(INITIAL_BUILDINGS);
       const [playerCars, setPlayerCars] = useState(() => [INITIAL_CAR]);
       const [selectedCarId, setSelectedCarId] = useState(INITIAL_CAR.id);
@@ -66,8 +66,6 @@ import React, { useState, useEffect, useRef } from 'react';
               const tg = window.Telegram?.WebApp;
               if (tg) {
                   console.log('App: Telegram WebApp detected, initializing...');
-                  console.log('App: Telegram WebApp version:', tg.version);
-                  console.log('App: Telegram initData:', tg.initData);
                   try {
                       tg.ready();
                       tg.expand();
@@ -94,7 +92,6 @@ import React, { useState, useEffect, useRef } from 'react';
               }
           };
 
-          console.log('App: API_URL=', import.meta.env.VITE_REACT_APP_API_URL);
           initializeTelegram();
       }, []);
 
@@ -113,7 +110,7 @@ import React, { useState, useEffect, useRef } from 'react';
           try {
               const userId = tgUserData?.id?.toString() || 'default';
               console.log('Using userId:', userId);
-              const initialState = await apiClient(`/game_state?userId=${userId}`, 'GET');
+              const initialState = await apiClient('/game_state', 'GET', { params: { userId } });
               console.log("Received initial state from backend:", initialState);
 
               if (initialState && typeof initialState === 'object') {
@@ -124,17 +121,9 @@ import React, { useState, useEffect, useRef } from 'react';
                   setCurrentXp(Number(initialState.current_xp) || currentXp);
                   setXpToNextLevel(Number(initialState.xp_to_next_level) || xpToNextLevel);
                   setIncomeRatePerHour(Number(initialState.income_rate_per_hour) || 0);
-                  const loadedTime = initialState.last_collected_time
+                  lastCollectedTimeRef.current = initialState.last_collected_time
                       ? Number(initialState.last_collected_time)
                       : Date.now();
-                  lastCollectedTimeRef.current = loadedTime;
-
-                  // Убираем локальный расчёт, полагаемся на бэкенд
-                  const now = Date.now();
-                  const timeDiffMs = now - loadedTime;
-                  const incomePerMs = initialState.income_rate_per_hour / (1000 * 60 * 60);
-                  const offlineIncome = Math.floor(timeDiffMs * incomePerMs);
-                  setAccumulatedIncome(offlineIncome > 0 ? offlineIncome : 0);
 
                   loadedBuildings = Array.isArray(initialState.buildings)
                       ? initialState.buildings
@@ -185,9 +174,19 @@ import React, { useState, useEffect, useRef } from 'react';
               if (carToCalculateFrom) {
                   const initialTotalRate = calculateTotalIncomeRate(loadedBuildings, carToCalculateFrom, loadedHiredStaff);
                   setIncomeRatePerHour(Number(initialTotalRate) || 0);
+                  const now = Date.now();
+                  const offlineTimeMs = now - lastCollectedTimeRef.current;
+                  let offlineIncome = 0;
+                  if (offlineTimeMs > 0 && initialTotalRate > 0) {
+                      offlineIncome =
+                          (initialTotalRate / 3600) * Math.min(offlineTimeMs / 1000, MAX_OFFLINE_HOURS * 3600);
+                  }
+                  setAccumulatedIncome(Number(offlineIncome) || 0);
+                  console.log(`Final calculated rate: ${initialTotalRate}/h, offline income: ${offlineIncome.toFixed(2)}`);
               } else {
                   console.error("Finally block: carToCalculateFrom is not set!");
                   setIncomeRatePerHour(0);
+                  setAccumulatedIncome(0);
                   if (!error) setError("Критическая ошибка инициализации.");
               }
               setIsLoading(false);
@@ -195,8 +194,21 @@ import React, { useState, useEffect, useRef } from 'react';
           }
       };
 
-      // Убираем useEffect для расчёта accumulatedIncome
-      // useEffect(() => {...}, [incomeRatePerHour, isLoading]);
+      useEffect(() => {
+          if (incomeRatePerHour <= 0 || isLoading) return;
+          const incomePerSecond = incomeRatePerHour / 3600;
+          const maxAccumulationCap = incomeRatePerHour * MAX_OFFLINE_HOURS;
+          const intervalId = setInterval(() => {
+              const now = Date.now();
+              const lastTime = Number(lastCollectedTimeRef.current) || now;
+              const timePassedTotalSeconds = (now - lastTime) / 1000;
+              const potentialTotalIncome = timePassedTotalSeconds * incomePerSecond;
+              const newAccumulated = Math.min(potentialTotalIncome, maxAccumulationCap);
+              setAccumulatedIncome(Number(newAccumulated) || 0);
+              console.log('Accumulated income:', newAccumulated);
+          }, UPDATE_INTERVAL);
+          return () => clearInterval(intervalId);
+      }, [incomeRatePerHour, isLoading]);
 
       const handleCollect = () => {
           const incomeToAdd = Math.floor(Number(accumulatedIncome) || 0);
@@ -207,7 +219,7 @@ import React, { useState, useEffect, useRef } from 'react';
               const collectionTime = Date.now();
               lastCollectedTimeRef.current = collectionTime;
               console.log(`Collected ${incomeToAdd} GC.`);
-              apiClient('/game_state', 'PATCH', {
+              apiClient('/game_state', 'POST', {
                   body: {
                       userId: tgUserData?.id?.toString() || 'default',
                       first_name: tgUserData?.first_name || 'Игрок',
@@ -237,7 +249,7 @@ import React, { useState, useEffect, useRef } from 'react';
               setBuildings(updatedBuildings);
               setIncomeRatePerHour(newTotalRate);
               console.log(`Building ${buildingName} upgraded. New rate: ${newTotalRate}/hour.`);
-              apiClient('/game_state', 'PATCH', {
+              apiClient('/game_state', 'POST', {
                   body: {
                       userId: tgUserData?.id?.toString() || 'default',
                       first_name: tgUserData?.first_name || 'Игрок',
@@ -279,7 +291,7 @@ import React, { useState, useEffect, useRef } from 'react';
               setGameCoins(newCoins);
               setPlayerCars(updatedPlayerCars);
               console.log(`Деталь "${partId}" улучшена. Новый доход: ${newTotalRate}/час.`);
-              apiClient('/game_state', 'PATCH', {
+              apiClient('/game_state', 'POST', {
                   body: {
                       userId: tgUserData?.id?.toString() || 'default',
                       first_name: tgUserData?.first_name || 'Игрок',
@@ -302,7 +314,7 @@ import React, { useState, useEffect, useRef } from 'react';
           if (raceOutcome) {
               setGameCoins(raceOutcome.newGameCoins);
               setCurrentXp(raceOutcome.newCurrentXp);
-              apiClient('/game_state', 'PATCH', {
+              apiClient('/game_state', 'POST', {
                   body: {
                       userId: tgUserData?.id?.toString() || 'default',
                       first_name: tgUserData?.first_name || 'Игрок',
@@ -336,7 +348,7 @@ import React, { useState, useEffect, useRef } from 'react';
           setGameCoins(newCoins);
           setPlayerCars(updatedPlayerCars);
           console.log(`Bought car ${carData.name}.`);
-          apiClient('/game_state', 'PATCH', {
+          apiClient('/game_state', 'POST', {
               body: {
                   userId: tgUserData?.id?.toString() || 'default',
                   first_name: tgUserData?.first_name || 'Игрок',
@@ -360,7 +372,7 @@ import React, { useState, useEffect, useRef } from 'react';
               setHiredStaff(updatedHiredStaff);
               setIncomeRatePerHour(newTotalRate);
               console.log(`Hired/upgraded staff ${staffId}. New rate: ${newTotalRate}/hour.`);
-              apiClient('/game_state', 'PATCH', {
+              apiClient('/game_state', 'POST', {
                   body: {
                       userId: tgUserData?.id?.toString() || 'default',
                       first_name: tgUserData?.first_name || 'Игрок',
@@ -392,7 +404,7 @@ import React, { useState, useEffect, useRef } from 'react';
                   const newTotalRate = calculateTotalIncomeRate(buildings, newSelectedCar, hiredStaff);
                   setIncomeRatePerHour(newTotalRate);
               }
-              apiClient('/game_state', 'PATCH', {
+              apiClient('/game_state', 'POST', {
                   body: {
                       userId: tgUserData?.id?.toString() || 'default',
                       first_name: tgUserData?.first_name || 'Игрок',
@@ -467,7 +479,7 @@ import React, { useState, useEffect, useRef } from 'react';
                           onBuyCar={handleBuyCar}
                       />
                   )}
-                  {activeScreen == 'staff' && (
+                  {activeScreen === 'staff' && (
                       <StaffScreen
                           staffCatalog={STAFF_CATALOG}
                           hiredStaff={hiredStaff}
