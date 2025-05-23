@@ -110,7 +110,7 @@ function App() {
         try {
             const userId = tgUserData?.id?.toString() || 'default';
             console.log('Using userId:', userId);
-            const initialState = await apiClient('/game_state', 'GET', { params: { userId } });
+            const initialState = await apiClient(`/game_state?userId=${userId}`, 'GET');
             console.log("Received initial state from backend:", initialState);
 
             if (initialState && typeof initialState === 'object') {
@@ -175,15 +175,8 @@ function App() {
             if (carToCalculateFrom) {
                 const initialTotalRate = calculateTotalIncomeRate(loadedBuildings, carToCalculateFrom, loadedHiredStaff);
                 setIncomeRatePerHour(Number(initialTotalRate) || 0);
-                const now = Date.now();
-                const offlineTimeMs = now - lastCollectedTimeRef.current;
-                let offlineIncome = 0;
-                if (offlineTimeMs > 0 && initialTotalRate > 0) {
-                    offlineIncome =
-                        (initialTotalRate / 3600) * Math.min(offlineTimeMs / 1000, MAX_OFFLINE_HOURS * 3600);
-                }
-                setAccumulatedIncome(Number(offlineIncome) || 0);
-                console.log(`Final calculated rate: ${initialTotalRate}/h, offline income: ${offlineIncome.toFixed(2)}`);
+                // Удаляем расчёт оффлайн-дохода, так как он теперь на бэкенде
+                setAccumulatedIncome(0); // Сбрасываем, так как доход уже учтён в game_coins
             } else {
                 console.error("Finally block: carToCalculateFrom is not set!");
                 setIncomeRatePerHour(0);
@@ -226,7 +219,11 @@ function App() {
                     first_name: tgUserData?.first_name || 'Игрок',
                     game_coins: newTotalCoins,
                     last_collected_time: collectionTime,
-                    income_rate_per_hour: incomeRatePerHour
+                    income_rate_per_hour: incomeRatePerHour,
+                    buildings,
+                    player_cars: playerCars,
+                    hired_staff: hiredStaff,
+                    selected_car_id: selectedCarId
                 }
             }).catch(err => console.error('Failed to save collect:', err));
         }
@@ -252,7 +249,10 @@ function App() {
                     first_name: tgUserData?.first_name || 'Игрок',
                     game_coins: newCoins,
                     buildings: updatedBuildings,
-                    income_rate_per_hour: newTotalRate
+                    income_rate_per_hour: newTotalRate,
+                    player_cars: playerCars,
+                    hired_staff: hiredStaff,
+                    selected_car_id: selectedCarId
                 }
             }).catch(err => console.error('Failed to save building:', err));
         }
@@ -291,7 +291,10 @@ function App() {
                     first_name: tgUserData?.first_name || 'Игрок',
                     game_coins: newCoins,
                     player_cars: updatedPlayerCars,
-                    income_rate_per_hour: newTotalRate
+                    income_rate_per_hour: newTotalRate,
+                    buildings,
+                    hired_staff: hiredStaff,
+                    selected_car_id: selectedCarId
                 }
             }).catch(err => console.error('Failed to save part upgrade:', err));
         } else {
@@ -311,7 +314,11 @@ function App() {
                     first_name: tgUserData?.first_name || 'Игрок',
                     game_coins: raceOutcome.newGameCoins,
                     current_xp: raceOutcome.newCurrentXp,
-                    income_rate_per_hour: incomeRatePerHour
+                    income_rate_per_hour: incomeRatePerHour,
+                    buildings,
+                    player_cars: playerCars,
+                    hired_staff: hiredStaff,
+                    selected_car_id: selectedCarId
                 }
             }).catch(err => console.error('Failed to save race:', err));
             return { result: raceOutcome.result, reward: raceOutcome.reward };
@@ -341,7 +348,10 @@ function App() {
                 first_name: tgUserData?.first_name || 'Игрок',
                 game_coins: newCoins,
                 player_cars: updatedPlayerCars,
-                income_rate_per_hour: incomeRatePerHour
+                income_rate_per_hour: incomeRatePerHour,
+                buildings,
+                hired_staff: hiredStaff,
+                selected_car_id: selectedCarId
             }
         }).catch(err => console.error('Failed to save car purchase:', err));
     };
@@ -362,7 +372,10 @@ function App() {
                     first_name: tgUserData?.first_name || 'Игрок',
                     game_coins: newCoins,
                     hired_staff: updatedHiredStaff,
-                    income_rate_per_hour: newTotalRate
+                    income_rate_per_hour: newTotalRate,
+                    buildings,
+                    player_cars: playerCars,
+                    selected_car_id: selectedCarId
                 }
             }).catch(err => console.error('Failed to save staff:', err));
         }
@@ -390,7 +403,10 @@ function App() {
                     userId: tgUserData?.id?.toString() || 'default',
                     first_name: tgUserData?.first_name || 'Игрок',
                     selected_car_id: carId,
-                    income_rate_per_hour: incomeRatePerHour
+                    income_rate_per_hour: incomeRatePerHour,
+                    buildings,
+                    player_cars: playerCars,
+                    hired_staff: hiredStaff
                 }
             }).catch(err => console.error('Failed to save car selection:', err));
         }
