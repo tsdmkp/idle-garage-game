@@ -2,7 +2,7 @@
 
 // ВРЕМЕННО: Захардкодим URL для отладки на телефоне
 // Удалим эту строку после отладки
-const API_URL = 'https://idle-garage-game-backend.onrender.com';
+const API_URL = import.meta.env.VITE_REACT_APP_API_URL || 'http://localhost:3000';
 
 const apiClient = async (endpoint, method = 'GET', { body, params } = {}) => {
     // Убедимся, что здесь формируется правильный URL
