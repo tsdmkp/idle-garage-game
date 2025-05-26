@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 // Импорты компонентов
 import Header from './components/Header';
@@ -55,7 +56,7 @@ function App() {
     const [currentXp, setCurrentXp] = useState(10);
     const [xpToNextLevel, setXpToNextLevel] = useState(100);
     const [incomeRatePerHour, setIncomeRatePerHour] = useState(0);
-    const lastCollectedTimeRef = useRef(Date.now());
+    const lastCollectedTimeRef = useRef(Date.now()); // Инициализация при создании
     const [accumulatedIncome, setAccumulatedIncome] = useState(0);
     const [buildings, setBuildings] = useState(INITIAL_BUILDINGS);
     const [playerCars, setPlayerCars] = useState(() => [INITIAL_CAR]);
@@ -110,7 +111,7 @@ function App() {
                 setCurrentXp(initialState.current_xp ?? currentXp);
                 setXpToNextLevel(initialState.xp_to_next_level ?? xpToNextLevel);
                 const loadedTime = initialState.last_collected_time ? new Date(initialState.last_collected_time).getTime() : Date.now();
-                lastCollectedTimeRef.current = loadedTime;
+                lastCollectedTimeRef.current = loadedTime; // Установка времени из бэкенда
 
                 // --- Обработка сложных состояний ---
                 loadedBuildings = Array.isArray(initialState.buildings) ? initialState.buildings : INITIAL_BUILDINGS;
@@ -182,14 +183,14 @@ function App() {
         const intervalId = setInterval(() => {
             const now = Date.now();
             const timePassedTotalSeconds = (now - lastCollectedTimeRef.current) / 1000;
-            if (!isFinite(timePassedTotalSeconds) || !isFinite(incomePerSecond)) {
-                console.error("Invalid time or income rate:", { timePassedTotalSeconds, incomePerSecond });
+            if (!isFinite(timePassedTotalSeconds) || !isFinite(incomePerSecond) || timePassedTotalSeconds < 0) {
+                console.error("Invalid time or income rate:", { timePassedTotalSeconds, incomePerSecond, now, lastCollectedTime: lastCollectedTimeRef.current });
                 return;
             }
             const potentialTotalIncome = timePassedTotalSeconds * incomePerSecond;
             const newAccumulated = Math.min(potentialTotalIncome, maxAccumulationCap);
             console.log("Accumulated income:", newAccumulated);
-            setAccumulatedIncome(isFinite(newAccumulated) && newAccumulated > 0 ? newAccumulated : 0);
+            setAccumulatedIncome(isFinite(newAccumulated) && newAccumulated >= 0 ? newAccumulated : 0);
         }, UPDATE_INTERVAL);
         return () => clearInterval(intervalId);
     }, [incomeRatePerHour, isLoading]);
