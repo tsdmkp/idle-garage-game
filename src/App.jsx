@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 // Импорты компонентов
 import Header from './components/Header';
@@ -110,8 +109,11 @@ function App() {
                 setJetCoins(initialState.jet_coins ?? jetCoins);
                 setCurrentXp(initialState.current_xp ?? currentXp);
                 setXpToNextLevel(initialState.xp_to_next_level ?? xpToNextLevel);
-                const loadedTime = initialState.last_collected_time ? new Date(initialState.last_collected_time).getTime() : Date.now();
-                lastCollectedTimeRef.current = loadedTime; // Установка времени из бэкенда
+                // Проверка корректности времени
+                const loadedTimeRaw = initialState.last_collected_time;
+                const loadedTime = loadedTimeRaw ? new Date(loadedTimeRaw).getTime() : Date.now();
+                lastCollectedTimeRef.current = isFinite(loadedTime) ? loadedTime : Date.now();
+                console.log("Loaded last collected time:", lastCollectedTimeRef.current);
 
                 // --- Обработка сложных состояний ---
                 loadedBuildings = Array.isArray(initialState.buildings) ? initialState.buildings : INITIAL_BUILDINGS;
@@ -209,7 +211,7 @@ function App() {
             apiClient('/game_state', 'POST', {
                 userId,
                 game_coins: newTotalCoins,
-                last_collected_time: collectionTime,
+                last_collected_time: new Date(collectionTime).toISOString(), // Сохраняем в формате ISO
                 income_rate_per_hour: incomeRatePerHour,
                 buildings,
                 player_cars: playerCars,
