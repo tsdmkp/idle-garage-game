@@ -79,7 +79,7 @@ function App() {
             console.log('App: Telegram user data structure:', JSON.stringify(userData, null, 2));
             if (userData && typeof userData === 'object') {
                 const firstName = userData.first_name || userData.firstName || userData.username || 'Игрок';
-                setPlayerName(firstName); // Устанавливаем имя сразу
+                setPlayerName(firstName); // Устанавливаем имя из Telegram
                 console.log('Player name set to:', firstName);
             } else {
                 console.warn('No valid user data in tgUserData:', userData);
@@ -108,8 +108,8 @@ function App() {
 
             if (initialState && typeof initialState === 'object') {
                 setPlayerLevel(initialState.player_level ?? playerLevel);
-                // Имя уже установлено выше, но если бэкенд возвращает имя, можно обновить
-                if (initialState.first_name) {
+                // Игнорируем first_name из бэкенда, если оно не "Skyline"
+                if (initialState.first_name && initialState.first_name !== 'Игрок') {
                     setPlayerName(initialState.first_name);
                     console.log('Player name updated from backend:', initialState.first_name);
                 }
