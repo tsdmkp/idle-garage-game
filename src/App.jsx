@@ -10,7 +10,6 @@ import RaceScreen from './components/RaceScreen';
 import ShopScreen from './components/ShopScreen';
 import StaffScreen from './components/StaffScreen';
 import CarSelector from './components/CarSelector';
-import NameInputModal from './components/NameInputModal';
 // Импорт утилит
 import {
     calculateUpgradeCost,
@@ -65,7 +64,6 @@ function App() {
     const [activeScreen, setActiveScreen] = useState('garage');
     const [isTuningVisible, setIsTuningVisible] = useState(false);
     const [isCarSelectorVisible, setIsCarSelectorVisible] = useState(false);
-    const [isNameModalOpen, setIsNameModalOpen] = useState(false);
 
     // --- Вычисляемая переменная для текущей выбранной машины ---
     const currentCar = playerCars.find(car => car.id === selectedCarId) || playerCars[0] || null;
@@ -86,13 +84,6 @@ function App() {
         loadInitialData();
     }, []);
 
-    // --- Эффект для открытия модального окна имени ---
-    useEffect(() => {
-        if (playerName === 'Игрок' && tgUserData && isTgApp) {
-            setIsNameModalOpen(true);
-        }
-    }, [playerName, tgUserData, isTgApp]);
-
     // --- Асинхронная Функция Загрузки Данных ---
     const loadInitialData = async () => {
         console.log("loadInitialData started...");
@@ -102,7 +93,8 @@ function App() {
 
         try {
             console.log("Attempting apiClient call...");
-            const initialState = await apiClient('/game_state', 'GET');
+            const userId = tgUserData?.id?.toString() || 'default';
+            const initialState = await apiClient('/game_state', 'GET', { params: { userId } });
             console.log("Received initial state from backend:", initialState);
 
             if (initialState && typeof initialState === 'object') {
@@ -186,7 +178,7 @@ function App() {
             const timePassedTotalSeconds = (now - lastCollectedTimeRef.current) / 1000;
             const potentialTotalIncome = timePassedTotalSeconds * incomePerSecond;
             const newAccumulated = Math.min(potentialTotalIncome, maxAccumulationCap);
-            setAccumulatedIncome(newAccumulated);
+            setAccumulatedIncome(newAccumulated > 0 ? newAccumulated : 0); // Проверка на корректность
         }, UPDATE_INTERVAL);
         return () => clearInterval(intervalId);
     }, [incomeRatePerHour, isLoading]);
@@ -201,9 +193,16 @@ function App() {
             const collectionTime = Date.now();
             lastCollectedTimeRef.current = collectionTime;
             console.log(`Collected ${incomeToAdd} GC.`);
+            const userId = tgUserData?.id?.toString() || 'default';
             apiClient('/game_state', 'POST', {
+                userId,
                 game_coins: newTotalCoins,
-                last_collected_time: collectionTime
+                last_collected_time: collectionTime,
+                income_rate_per_hour: incomeRatePerHour,
+                buildings,
+                player_cars: playerCars,
+                hired_staff: hiredStaff,
+                selected_car_id: selectedCarId
             }).catch(err => console.error('Failed to save collect:', err));
         }
     };
@@ -222,9 +221,15 @@ function App() {
             setBuildings(updatedBuildings);
             setIncomeRatePerHour(newTotalRate);
             console.log(`Building ${buildingName} upgraded. New rate: ${newTotalRate}/hour.`);
+            const userId = tgUserData?.id?.toString() || 'default';
             apiClient('/game_state', 'POST', {
+                userId,
                 game_coins: newCoins,
-                buildings: updatedBuildings
+                buildings: updatedBuildings,
+                income_rate_per_hour: newTotalRate,
+                player_cars: playerCars,
+                hired_staff: hiredStaff,
+                selected_car_id: selectedCarId
             }).catch(err => console.error('Failed to save building:', err));
         }
     };
@@ -251,9 +256,15 @@ function App() {
             setGameCoins(newCoins);
             setPlayerCars(updatedPlayerCars);
             console.log(`Part "${part.name}" upgraded. New rate: ${incomeRatePerHour}/hour.`);
+            const userId = tgUserData?.id?.toString() || 'default';
             apiClient('/game_state', 'POST', {
+                userId,
                 game_coins: newCoins,
-                player_cars: updatedPlayerCars
+                player_cars: updatedPlayerCars,
+                income_rate_per_hour: incomeRatePerHour,
+                buildings,
+                hired_staff: hiredStaff,
+                selected_car_id: selectedCarId
             }).catch(err => console.error('Failed to save part upgrade:', err));
         }
     };
@@ -264,9 +275,16 @@ function App() {
         if (raceOutcome) {
             setGameCoins(raceOutcome.newGameCoins);
             setCurrentXp(raceOutcome.newCurrentXp);
+            const userId = tgUserData?.id?.toString() || 'default';
             apiClient('/game_state', 'POST', {
+                userId,
                 game_coins: raceOutcome.newGameCoins,
-                current_xp: raceOutcome.newCurrentXp
+                current_xp: raceOutcome.newCurrentXp,
+                income_rate_per_hour: incomeRatePerHour,
+                buildings,
+                player_cars: playerCars,
+                hired_staff: hiredStaff,
+                selected_car_id: selectedCarId
             }).catch(err => console.error('Failed to save race:', err));
             return { result: raceOutcome.result, reward: raceOutcome.reward };
         } else {
@@ -289,9 +307,15 @@ function App() {
         setGameCoins(newCoins);
         setPlayerCars(updatedPlayerCars);
         console.log(`Bought car ${carData.name}.`);
+        const userId = tgUserData?.id?.toString() || 'default';
         apiClient('/game_state', 'POST', {
+            userId,
             game_coins: newCoins,
-            player_cars: updatedPlayerCars
+            player_cars: updatedPlayerCars,
+            income_rate_per_hour: incomeRatePerHour,
+            buildings,
+            hired_staff: hiredStaff,
+            selected_car_id: selectedCarId
         }).catch(err => console.error('Failed to save car purchase:', err));
     };
 
@@ -305,9 +329,15 @@ function App() {
             setHiredStaff(updatedHiredStaff);
             setIncomeRatePerHour(newTotalRate);
             console.log(`Hired/upgraded staff ${staffId}. New rate: ${newTotalRate}/hour.`);
+            const userId = tgUserData?.id?.toString() || 'default';
             apiClient('/game_state', 'POST', {
+                userId,
                 game_coins: newCoins,
-                hired_staff: updatedHiredStaff
+                hired_staff: updatedHiredStaff,
+                income_rate_per_hour: newTotalRate,
+                buildings,
+                player_cars: playerCars,
+                selected_car_id: selectedCarId
             }).catch(err => console.error('Failed to save staff:', err));
         }
     };
@@ -329,25 +359,17 @@ function App() {
                 const newTotalRate = calculateTotalIncomeRate(buildings, newSelectedCar, hiredStaff);
                 setIncomeRatePerHour(newTotalRate);
             }
+            const userId = tgUserData?.id?.toString() || 'default';
             apiClient('/game_state', 'POST', {
-                selected_car_id: carId
+                userId,
+                selected_car_id: carId,
+                income_rate_per_hour: incomeRatePerHour,
+                buildings,
+                player_cars: playerCars,
+                hired_staff: hiredStaff
             }).catch(err => console.error('Failed to save car selection:', err));
         }
         setIsCarSelectorVisible(false);
-    };
-
-    const handleSaveName = async (newName) => {
-        if (!newName.trim()) return;
-        try {
-            console.log(`Saving new name: ${newName}`);
-            setPlayerName(newName);
-            await apiClient('/game_state', 'POST', {
-                first_name: newName
-            });
-            setIsNameModalOpen(false);
-        } catch (error) {
-            console.error('Failed to save name:', error);
-        }
     };
 
     // --- Расчеты для Рендера ---
@@ -371,7 +393,6 @@ function App() {
                     gameCoins={gameCoins}
                     jetCoins={jetCoins}
                     xpPercentage={xpPercentage}
-                    onChangeName={() => setIsNameModalOpen(true)}
                 />
             </div>
 
@@ -457,14 +478,6 @@ function App() {
                     selectedCarId={selectedCarId}
                     onSelectCar={handleSelectCar}
                     onClose={handleCloseCarSelector}
-                />
-            )}
-
-            {isNameModalOpen && (
-                <NameInputModal
-                    currentName={playerName}
-                    onSave={handleSaveName}
-                    onClose={() => setIsNameModalOpen(false)}
                 />
             )}
 
