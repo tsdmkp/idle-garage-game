@@ -35,6 +35,7 @@
   border-radius: 8px;
   margin: 0 2px;
   position: relative;
+  -webkit-tap-highlight-color: transparent; /* Убираем выделение при клике на мобильных */
 }
 
 .nav-item:hover {

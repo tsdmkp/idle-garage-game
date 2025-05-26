@@ -1,8 +1,8 @@
 import React from 'react';
-import './NavBar.css'; // Стили
+import './NavBar.css';
 
 // Принимает текущий активный экран и обработчик клика
-function NavBar({ activeScreen, onNavClick }) {
+function NavBar({ activeScreen, onScreenChange }) {
   // Список элементов навигации
   const navItems = [
     { id: 'garage', icon: '🚗', label: 'Гараж' },
@@ -19,7 +19,7 @@ function NavBar({ activeScreen, onNavClick }) {
         <button
           key={item.id}
           className={`nav-item ${activeScreen === item.id ? 'active' : ''}`}
-          onClick={() => onNavClick(item.id)} // Вызываем обработчик с ID экрана
+          onClick={() => onScreenChange(item.id)} // Используем onScreenChange
           title={item.label} // Подсказка для десктопа
         >
           <div className="nav-icon">{item.icon}</div>
