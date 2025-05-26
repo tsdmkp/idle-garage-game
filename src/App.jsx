@@ -76,6 +76,9 @@ function App() {
             const userData = tg.initDataUnsafe?.user || null;
             setTgUserData(userData);
             console.log('App: Telegram user data:', userData);
+            if (userData?.first_name) {
+                setPlayerName(userData.first_name);
+            }
             tg.ready();
             tg.expand();
         } else {
@@ -138,7 +141,7 @@ function App() {
                 loadedBuildings = buildings;
                 carToCalculateFrom = currentCar || INITIAL_CAR;
                 loadedHiredStaff = hiredStaff;
-                setPlayerName(tgUserData?.first_name || playerName); // Попытка установить имя из Telegram
+                setPlayerName(tgUserData?.first_name || playerName);
             }
         } catch (err) {
             console.error("Failed to fetch initial game state:", err.message);
@@ -179,10 +182,14 @@ function App() {
         const intervalId = setInterval(() => {
             const now = Date.now();
             const timePassedTotalSeconds = (now - lastCollectedTimeRef.current) / 1000;
+            if (!isFinite(timePassedTotalSeconds) || !isFinite(incomePerSecond)) {
+                console.error("Invalid time or income rate:", { timePassedTotalSeconds, incomePerSecond });
+                return;
+            }
             const potentialTotalIncome = timePassedTotalSeconds * incomePerSecond;
             const newAccumulated = Math.min(potentialTotalIncome, maxAccumulationCap);
             console.log("Accumulated income:", newAccumulated);
-            setAccumulatedIncome(newAccumulated > 0 ? newAccumulated : 0);
+            setAccumulatedIncome(isFinite(newAccumulated) && newAccumulated > 0 ? newAccumulated : 0);
         }, UPDATE_INTERVAL);
         return () => clearInterval(intervalId);
     }, [incomeRatePerHour, isLoading]);
