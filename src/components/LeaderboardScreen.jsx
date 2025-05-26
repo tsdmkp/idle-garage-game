@@ -12,12 +12,9 @@ function LeaderboardScreen({ tgUserData }) {
         try {
             const userId = tgUserData?.id?.toString() || 'default';
             const data = await apiClient(`/leaderboard?userId=${userId}`, 'GET');
-            // Адаптация к текущему формату ответа (просто массив)
             const leaderboardData = Array.isArray(data) ? data : [];
-            // Сортировка по income_rate_per_hour (по убыванию)
             const sortedLeaderboard = leaderboardData.sort((a, b) => (b.income_rate_per_hour || 0) - (a.income_rate_per_hour || 0));
             setLeaderboard(sortedLeaderboard);
-            // Находим текущего игрока в массиве
             const current = sortedLeaderboard.find(player => player.user_id === userId) || null;
             setCurrentPlayer(current);
         } catch (err) {
@@ -30,7 +27,7 @@ function LeaderboardScreen({ tgUserData }) {
 
     useEffect(() => {
         fetchLeaderboard();
-        const intervalId = setInterval(fetchLeaderboard, 30000); // Обновление каждые 30 секунд
+        const intervalId = setInterval(fetchLeaderboard, 30000);
         return () => clearInterval(intervalId);
     }, [tgUserData]);
 
@@ -52,7 +49,7 @@ function LeaderboardScreen({ tgUserData }) {
             <h2>Таблица рекордов</h2>
             {currentPlayer && (
                 <div className="current-player">
-                    Вы: #{leaderboard.findIndex(p => p.user_id === currentPlayer.user_id) + 1} ({currentPlayer.first_name || 'Игрок'}, {currentPlayer.income_rate_per_hour.toLocaleString()}/ч)
+                    Вы: #{leaderboard.findIndex(p => p.user_id === currentPlayer.user_id) + 1} ({currentPlayer.first_name || 'Игрок'}, {(currentPlayer.income_rate_per_hour || 0).toLocaleString()}/ч)
                 </div>
             )}
             {leaderboard.length === 0 ? (
@@ -71,7 +68,7 @@ function LeaderboardScreen({ tgUserData }) {
                             <tr key={player.user_id}>
                                 <td>{index + 1}</td>
                                 <td>{player.first_name || 'Игрок'}</td>
-                                <td>{player.income_rate_per_hour.toLocaleString()}/ч</td>
+                                <td>{(player.income_rate_per_hour || 0).toLocaleString()}/ч</td>
                             </tr>
                         ))}
                     </tbody>

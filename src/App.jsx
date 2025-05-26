@@ -56,7 +56,7 @@ function App() {
     const [currentXp, setCurrentXp] = useState(10);
     const [xpToNextLevel, setXpToNextLevel] = useState(100);
     const [incomeRatePerHour, setIncomeRatePerHour] = useState(0);
-    const lastCollectedTimeRef = useRef(Date.now()); // Инициализация при создании
+    const lastCollectedTimeRef = useRef(Date.now());
     const [accumulatedIncome, setAccumulatedIncome] = useState(0);
     const [buildings, setBuildings] = useState(INITIAL_BUILDINGS);
     const [playerCars, setPlayerCars] = useState(() => [INITIAL_CAR]);
@@ -79,7 +79,7 @@ function App() {
             console.log('App: Telegram user data structure:', JSON.stringify(userData, null, 2));
             if (userData && typeof userData === 'object') {
                 const firstName = userData.first_name || userData.firstName || userData.username || 'Игрок';
-                setPlayerName(firstName);
+                setPlayerName(firstName); // Устанавливаем имя сразу
                 console.log('Player name set to:', firstName);
             } else {
                 console.warn('No valid user data in tgUserData:', userData);
@@ -107,20 +107,22 @@ function App() {
             console.log("Received initial state from backend:", initialState);
 
             if (initialState && typeof initialState === 'object') {
-                // --- Установка простых состояний ---
                 setPlayerLevel(initialState.player_level ?? playerLevel);
-                setPlayerName(initialState.first_name || (tgUserData?.first_name || tgUserData?.firstName || tgUserData?.username || playerName));
+                // Имя уже установлено выше, но если бэкенд возвращает имя, можно обновить
+                if (initialState.first_name) {
+                    setPlayerName(initialState.first_name);
+                    console.log('Player name updated from backend:', initialState.first_name);
+                }
                 setGameCoins(initialState.game_coins ?? gameCoins);
                 setJetCoins(initialState.jet_coins ?? jetCoins);
                 setCurrentXp(initialState.current_xp ?? currentXp);
                 setXpToNextLevel(initialState.xp_to_next_level ?? xpToNextLevel);
-                // Проверка корректности времени
+
                 const loadedTimeRaw = initialState.last_collected_time;
                 const loadedTime = loadedTimeRaw ? new Date(loadedTimeRaw).getTime() : Date.now();
                 lastCollectedTimeRef.current = isFinite(loadedTime) ? loadedTime : Date.now();
                 console.log("Loaded last collected time:", lastCollectedTimeRef.current);
 
-                // --- Обработка сложных состояний ---
                 loadedBuildings = Array.isArray(initialState.buildings) ? initialState.buildings : INITIAL_BUILDINGS;
                 setBuildings(loadedBuildings);
 
@@ -149,7 +151,6 @@ function App() {
                 loadedBuildings = buildings;
                 carToCalculateFrom = currentCar || INITIAL_CAR;
                 loadedHiredStaff = hiredStaff;
-                setPlayerName(tgUserData?.first_name || tgUserData?.firstName || tgUserData?.username || playerName);
             }
         } catch (err) {
             console.error("Failed to fetch initial game state:", err.message);
