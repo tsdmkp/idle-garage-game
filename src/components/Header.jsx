@@ -19,6 +19,9 @@ const Header = ({
     return num.toString();
   };
 
+  // Отладочный лог
+  console.log('Header rendering with playerName:', playerName);
+
   return (
     <div className="header">
       {/* Информация об игроке */}
@@ -30,8 +33,9 @@ const Header = ({
           className="player-name" 
           onClick={onChangeName}
           title="Нажмите, чтобы изменить имя"
+          style={{ border: '2px solid red', padding: '2px' }} // Усиленная отладка
         >
-          {playerName}
+          {playerName || 'DefaultPlayer'}
         </div>
         <div className="xp-bar-container">
           <div 

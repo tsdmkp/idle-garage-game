@@ -163,7 +163,10 @@ function App() {
                 const initialTotalRate = calculateTotalIncomeRate(loadedBuildings, carToCalculateFrom, loadedHiredStaff);
                 setIncomeRatePerHour(initialTotalRate);
                 const now = Date.now();
+                console.log("Current time (now):", now);
+                console.log("Last collected time:", lastCollectedTimeRef.current);
                 const offlineTimeMs = now - lastCollectedTimeRef.current;
+                console.log("Offline time (ms):", offlineTimeMs);
                 let offlineIncome = 0;
                 if (offlineTimeMs > 0 && initialTotalRate > 0) {
                     offlineIncome = (initialTotalRate / 3600) * Math.min(offlineTimeMs / 1000, MAX_OFFLINE_HOURS * 3600);
