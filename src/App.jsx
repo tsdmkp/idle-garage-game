@@ -10,6 +10,7 @@ import RaceScreen from './components/RaceScreen';
 import ShopScreen from './components/ShopScreen';
 import StaffScreen from './components/StaffScreen';
 import CarSelector from './components/CarSelector';
+import LeaderboardScreen from './components/LeaderboardScreen';
 // Импорт утилит
 import {
     calculateUpgradeCost,
@@ -75,9 +76,13 @@ function App() {
             setIsTgApp(true);
             const userData = tg.initDataUnsafe?.user || null;
             setTgUserData(userData);
-            console.log('App: Telegram user data:', userData);
-            if (userData?.first_name) {
-                setPlayerName(userData.first_name);
+            console.log('App: Telegram user data structure:', JSON.stringify(userData, null, 2));
+            if (userData && typeof userData === 'object') {
+                const firstName = userData.first_name || userData.firstName || userData.username || 'Игрок';
+                setPlayerName(firstName);
+                console.log('Player name set to:', firstName);
+            } else {
+                console.warn('No valid user data in tgUserData:', userData);
             }
             tg.ready();
             tg.expand();
@@ -104,7 +109,7 @@ function App() {
             if (initialState && typeof initialState === 'object') {
                 // --- Установка простых состояний ---
                 setPlayerLevel(initialState.player_level ?? playerLevel);
-                setPlayerName(initialState.first_name || tgUserData?.first_name || playerName);
+                setPlayerName(initialState.first_name || (tgUserData?.first_name || tgUserData?.firstName || tgUserData?.username || playerName));
                 setGameCoins(initialState.game_coins ?? gameCoins);
                 setJetCoins(initialState.jet_coins ?? jetCoins);
                 setCurrentXp(initialState.current_xp ?? currentXp);
@@ -144,7 +149,7 @@ function App() {
                 loadedBuildings = buildings;
                 carToCalculateFrom = currentCar || INITIAL_CAR;
                 loadedHiredStaff = hiredStaff;
-                setPlayerName(tgUserData?.first_name || playerName);
+                setPlayerName(tgUserData?.first_name || tgUserData?.firstName || tgUserData?.username || playerName);
             }
         } catch (err) {
             console.error("Failed to fetch initial game state:", err.message);
@@ -162,6 +167,7 @@ function App() {
                 let offlineIncome = 0;
                 if (offlineTimeMs > 0 && initialTotalRate > 0) {
                     offlineIncome = (initialTotalRate / 3600) * Math.min(offlineTimeMs / 1000, MAX_OFFLINE_HOURS * 3600);
+                    console.log(`Offline income calculated: ${offlineIncome.toFixed(2)} for ${offlineTimeMs / 1000} seconds`);
                 }
                 setAccumulatedIncome(offlineIncome);
                 console.log(`Final calculated rate: ${initialTotalRate}/h, offline income: ${offlineIncome.toFixed(2)}`);
@@ -211,7 +217,7 @@ function App() {
             apiClient('/game_state', 'POST', {
                 userId,
                 game_coins: newTotalCoins,
-                last_collected_time: new Date(collectionTime).toISOString(), // Сохраняем в формате ISO
+                last_collected_time: new Date(collectionTime).toISOString(),
                 income_rate_per_hour: incomeRatePerHour,
                 buildings,
                 player_cars: playerCars,
@@ -463,6 +469,13 @@ function App() {
                         gameCoins={gameCoins}
                         onHireOrUpgrade={handleHireOrUpgradeStaff}
                         calculateCost={(id) => calculateStaffCost(id, hiredStaff)}
+                    />
+                )}
+
+                {/* ЭКРАН РЕКОРДОВ */}
+                {activeScreen === 'leaderboard' && (
+                    <LeaderboardScreen
+                        tgUserData={tgUserData}
                     />
                 )}
 
