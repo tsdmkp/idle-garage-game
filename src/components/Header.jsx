@@ -1,59 +1,77 @@
 import React from 'react';
-import './Header.css'; // Убедись, что файл стилей существует и импортирован
+import './Header.css';
 
-// Компонент Header для отображения верхней панели игры
-// Принимает данные об игроке и ресурсах через props
-
-// --- ДОБАВЛЕНЫ ЗНАЧЕНИЯ ПО УМОЛЧАНИЮ для gameCoins и jetCoins ---
-function Header({
-    level = 1,                // Уровень игрока (по умолчанию 1)
-    playerName = "Игрок",   // Имя игрока (по умолчанию "Игрок")
-    gameCoins = 0,            // Игровые монеты (по умолчанию 0)
-    jetCoins = 0,             // Токены (по умолчанию 0)
-    xpPercentage = 0          // Процент опыта (по умолчанию 0)
-}) {
-
-  // Теперь gameCoins и jetCoins гарантированно будут числами (или 0),
-  // даже если из App придет undefined или null.
+const Header = ({ 
+  level, 
+  playerName, 
+  gameCoins, 
+  jetCoins, 
+  xpPercentage, 
+  onChangeName 
+}) => {
+  // Форматирование чисел
+  const formatNumber = (num) => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toString();
+  };
 
   return (
-    // Основной контейнер хедера
     <div className="header">
-
-      {/* Блок с информацией об игроке (уровень, имя, XP) */}
+      {/* Информация об игроке */}
       <div className="player-info">
-        <span className="player-level">LVL {level}</span> {/* Отображаем уровень */}
-        <span className="player-name">{playerName}</span> {/* Отображаем имя */}
-        {/* Контейнер для полосы опыта */}
+        <div className="player-level">
+          Lv.{level}
+        </div>
+        <div 
+          className="player-name" 
+          onClick={onChangeName}
+          title="Нажмите, чтобы изменить имя"
+        >
+          {playerName}
+        </div>
         <div className="xp-bar-container">
-          {/* Заполняющая часть полосы опыта, ширина зависит от xpPercentage */}
-          <div
-            className="xp-bar-fill"
-            style={{ width: `${xpPercentage}%` }} // Динамический стиль ширины
+          <div 
+            className="xp-bar-fill" 
+            style={{ width: `${xpPercentage}%` }}
           ></div>
         </div>
       </div>
 
-      {/* Блок с ресурсами (монеты, токены) */}
+      {/* Ресурсы */}
       <div className="resources">
-        {/* Отображаем игровые монеты с форматированием */}
-        <span className="resource-item">💰 {gameCoins.toLocaleString()}</span>
-        {/* Отображаем токены с форматированием */}
-        <span className="resource-item">💎 {jetCoins.toLocaleString()}</span>
+        <div className="resource-item game-coins">
+          <span>💰</span>
+          <span>{formatNumber(gameCoins)}</span>
+        </div>
+        <div className="resource-item jet-coins">
+          <span>💎</span>
+          <span>{formatNumber(jetCoins)}</span>
+        </div>
       </div>
 
-      {/* Блок с кнопками действий (бустеры, настройки) */}
+      {/* Действия */}
       <div className="header-actions">
-        {/* Иконка бустеров (пока неактивна) */}
-        <span className="header-icon" title="Бустеры">🚀</span>
-        {/* Иконка настроек (пока неактивна) */}
-        <span className="header-icon" title="Настройки">⚙️</span>
-        {/* TODO: Сделать эти иконки кликабельными кнопками */}
+        <div 
+          className="header-icon" 
+          title="Настройки"
+          onClick={() => console.log('Settings clicked')}
+        >
+          ⚙️
+        </div>
+        <div 
+          className="header-icon" 
+          title="Профиль"
+          onClick={() => console.log('Profile clicked')}
+        >
+          👤
+        </div>
       </div>
-
-    </div> // Закрываем основной контейнер хедера
+    </div>
   );
-}
+};
 
-// Экспортируем компонент для использования в других частях приложения
 export default Header;

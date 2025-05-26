@@ -1,142 +1,254 @@
-/* Единые настройки для всей игры */
+/* src/App.css - Обновленная версия с компактной компоновкой */
+
+/* Сброс стилей для корневого элемента */
 #root {
-  width: 100%;
-  margin: 0 auto;
+  margin: 0;
   padding: 0;
-  text-align: center;
-  box-sizing: border-box;
-}
-
-/* Основной контейнер - ЕДИНАЯ ШИРИНА для всех страниц */
-.app {
-  width: 100%;
-  max-width: 400px; /* Оптимально для Telegram */
-  margin: 0 auto;
-  padding: 15px;
-  font-family: Arial, sans-serif;
-  box-sizing: border-box;
   min-height: 100vh;
-}
-
-/* Header фиксированный размер */
-header {
-  text-align: center;
-  margin-bottom: 15px;
   width: 100%;
-}
-
-.player-info {
-  margin-top: 10px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap; /* На маленьких экранах переносится */
-}
-
-.player-info button {
-  padding: 8px 12px;
-  background: #007bff;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
   color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background 0.2s;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
 
-.player-info button:hover {
-  background: #0056b3;
-}
-
-/* Основной контент - единая ширина */
-.main-content {
-  width: 100%;
-  margin-bottom: 80px; /* Место для NavBar */
-}
-
-/* Экраны ошибок и загрузки */
-.loading-screen, .error-screen {
+/* Основной контейнер приложения */
+.App {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  min-height: 50vh;
-  padding: 20px;
-  text-align: center;
+  position: relative;
+  overflow-x: hidden;
 }
 
-.error-screen button {
-  margin-top: 15px;
-  padding: 10px 20px;
-  background: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
+/* === ФИКСИРОВАННЫЙ ХЕДЕР === */
+.header-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: rgba(51, 51, 51, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #555;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
-/* Placeholder для P2E экрана */
+/* === ОСНОВНОЙ КОНТЕНТ === */
+.main-content {
+  flex: 1;
+  padding-top: 60px; /* Отступ под фиксированный хедер */
+  padding-bottom: 80px; /* Отступ над нижней навигацией */
+  padding-left: 10px;
+  padding-right: 10px;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+/* === КОМПАКТНАЯ КОМПОНОВКА ГАРАЖА === */
+.garage-screen-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* Компактный гараж */
+.garage-area {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 12px !important;
+  min-height: auto;
+}
+
+.garage-area .car-image {
+  max-width: 200px !important;
+  height: auto;
+}
+
+.garage-area .car-stats {
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 8px !important;
+  padding: 10px !important;
+  margin-bottom: 12px !important;
+}
+
+.garage-area .car-stats span {
+  padding: 6px 4px !important;
+  font-size: 0.8em !important;
+}
+
+.garage-area .tune-button {
+  padding: 12px !important;
+  font-size: 1em !important;
+}
+
+/* === КОМПАКТНАЯ ОБЛАСТЬ ДОХОДА === */
+.income-area {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 12px 15px !important;
+}
+
+.income-progress {
+  height: 24px !important;
+  margin-bottom: 12px !important;
+}
+
+.collect-button {
+  width: 100% !important;
+  padding: 12px 20px !important;
+  font-size: 1em !important;
+}
+
+/* === КОМПАКТНАЯ ОБЛАСТЬ ПОСТРОЕК === */
+.building-area {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 12px 15px !important;
+}
+
+.buildings-grid {
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.building-item {
+  min-height: 90px !important;
+  padding: 8px 4px !important;
+}
+
+.building-icon {
+  font-size: 1.8em !important;
+  margin-bottom: 6px !important;
+}
+
+.building-name {
+  font-size: 0.75em !important;
+  margin-bottom: 6px !important;
+}
+
+/* === ЭКРАНЫ-ЗАГЛУШКИ === */
 .placeholder-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
   padding: 40px 20px;
   text-align: center;
-  color: white;
-  fontSize: 1.2em;
-  opacity: 0.7;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.5em;
+  font-weight: 300;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  margin: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Убираем старые стили логотипов */
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+/* === ЭКРАНЫ ЗАГРУЗКИ И ОШИБОК === */
+.loading-screen,
+.error-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  text-align: center;
+  font-size: 1.2em;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+.loading-screen {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: #fff;
 }
 
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.error-screen {
+  background: linear-gradient(135deg, #2d1b2e 0%, #3e1621 50%, #601f0f 100%);
+  color: #ffcccb;
 }
 
-@keyframes logo-spin {
+/* === АДАПТИВНОСТЬ === */
+@media (max-width: 480px) {
+  .main-content {
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+  
+  .garage-area .car-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  
+  .buildings-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  
+  .building-item {
+    min-height: 80px !important;
+  }
+  
+  .building-icon {
+    font-size: 1.6em !important;
+  }
+}
+
+@media (max-width: 350px) {
+  .garage-area,
+  .income-area,
+  .building-area {
+    padding: 8px 10px !important;
+  }
+  
+  .placeholder-screen {
+    margin: 10px;
+    padding: 30px 15px;
+    font-size: 1.2em;
+  }
+}
+
+/* === УЛУЧШЕНИЯ АНИМАЦИЙ === */
+.main-content > * {
+  animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
   from {
-    transform: rotate(0deg);
+    opacity: 0;
+    transform: translateY(20px);
   }
   to {
-    transform: rotate(360deg);
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+/* === ФИКСЫ ДЛЯ СУЩЕСТВУЮЩИХ КОМПОНЕНТОВ === */
+.header {
+  position: relative !important; /* Убираем конфликты с фиксированным позиционированием */
 }
 
-.card {
-  padding: 2em;
+.navbar {
+  z-index: 999 !important;
 }
 
-.read-the-docs {
-  color: #888;
+/* Убираем лишние отступы у секций */
+.garage-area::before {
+  border-radius: 8px !important;
 }
 
-/* Responsive для очень маленьких экранов */
-@media (max-width: 350px) {
-  .app {
-    max-width: 100%;
-    padding: 10px;
-  }
-  
-  .player-info {
-    gap: 5px;
-  }
-  
-  .player-info button {
-    padding: 6px 10px;
-    font-size: 12px;
-  }
+/* Компактные кнопки навигации */
+.nav-item {
+  padding: 8px 6px !important;
+}
+
+.nav-icon {
+  font-size: 1.1em !important;
+}
+
+.nav-label {
+  font-size: 0.65em !important;
 }
