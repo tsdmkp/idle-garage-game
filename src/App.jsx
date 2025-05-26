@@ -73,10 +73,11 @@ function App() {
         const tg = window.Telegram?.WebApp;
         if (tg) {
             setIsTgApp(true);
-            setTgUserData(tg.initDataUnsafe?.user || null);
+            const userData = tg.initDataUnsafe?.user || null;
+            setTgUserData(userData);
+            console.log('App: Telegram user data:', userData);
             tg.ready();
             tg.expand();
-            console.log('App: Telegram user data:', tg.initDataUnsafe?.user);
         } else {
             setIsTgApp(false);
             console.warn('App: Telegram initData not found.');
@@ -100,7 +101,7 @@ function App() {
             if (initialState && typeof initialState === 'object') {
                 // --- Установка простых состояний ---
                 setPlayerLevel(initialState.player_level ?? playerLevel);
-                setPlayerName(initialState.first_name || initialState.username || playerName);
+                setPlayerName(initialState.first_name || tgUserData?.first_name || playerName);
                 setGameCoins(initialState.game_coins ?? gameCoins);
                 setJetCoins(initialState.jet_coins ?? jetCoins);
                 setCurrentXp(initialState.current_xp ?? currentXp);
@@ -137,6 +138,7 @@ function App() {
                 loadedBuildings = buildings;
                 carToCalculateFrom = currentCar || INITIAL_CAR;
                 loadedHiredStaff = hiredStaff;
+                setPlayerName(tgUserData?.first_name || playerName); // Попытка установить имя из Telegram
             }
         } catch (err) {
             console.error("Failed to fetch initial game state:", err.message);
@@ -171,6 +173,7 @@ function App() {
     // --- Эффект Таймера Дохода ---
     useEffect(() => {
         if (incomeRatePerHour <= 0 || isLoading) return;
+        console.log("Income timer started with rate:", incomeRatePerHour);
         const incomePerSecond = incomeRatePerHour / 3600;
         const maxAccumulationCap = incomeRatePerHour * MAX_OFFLINE_HOURS;
         const intervalId = setInterval(() => {
@@ -178,7 +181,8 @@ function App() {
             const timePassedTotalSeconds = (now - lastCollectedTimeRef.current) / 1000;
             const potentialTotalIncome = timePassedTotalSeconds * incomePerSecond;
             const newAccumulated = Math.min(potentialTotalIncome, maxAccumulationCap);
-            setAccumulatedIncome(newAccumulated > 0 ? newAccumulated : 0); // Проверка на корректность
+            console.log("Accumulated income:", newAccumulated);
+            setAccumulatedIncome(newAccumulated > 0 ? newAccumulated : 0);
         }, UPDATE_INTERVAL);
         return () => clearInterval(intervalId);
     }, [incomeRatePerHour, isLoading]);
@@ -234,7 +238,10 @@ function App() {
         }
     };
 
-    const handleOpenTuning = () => setIsTuningVisible(true);
+    const handleOpenTuning = () => {
+        console.log("Opening Tuning Screen");
+        setIsTuningVisible(true);
+    };
     const handleCloseTuning = () => setIsTuningVisible(false);
 
     const handleUpgradePart = (partId) => {
@@ -343,6 +350,7 @@ function App() {
     };
 
     const handleNavClick = (screenId) => {
+        console.log("Nav click:", screenId);
         setIsTuningVisible(false);
         setIsCarSelectorVisible(false);
         setActiveScreen(screenId);
