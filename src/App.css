@@ -26,7 +26,7 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1000;
+  z-index: 1000; /* Выше NavBar */
   background: rgba(51, 51, 51, 0.95);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid #555;
@@ -56,80 +56,80 @@
 
 /* Компактный гараж */
 .garage-area {
-  width: 100% !important;
-  max-width: 100% !important;
-  margin: 0 !important;
-  padding: 12px !important;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 12px;
   min-height: auto;
 }
 
 .garage-area .car-image {
-  max-width: 200px !important;
+  max-width: 200px;
   height: auto;
 }
 
 .garage-area .car-stats {
-  grid-template-columns: repeat(4, 1fr) !important;
-  gap: 8px !important;
-  padding: 10px !important;
-  margin-bottom: 12px !important;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 10px;
+  margin-bottom: 12px;
 }
 
 .garage-area .car-stats span {
-  padding: 6px 4px !important;
-  font-size: 0.8em !important;
+  padding: 6px 4px;
+  font-size: 0.8em;
 }
 
 .garage-area .tune-button {
-  padding: 12px !important;
-  font-size: 1em !important;
+  padding: 12px;
+  font-size: 1em;
 }
 
 /* === КОМПАКТНАЯ ОБЛАСТЬ ДОХОДА === */
 .income-area {
-  width: 100% !important;
-  max-width: 100% !important;
-  margin: 0 !important;
-  padding: 12px 15px !important;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 12px 15px;
 }
 
 .income-progress {
-  height: 24px !important;
-  margin-bottom: 12px !important;
+  height: 24px;
+  margin-bottom: 12px;
 }
 
 .collect-button {
-  width: 100% !important;
-  padding: 12px 20px !important;
-  font-size: 1em !important;
+  width: 100%;
+  padding: 12px 20px;
+  font-size: 1em;
 }
 
 /* === КОМПАКТНАЯ ОБЛАСТЬ ПОСТРОЕК === */
 .building-area {
-  width: 100% !important;
-  max-width: 100% !important;
-  margin: 0 !important;
-  padding: 12px 15px !important;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 12px 15px;
 }
 
 .buildings-grid {
-  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)) !important;
-  gap: 10px !important;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 10px;
 }
 
 .building-item {
-  min-height: 90px !important;
-  padding: 8px 4px !important;
+  min-height: 90px;
+  padding: 8px 4px;
 }
 
 .building-icon {
-  font-size: 1.8em !important;
-  margin-bottom: 6px !important;
+  font-size: 1.8em;
+  margin-bottom: 6px;
 }
 
 .building-name {
-  font-size: 0.75em !important;
-  margin-bottom: 6px !important;
+  font-size: 0.75em;
+  margin-bottom: 6px;
 }
 
 /* === ЭКРАНЫ-ЗАГЛУШКИ === */
@@ -180,19 +180,19 @@
   }
   
   .garage-area .car-stats {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(2, 1fr);
   }
   
   .buildings-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-columns: repeat(3, 1fr);
   }
   
   .building-item {
-    min-height: 80px !important;
+    min-height: 80px;
   }
   
   .building-icon {
-    font-size: 1.6em !important;
+    font-size: 1.6em;
   }
 }
 
@@ -200,7 +200,7 @@
   .garage-area,
   .income-area,
   .building-area {
-    padding: 8px 10px !important;
+    padding: 8px 10px;
   }
   
   .placeholder-screen {
@@ -228,27 +228,30 @@
 
 /* === ФИКСЫ ДЛЯ СУЩЕСТВУЮЩИХ КОМПОНЕНТОВ === */
 .header {
-  position: relative !important; /* Убираем конфликты с фиксированным позиционированием */
+  position: relative; /* Убираем конфликты с фиксированным позиционированием */
 }
 
 .navbar {
-  z-index: 999 !important;
+  z-index: 900; /* Ниже header-container */
 }
 
 /* Убираем лишние отступы у секций */
 .garage-area::before {
-  border-radius: 8px !important;
+  border-radius: 8px;
 }
 
 /* Компактные кнопки навигации */
 .nav-item {
-  padding: 8px 6px !important;
+  padding: 8px 6px;
 }
 
 .nav-icon {
-  font-size: 1.1em !important;
+  font-size: 1.1em;
 }
 
 .nav-label {
-  font-size: 0.65em !important;
+  font-size: 0.65em;
 }
+
+/* === КОММЕНТАРИИ ДЛЯ БУДУЩЕГО === */
+/* Добавить стили для NameInputModal, когда компонент будет готов */
