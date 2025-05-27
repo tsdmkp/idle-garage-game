@@ -83,17 +83,19 @@ function App() {
     }
     loadInitialData();
     return () => {
-      const userId = tgUserData?.id?.toString() || 'default';
-      apiClient('/game_state', 'POST', {
-        userId,
-        last_exit_time: new Date().toISOString(),
-      }).catch(err => console.error('Failed to save last exit time:', err));
+      if (tgUserData) {
+        const userId = tgUserData.id.toString() || 'default';
+        apiClient('/game_state', 'POST', {
+          userId,
+          last_exit_time: new Date().toISOString(),
+        }).catch(err => console.error('Failed to save last exit time:', err));
+      }
     };
   }, [tgUserData]);
 
   useEffect(() => {
     if (incomeRatePerHour > 0 && tgUserData) {
-      const userId = tgUserData?.id?.toString() || 'default';
+      const userId = tgUserData.id.toString() || 'default';
       apiClient('/game_state', 'POST', {
         userId,
         income_rate_per_hour: incomeRatePerHour,
@@ -130,6 +132,10 @@ function App() {
         console.log('Loaded last collected time:', lastCollectedTimeRef.current);
         console.log('Loaded last exit time:', loadedLastExitTime);
 
+        const now = Date.now();
+        const offlineTimeMs = Math.max(0, now - loadedLastExitTime);
+        console.log('Offline time (ms) from exit:', offlineTimeMs);
+
         loadedBuildings = Array.isArray(initialState.buildings) ? initialState.buildings : INITIAL_BUILDINGS;
         setBuildings(loadedBuildings);
 
@@ -152,6 +158,16 @@ function App() {
         carToCalculateFrom = actualPlayerCars.find(c => c.id === finalSelectedCarId) || actualPlayerCars[0];
 
         if (!carToCalculateFrom) throw new Error('Ошибка определения машины после загрузки');
+
+        const initialTotalRate = calculateTotalIncomeRate(loadedBuildings, carToCalculateFrom, loadedHiredStaff);
+        setIncomeRatePerHour(initialTotalRate);
+        let offlineIncome = 0;
+        if (offlineTimeMs > 0 && initialTotalRate > 0) {
+          offlineIncome = (initialTotalRate / 3600) * Math.min(offlineTimeMs / 1000, MAX_OFFLINE_HOURS * 3600);
+          console.log(`Offline income calculated: ${offlineIncome.toFixed(2)} for ${offlineTimeMs / 1000} seconds`);
+        }
+        setAccumulatedIncome(offlineIncome);
+        console.log(`Final calculated rate: ${initialTotalRate}/h, offline income: ${offlineIncome.toFixed(2)}`);
       } else {
         console.warn('Backend returned invalid initial state. Using current state as defaults.');
         setError('Не удалось получить данные игрока.');
@@ -162,32 +178,7 @@ function App() {
     } catch (err) {
       console.error('Failed to fetch initial game state:', err.message);
       setError(`Ошибка загрузки: ${err.message}`);
-      loadedBuildings = buildings;
-      carToCalculateFrom = currentCar || INITIAL_CAR;
-      loadedHiredStaff = hiredStaff;
     } finally {
-      console.log('Entering finally block...');
-      if (carToCalculateFrom) {
-        const initialTotalRate = calculateTotalIncomeRate(loadedBuildings, carToCalculateFrom, loadedHiredStaff);
-        setIncomeRatePerHour(initialTotalRate);
-        const now = Date.now();
-        console.log('Current time (now):', now);
-        console.log('Last collected time:', lastCollectedTimeRef.current);
-        const offlineTimeMs = now - lastCollectedTimeRef.current;
-        console.log('Offline time (ms):', offlineTimeMs);
-        let offlineIncome = 0;
-        if (offlineTimeMs > 0 && initialTotalRate > 0) {
-          offlineIncome = (initialTotalRate / 3600) * Math.min(offlineTimeMs / 1000, MAX_OFFLINE_HOURS * 3600);
-          console.log(`Offline income calculated: ${offlineIncome.toFixed(2)} for ${offlineTimeMs / 1000} seconds`);
-        }
-        setAccumulatedIncome(offlineIncome);
-        console.log(`Final calculated rate: ${initialTotalRate}/h, offline income: ${offlineIncome.toFixed(2)}`);
-      } else {
-        console.error('Finally block: carToCalculateFrom is not set!');
-        setIncomeRatePerHour(0);
-        setAccumulatedIncome(0);
-        if (!error) setError('Критическая ошибка инициализации.');
-      }
       setIsLoading(false);
       console.log('isLoading set to false. Initialization finished.');
     }
@@ -279,7 +270,7 @@ function App() {
     const part = currentCar.parts[partId];
     const cost = calculateUpgradeCost(partId, part.level);
     console.log('Upgrade cost:', cost, 'GameCoins:', gameCoins);
-    if (gameCoins >= cost) {
+    if (gameCoins >= cost && cost !== Infinity) {
       const newCoins = gameCoins - cost;
       const updatedParts = { ...currentCar.parts, [partId]: { ...part, level: part.level + 1 } };
       const { stats: newStats } = recalculateStatsAndIncomeBonus(currentCar.id, updatedParts);
@@ -306,7 +297,7 @@ function App() {
         selected_car_id: selectedCarId
       }).catch(err => console.error('Failed to save part upgrade:', err));
     } else {
-      console.log('Not enough coins for upgrade:', cost);
+      console.log('Not enough coins for upgrade or invalid cost:', cost);
     }
   };
 
@@ -489,7 +480,7 @@ function App() {
         {activeScreen === 'p2e' && (
           <div className="placeholder-screen">
             <div>
-              <div style={{ fontSize: '1.5em', marginBottom: '10px' }}>🎮</div>
+              <div style={{ fontSize: '3em', marginBottom: '10px' }}>🎮</div>
               <div>Play to Earn</div>
               <div style={{ fontSize: '0.8em', opacity: 0.6, marginTop: '10px' }}>
                 Скоро здесь появятся новые возможности!
@@ -508,7 +499,7 @@ function App() {
       )}
       {isCarSelectorVisible && (
         <CarSelector
-          items={playerCars}
+          playerCars={playerCars}
           selectedCarId={selectedCarId}
           onSelectCar={handleSelectCar}
           onClose={handleCloseCarSelector}

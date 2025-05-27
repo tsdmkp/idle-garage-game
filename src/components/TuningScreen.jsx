@@ -1,47 +1,49 @@
 import React from 'react';
-import './TuningScreen.css';
 import { calculateUpgradeCost } from '../utils';
+import './TuningScreen.css';
 
-function TuningScreen({ car, gameCoins, onUpgradePart, onClose }) {
-    if (!car) return null;
+function TuningScreen({ car, gameCoins, onClose, onUpgrade }) {
+  if (!car || !car.parts) {
+    console.error('TuningScreen: No car or parts provided', car);
+    return <div className="tuning-screen-overlay">Ошибка: Нет данных машины</div>;
+  }
 
-    const { parts, name: carName } = car;
+  const handleUpgradeClick = (partId) => {
+    console.log('TuningScreen: Upgrading part:', partId, 'Car:', car, 'GameCoins:', gameCoins);
+    if (car.parts[partId]) {
+      onUpgrade(partId);
+    } else {
+      console.error('TuningScreen: Part not found:', partId);
+    }
+  };
 
-    return (
-        <div className="tuning-overlay" onClick={onClose}>
-            <div className="tuning-screen" onClick={(e) => e.stopPropagation()}>
-                <button className="close-button" onClick={onClose}>×</button>
-                <h2>Тюнинг: {carName}</h2>
-
-                <div className="tuning-parts-list">
-                    {Object.entries(parts).map(([partId, part]) => {
-                        const cost = calculateUpgradeCost(partId, part.level);
-                        const canAfford = gameCoins >= cost;
-
-                        return (
-                            <div className="part-item" key={partId}>
-                                <span className="part-name">
-                                    {part.name || (partId.charAt(0).toUpperCase() + partId.slice(1).replace('_', ' '))} (Ур. {part.level})
-                                </span>
-                                <div className="part-actions">
-                                    <span className={`part-cost ${!canAfford ? 'insufficient' : ''}`}>
-                                        💰 {cost.toLocaleString()}
-                                    </span>
-                                    <button
-                                        className="upgrade-button"
-                                        onClick={() => onUpgradePart(car.id, partId)}
-                                        disabled={!canAfford}
-                                    >
-                                        Улучшить
-                                    </button>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
+  return (
+    <div className="tuning-screen-overlay">
+      <div className="tuning-screen">
+        <h2>Тюнинг: {car.name}</h2>
+        <button className="close-button" onClick={onClose}>×</button>
+        <div className="parts-list">
+          {Object.entries(car.parts).map(([partId, part]) => {
+            const cost = calculateUpgradeCost(partId, part.level);
+            const canAfford = gameCoins >= cost && cost !== Infinity;
+            console.log(`TuningScreen: Part ${partId}, Cost: ${cost}, CanAfford: ${canAfford}`);
+            return (
+              <div key={partId} className="part-item">
+                <span>{part.name} (Уровень: {part.level})</span>
+                <button
+                  className="upgrade-button"
+                  onClick={() => handleUpgradeClick(partId)}
+                  disabled={!canAfford}
+                >
+                  Улучшить ({cost} 💰)
+                </button>
+              </div>
+            );
+          })}
         </div>
-    );
+      </div>
+    </div>
+  );
 }
 
 export default TuningScreen;
