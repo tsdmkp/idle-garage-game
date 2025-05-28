@@ -4,13 +4,13 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(30, 30, 30, 0.9));
-  backdrop-filter: blur(10px);
+  background: transparent;
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
   animation: fadeIn 0.3s ease-out;
+  pointer-events: none;
 }
 
 @keyframes fadeIn {
@@ -43,6 +43,8 @@
     0 0 0 1px rgba(255, 255, 255, 0.1);
   animation: slideUp 0.4s ease-out;
   color: #ffffff;
+  backdrop-filter: blur(20px);
+  pointer-events: all;
 }
 
 .tuning-screen h2 {
