@@ -11,6 +11,8 @@ import StaffScreen from './components/StaffScreen';
 import CarSelector from './components/CarSelector';
 import LeaderboardScreen from './components/LeaderboardScreen';
 import {
+ 
+ 
   calculateUpgradeCost,
   recalculateStatsAndIncomeBonus,
   calculateTotalIncomeRate,
@@ -170,7 +172,7 @@ function App() {
         console.log(`Final calculated rate: ${initialTotalRate}/h, offline income: ${offlineIncome.toFixed(2)}`);
       } else {
         console.warn('Backend returned invalid initial state. Using current state as defaults.');
-        setError('Не удалось получить данные игрока.');
+        setError('Не удалось получить данные игрока');
         loadedBuildings = buildings;
         carToCalculateFrom = currentCar || INITIAL_CAR;
         loadedHiredStaff = hiredStaff;
