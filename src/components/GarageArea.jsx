@@ -65,12 +65,24 @@ function GarageArea({ car, onTuneClick, onOpenCarSelector }) {
         />
       </div>
 
-      {/* Блок характеристик */}
+      {/* Блок характеристик С ИКОНКАМИ */}
       <div className="car-stats">
-        <span title={`Мощность: ${power}`}>P: {power}</span>
-        <span title={`Скорость: ${speed}`}>S: {speed}</span>
-        <span title={`Стиль: ${style}`}>St: {style}</span>
-        <span title={`Надежность: ${reliability}`}>R: {reliability}</span>
+        <span title={`Мощность: ${power}`}>
+          <span className="stat-icon">⚡</span>
+          <span className="stat-value">{power}</span>
+        </span>
+        <span title={`Скорость: ${speed}`}>
+          <span className="stat-icon">🏎️</span>
+          <span className="stat-value">{speed}</span>
+        </span>
+        <span title={`Стиль: ${style}`}>
+          <span className="stat-icon">✨</span>
+          <span className="stat-value">{style}</span>
+        </span>
+        <span title={`Надежность: ${reliability}`}>
+          <span className="stat-icon">🔧</span>
+          <span className="stat-value">{reliability}</span>
+        </span>
       </div>
 
       {/* Кнопка тюнинга */}
