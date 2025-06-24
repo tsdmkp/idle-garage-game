@@ -1,35 +1,38 @@
 import React from 'react';
-import BuildingItem from './BuildingItem'; // Импортируем компонент здания
-import './BuildingArea.css'; // Стили
+import './BuildingItem.css'; // Стили добавим
 
-// Принимает массив зданий и обработчик клика
-function BuildingArea({ buildings, onBuildingClick }) {
-
-  const handleItemClick = (buildingName) => {
-    console.log("Клик по зданию:", buildingName);
-    if (onBuildingClick) {
-      onBuildingClick(buildingName); // Вызываем переданную функцию
+function BuildingItem({ name, level, icon, isLocked = false, onClick }) {
+  
+  // ✅ ДОБАВЛЯЕМ ОТЛАДОЧНЫЕ ЛОГИ
+  console.log(`BuildingItem render: name=${name}, icon="${icon}", level=${level}, isLocked=${isLocked}`);
+  
+  const handleClick = () => {
+    if (!isLocked && onClick) {
+      console.log(`BuildingItem clicked: ${name}`);
+      onClick(name); // Передаем имя здания при клике
+    } else {
+      console.log(`BuildingItem click blocked: locked=${isLocked}, onClick=${!!onClick}`);
     }
-    // В будущем здесь может быть логика открытия окна улучшения/постройки
   };
 
+  // ✅ ПРОВЕРЯЕМ ЧТО ОТОБРАЖАЕТСЯ В ИКОНКЕ
+  const displayIcon = isLocked ? '🔒' : icon;
+  console.log(`BuildingItem ${name} will display icon: "${displayIcon}"`);
+
   return (
-    <div className="building-area">
-      <h3 className="area-title">Постройки</h3>
-      <div className="buildings-grid">
-        {buildings.map((building) => (
-          <BuildingItem
-            key={building.id} // Ключ для React
-            name={building.name}
-            level={building.level}
-            icon={building.icon}
-            isLocked={building.isLocked}
-            onClick={handleItemClick}
-          />
-        ))}
+    <div
+      className={`building-item ${isLocked ? 'locked' : ''} ${level > 0 ? 'active' : ''}`}
+      onClick={handleClick}
+      title={isLocked ? "Недоступно" : `${name} (Ур. ${level}) ${level > 0 ? '' : '(Не построено)'}`}
+    >
+      <div className="building-icon" style={{ border: '1px solid red', minHeight: '30px' }}>
+        {displayIcon}
       </div>
+      <div className="building-name">{name}</div>
+      {level > 0 && !isLocked && <div className="building-level">Ур. {level}</div>}
+      {level === 0 && !isLocked && <div className="building-level build-prompt">Построить</div>}
     </div>
   );
 }
 
-export default BuildingArea;
+export default BuildingItem;
