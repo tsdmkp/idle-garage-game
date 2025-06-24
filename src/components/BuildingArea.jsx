@@ -1,38 +1,74 @@
 import React from 'react';
-import './BuildingItem.css'; // Стили добавим
+import BuildingItem from './BuildingItem';
+import './BuildingArea.css';
 
-function BuildingItem({ name, level, icon, isLocked = false, onClick }) {
+// ✅ ЭКСТРЕННОЕ РЕШЕНИЕ: Хардкод зданий прямо в компоненте
+const FALLBACK_BUILDINGS = [
+    { id: 'wash', name: 'Автомойка', level: 1, icon: '🧼', isLocked: false },
+    { id: 'service', name: 'Сервис', level: 0, icon: '🔧', isLocked: false },
+    { id: 'tires', name: 'Шиномонтаж', level: 0, icon: '🔘', isLocked: true },
+    { id: 'drift', name: 'Шк. Дрифта', level: 0, icon: '🏫', isLocked: true },
+];
+
+function BuildingArea({ buildings, onBuildingClick }) {
+
+  console.log("BuildingArea: buildings received:", buildings);
   
-  // ✅ ДОБАВЛЯЕМ ОТЛАДОЧНЫЕ ЛОГИ
-  console.log(`BuildingItem render: name=${name}, icon="${icon}", level=${level}, isLocked=${isLocked}`);
+  // ✅ ЭКСТРЕННАЯ ЗАЩИТА: Используем fallback если данные плохие
+  const safeBuildings = React.useMemo(() => {
+    
+    // Если нет зданий или данные плохие - используем fallback
+    if (!buildings || !Array.isArray(buildings) || buildings.length === 0) {
+      console.warn("BuildingArea: No buildings received, using FALLBACK_BUILDINGS");
+      return FALLBACK_BUILDINGS;
+    }
+    
+    // Проверяем первое здание
+    const firstBuilding = buildings[0];
+    if (!firstBuilding || 
+        typeof firstBuilding.name !== 'string' || 
+        typeof firstBuilding.icon !== 'string' ||
+        firstBuilding.name === 'undefined' ||
+        firstBuilding.icon === 'undefined') {
+      console.warn("BuildingArea: Buildings have invalid data, using FALLBACK_BUILDINGS");
+      console.log("First building:", firstBuilding);
+      return FALLBACK_BUILDINGS;
+    }
+    
+    console.log("BuildingArea: Using received buildings:", buildings);
+    return buildings;
+  }, [buildings]);
   
-  const handleClick = () => {
-    if (!isLocked && onClick) {
-      console.log(`BuildingItem clicked: ${name}`);
-      onClick(name); // Передаем имя здания при клике
+  const handleItemClick = (buildingName) => {
+    console.log("Клик по зданию:", buildingName);
+    if (onBuildingClick) {
+      onBuildingClick(buildingName);
     } else {
-      console.log(`BuildingItem click blocked: locked=${isLocked}, onClick=${!!onClick}`);
+      console.warn("onBuildingClick не передан!");
     }
   };
 
-  // ✅ ПРОВЕРЯЕМ ЧТО ОТОБРАЖАЕТСЯ В ИКОНКЕ
-  const displayIcon = isLocked ? '🔒' : icon;
-  console.log(`BuildingItem ${name} will display icon: "${displayIcon}"`);
-
   return (
-    <div
-      className={`building-item ${isLocked ? 'locked' : ''} ${level > 0 ? 'active' : ''}`}
-      onClick={handleClick}
-      title={isLocked ? "Недоступно" : `${name} (Ур. ${level}) ${level > 0 ? '' : '(Не построено)'}`}
-    >
-      <div className="building-icon" style={{ border: '1px solid red', minHeight: '30px' }}>
-        {displayIcon}
+    <div className="building-area">
+      <h3 className="area-title">Постройки</h3>
+      <div className="buildings-grid">
+        {safeBuildings.map((building) => {
+          console.log(`Rendering building: ${building.name}, icon: ${building.icon}, level: ${building.level}, locked: ${building.isLocked}`);
+          
+          return (
+            <BuildingItem
+              key={building.id}
+              name={building.name}
+              level={building.level}
+              icon={building.icon}
+              isLocked={building.isLocked}
+              onClick={handleItemClick}
+            />
+          );
+        })}
       </div>
-      <div className="building-name">{name}</div>
-      {level > 0 && !isLocked && <div className="building-level">Ур. {level}</div>}
-      {level === 0 && !isLocked && <div className="building-level build-prompt">Построить</div>}
     </div>
   );
 }
 
-export default BuildingItem;
+export default BuildingArea;

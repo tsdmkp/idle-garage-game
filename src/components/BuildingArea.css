@@ -1,44 +1,52 @@
-import React from 'react';
-import BuildingItem from './BuildingItem'; // Импортируем компонент здания
-import './BuildingArea.css'; // Стили
+/* src/components/BuildingArea.css */
 
-// Принимает массив зданий и обработчик клика
-function BuildingArea({ buildings, onBuildingClick }) {
+.building-area {
+  /* --- Layout & Box Model --- */
+  width: 90%;                     /* Ширина блока */
+  max-width: 480px;               /* Макс. ширина (как у гаража и дохода) */
+  margin: 20px auto 0 auto;       /* Отступы: 20 сверху, авто по бокам, 0 снизу */
+  padding: 15px;                  /* Внутренние отступы */
+  box-sizing: border-box;
 
-  // ✅ ДОБАВЛЯЕМ ОТЛАДОЧНЫЕ ЛОГИ
-  console.log("BuildingArea: buildings received:", buildings);
-  
-  const handleItemClick = (buildingName) => {
-    console.log("Клик по зданию:", buildingName);
-    if (onBuildingClick) {
-      onBuildingClick(buildingName); // Вызываем переданную функцию
-    } else {
-      console.warn("onBuildingClick не передан!");
-    }
-  };
+  /* --- Appearance & Background --- */
+  border-radius: 8px;             /* Скругление углов */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Внешняя тень */
+  position: relative;             /* Для позиционирования */
+  overflow: hidden;               /* Обрезаем фон по границам */
+  border: 1px solid rgba(255, 255, 255, 0.08); /* Легкая светлая граница */
 
-  return (
-    <div className="building-area">
-      <h3 className="area-title">Постройки</h3>
-      <div className="buildings-grid">
-        {buildings.map((building) => {
-          // ✅ ЛОГИРУЕМ КАЖДОЕ ЗДАНИЕ
-          console.log(`Rendering building: ${building.name}, icon: ${building.icon}, level: ${building.level}, locked: ${building.isLocked}`);
-          
-          return (
-            <BuildingItem
-              key={building.id} // Ключ для React
-              name={building.name}
-              level={building.level}
-              icon={building.icon}
-              isLocked={building.isLocked}
-              onClick={handleItemClick}
-            />
-          );
-        })}
-      </div>
-    </div>
-  );
+  /* --- Background Image Settings --- */
+  /* Путь к файлу фона в папке /public/ */
+  /* Пример градиента + фон. Настрой rgba(R,G,B, Alpha) и Alpha под свой фон */
+  /* Если фон сам по себе темный и контрастный, градиент можно убрать */
+  background-image: linear-gradient(rgba(55, 60, 70, 0.2), rgba(55, 60, 70, 0.2)), url('/buildings-background.jpg');
+  background-size: cover;           /* Масштабируем фон */
+  background-position: center center; /* Центрируем фон */
+  background-repeat: no-repeat;     /* Не повторяем фон */
 }
 
-export default BuildingArea;
+/* --- Заголовок "Постройки" --- */
+.area-title {
+  text-align: center;             /* Текст по центру */
+  margin: 0 0 15px 0;             /* Отступы: 0 сверху/по бокам, 15 снизу */
+  color: #f0f0f0;                 /* Светлый цвет текста */
+  font-size: 1.1em;               /* Размер шрифта */
+  font-weight: 500;               /* Средняя жирность */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6); /* Тень для читаемости */
+}
+
+/* --- Сетка для Карточек Зданий --- */
+.buildings-grid {
+  display: grid;                  /* Используем Grid для сетки */
+  /* Адаптивные колонки: мин. ширина 85px, макс. - равная доля (1fr) */
+  grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
+  gap: 12px;                      /* Отступы между карточками (чуть больше) */
+}
+
+/* --- Стили для самих карточек зданий (BuildingItem) --- */
+/* Находятся в файле BuildingItem.css */
+/* Если текст/иконки на карточках стали плохо читаемы на новом фоне, */
+/* нужно отредактировать BuildingItem.css, добавив/изменив там: */
+/* - text-shadow для .building-name */
+/* - Возможно, легкий фон для .building-item (например, rgba(0,0,0,0.1)) */
+/* - Цвет .building-icon, если используются шрифтовые иконки */
