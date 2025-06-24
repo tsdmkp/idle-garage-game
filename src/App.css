@@ -1,4 +1,4 @@
-/* src/App.css - Обновленная версия с компактной компоновкой */
+/* src/App.css - Современный красивый дизайн */
 
 /* Сброс стилей для корневого элемента */
 #root {
@@ -6,9 +6,17 @@
   padding: 0;
   min-height: 100vh;
   width: 100%;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  background: linear-gradient(135deg, 
+    #0f172a 0%, 
+    #1e293b 25%, 
+    #334155 50%, 
+    #1e293b 75%, 
+    #0f172a 100%
+  );
+  background-attachment: fixed;
   color: white;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Inter', sans-serif;
+  font-feature-settings: 'kern', 'liga', 'clig', 'calt';
 }
 
 /* Основной контейнер приложения */
@@ -26,110 +34,62 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1000; /* Выше NavBar */
-  background: rgba(51, 51, 51, 0.95);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid #555;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.3),
+    0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+}
+
+.header-container::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(147, 197, 253, 0.3) 50%, 
+    transparent 100%
+  );
 }
 
 /* === ОСНОВНОЙ КОНТЕНТ === */
 .main-content {
   flex: 1;
-  padding-top: 60px; /* Отступ под фиксированный хедер */
-  padding-bottom: 80px; /* Отступ над нижней навигацией */
-  padding-left: 10px;
-  padding-right: 10px;
+  padding-top: 70px;
+  padding-bottom: 90px;
+  padding-left: 15px;
+  padding-right: 15px;
   max-width: 100%;
   box-sizing: border-box;
   overflow-y: auto;
+  scroll-behavior: smooth;
 }
 
 /* === КОМПАКТНАЯ КОМПОНОВКА ГАРАЖА === */
 .garage-screen-layout {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 20px;
   max-width: 500px;
   margin: 0 auto;
+  animation: fadeIn 0.8s ease-out;
 }
 
-/* Компактный гараж */
-.garage-area {
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  padding: 12px;
-  min-height: auto;
-}
-
-.garage-area .car-image {
-  max-width: 200px;
-  height: auto;
-}
-
-.garage-area .car-stats {
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  padding: 10px;
-  margin-bottom: 12px;
-}
-
-.garage-area .car-stats span {
-  padding: 6px 4px;
-  font-size: 0.8em;
-}
-
-.garage-area .tune-button {
-  padding: 12px;
-  font-size: 1em;
-}
-
-/* === КОМПАКТНАЯ ОБЛАСТЬ ДОХОДА === */
-.income-area {
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  padding: 12px 15px;
-}
-
-.income-progress {
-  height: 24px;
-  margin-bottom: 12px;
-}
-
-.collect-button {
-  width: 100%;
-  padding: 12px 20px;
-  font-size: 1em;
-}
-
-/* === КОМПАКТНАЯ ОБЛАСТЬ ПОСТРОЕК === */
-.building-area {
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
-  padding: 12px 15px;
-}
-
-.buildings-grid {
-  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-  gap: 10px;
-}
-
-.building-item {
-  min-height: 90px;
-  padding: 8px 4px;
-}
-
-.building-icon {
-  font-size: 1.8em;
-  margin-bottom: 6px;
-}
-
-.building-name {
-  font-size: 0.75em;
-  margin-bottom: 6px;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* === ЭКРАНЫ-ЗАГЛУШКИ === */
@@ -140,13 +100,40 @@
   min-height: 60vh;
   padding: 40px 20px;
   text-align: center;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.8);
   font-size: 1.5em;
   font-weight: 300;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
+  
+  /* Современный дизайн */
+  background: linear-gradient(135deg, 
+    rgba(30, 35, 50, 0.8) 0%, 
+    rgba(45, 50, 70, 0.6) 100%
+  );
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
   margin: 20px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  
+  animation: slideInUp 0.6s ease-out;
+}
+
+.placeholder-screen > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.placeholder-screen > div > div:first-child {
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
 
 /* === ЭКРАНЫ ЗАГРУЗКИ И ОШИБОК === */
@@ -160,98 +147,166 @@
   font-size: 1.2em;
   padding: 20px;
   box-sizing: border-box;
+  position: relative;
 }
 
 .loading-screen {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-  color: #fff;
+  background: linear-gradient(135deg, 
+    #0f172a 0%, 
+    #1e293b 50%, 
+    #334155 100%
+  );
+  color: #f1f5f9;
+}
+
+.loading-screen::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  border: 3px solid rgba(147, 197, 253, 0.3);
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: loadingSpinner 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes loadingSpinner {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
 .error-screen {
-  background: linear-gradient(135deg, #2d1b2e 0%, #3e1621 50%, #601f0f 100%);
-  color: #ffcccb;
+  background: linear-gradient(135deg, 
+    #450a0a 0%, 
+    #7f1d1d 50%, 
+    #991b1b 100%
+  );
+  color: #fecaca;
+}
+
+/* === УЛУЧШЕНИЯ АНИМАЦИЙ === */
+.main-content > * {
+  animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+}
+
+.main-content > *:nth-child(1) { animation-delay: 0.1s; }
+.main-content > *:nth-child(2) { animation-delay: 0.2s; }
+.main-content > *:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* === АДАПТИВНОСТЬ === */
 @media (max-width: 480px) {
   .main-content {
-    padding-left: 5px;
-    padding-right: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 65px;
+    padding-bottom: 85px;
   }
   
-  .garage-area .car-stats {
-    grid-template-columns: repeat(2, 1fr);
+  .garage-screen-layout {
+    gap: 15px;
   }
   
-  .buildings-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  
-  .building-item {
-    min-height: 80px;
-  }
-  
-  .building-icon {
-    font-size: 1.6em;
+  .placeholder-screen {
+    margin: 15px;
+    padding: 30px 15px;
+    font-size: 1.3em;
   }
 }
 
 @media (max-width: 350px) {
-  .garage-area,
-  .income-area,
-  .building-area {
-    padding: 8px 10px;
+  .main-content {
+    padding-left: 5px;
+    padding-right: 5px;
   }
   
   .placeholder-screen {
     margin: 10px;
-    padding: 30px 15px;
-    font-size: 1.2em;
+    padding: 25px 10px;
+    font-size: 1.1em;
   }
 }
 
-/* === УЛУЧШЕНИЯ АНИМАЦИЙ === */
-.main-content > * {
-  animation: slideInUp 0.3s ease-out;
-}
-
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* === ФИКСЫ ДЛЯ СУЩЕСТВУЮЩИХ КОМПОНЕНТОВ === */
-.header {
-  position: relative; /* Убираем конфликты с фиксированным позиционированием */
-}
-
+/* === УЛУЧШЕНИЯ ДЛЯ СУЩЕСТВУЮЩИХ КОМПОНЕНТОВ === */
 .navbar {
-  z-index: 900; /* Ниже header-container */
+  z-index: 900;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 -4px 16px rgba(0, 0, 0, 0.3),
+    0 -1px 0 rgba(255, 255, 255, 0.05);
 }
 
-/* Убираем лишние отступы у секций */
-.garage-area::before {
-  border-radius: 8px;
+.navbar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(147, 197, 253, 0.3) 50%, 
+    transparent 100%
+  );
 }
 
-/* Компактные кнопки навигации */
-.nav-item {
-  padding: 8px 6px;
+/* === ПЛАВНЫЕ ПЕРЕХОДЫ === */
+* {
+  -webkit-tap-highlight-color: transparent;
 }
 
-.nav-icon {
-  font-size: 1.1em;
+button, .clickable {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.nav-label {
-  font-size: 0.65em;
+/* === СКРОЛЛБАР === */
+::-webkit-scrollbar {
+  width: 6px;
 }
 
-/* === КОММЕНТАРИИ ДЛЯ БУДУЩЕГО === */
-/* Добавить стили для NameInputModal, когда компонент будет готов */
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(147, 197, 253, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(147, 197, 253, 0.5);
+}
+
+/* === УЛУЧШЕНИЯ ТИПОГРАФИКИ === */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+p, span, div {
+  line-height: 1.5;
+}
+
+/* === FOCUS STATES === */
+button:focus-visible,
+.clickable:focus-visible {
+  outline: 2px solid rgba(147, 197, 253, 0.6);
+  outline-offset: 2px;
+}

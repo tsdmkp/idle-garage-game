@@ -1,133 +1,315 @@
-/* src/components/IncomeArea.css */
+/* src/components/IncomeArea.css - Красивая область дохода */
 
 .income-area {
   /* --- Layout & Box Model --- */
-  display: flex;                  /* Flex-контейнер */
-  flex-direction: column;         /* Элементы в столбец */
-  align-items: center;            /* Центрируем по горизонтали */
-  padding: 15px 20px;             /* Внутренние отступы */
-  margin-top: 20px;               /* Отступ сверху от гаража */
-  width: 90%;                     /* Ширина блока */
-  max-width: 480px;               /* Макс. ширина (как у гаража) */
-  margin-left: auto;              /* Центрируем блок */
-  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  margin: 15px auto;
+  width: 100%;
+  max-width: 420px;
   box-sizing: border-box;
 
-  /* --- Appearance & Background --- */
-  border-radius: 8px;             /* Скругление углов */
-  box-shadow: 0 4px 10px rgba(0,0,0, 0.15); /* Внешняя тень */
-  position: relative;             /* Для позиционирования */
-  overflow: hidden;               /* Обрезаем фон по границам */
-  border: 1px solid rgba(255, 255, 255, 0.08); /* Легкая светлая граница */
+  /* --- Современный дизайн --- */
+  background: linear-gradient(135deg, 
+    rgba(20, 25, 40, 0.95) 0%, 
+    rgba(35, 40, 60, 0.9) 50%, 
+    rgba(15, 20, 35, 0.95) 100%
+  );
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  
+  /* --- Красивые тени --- */
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  
+  /* --- Анимация появления --- */
+  animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.2s backwards;
+  position: relative;
+  overflow: hidden;
+}
 
-  /* --- Background Image --- */
-  /* Путь к файлу фона в папке /public/ */
-  /* Добавлен полупрозрачный темный градиент поверх картинки */
-  /* Настрой цвет rgba(R, G, B, Alpha) и прозрачность Alpha под свой фон */
-  background-image: linear-gradient(rgba(40, 45, 55, 0.75), rgba(40, 45, 55, 0.75)), url('/income-background.jpg');
-  background-size: cover;           /* Масштабируем фон */
-  background-position: center center; /* Центрируем фон */
-  background-repeat: no-repeat;     /* Не повторяем фон */
+/* Декоративный элемент сверху */
+.income-area::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    #fbbf24 0%, 
+    #f59e0b 50%, 
+    #d97706 100%
+  );
+  border-radius: 16px 16px 0 0;
 }
 
 /* --- Info Row (Доход в час: +XX) --- */
 .income-info {
-  display: flex;                  /* Flex-контейнер для строки */
-  justify-content: space-between; /* Элементы по краям */
-  width: 100%;                    /* Занимает всю ширину */
-  margin-bottom: 12px;            /* Отступ снизу до прогресс-бара */
-  font-size: 0.9em;               /* Размер шрифта */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
 }
 
 /* Текст "Доход в час:" */
 .income-label {
-  color: #ccc; /* Светло-серый */
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5); /* Тень */
+  color: #e2e8f0;
+  font-size: 0.9em;
+  font-weight: 500;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 /* Текст "+XX" */
 .income-value {
-  font-weight: bold;              /* Жирный шрифт */
-  color: #f0e68c; /* Оставляем желтоватый для акцента */
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6); /* Тень */
+  font-weight: 700;
+  font-size: 1.1em;
+  color: #fbbf24;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.income-value::before {
+  content: '💰';
+  font-size: 1.2em;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
 }
 
 /* --- Progress Bar Area --- */
-/* Контейнер прогресс-бара */
 .income-progress {
-  width: 100%;                    /* Вся ширина */
-  height: 28px;                   /* Высота бара */
-  background-color: rgba(0, 0, 0, 0.35); /* Полупрозрачный темный фон */
-  border-radius: 6px;             /* Скругление */
-  margin-bottom: 15px;            /* Отступ снизу до кнопки */
-  position: relative;             /* Для позиционирования текста */
-  overflow: hidden;               /* Обрезаем заливку */
-  border: 1px solid rgba(255, 255, 255, 0.1); /* Легкая светлая рамка */
+  width: 100%;
+  height: 32px;
+  background: linear-gradient(135deg, 
+    rgba(0, 0, 0, 0.4) 0%, 
+    rgba(0, 0, 0, 0.6) 100%
+  );
+  border-radius: 16px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    inset 0 2px 8px rgba(0, 0, 0, 0.3),
+    0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 /* Заливка прогресс-бара */
 .income-fill {
-  height: 100%;                   /* Вся высота контейнера */
-  background: linear-gradient(90deg, #4caf50, #8bc34a); /* Зеленый градиент */
-  transition: width 0.5s linear;  /* Плавная анимация изменения ширины */
-  border-radius: 6px 0 0 6px;     /* Скругляем левые углы */
-}
-/* Если заполнено на 100%, скругляем и правые */
-.income-fill[style*="width: 100%"] {
-    border-radius: 6px;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    #22c55e 0%, 
+    #16a34a 25%,
+    #15803d 50%,
+    #22c55e 100%
+  );
+  border-radius: 16px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  box-shadow: 
+    0 0 20px rgba(34, 197, 94, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
-/* Текст поверх прогресс-бара ("Накоплено: X GC") */
+/* Анимированный блик на прогресс-баре */
+.income-fill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.3) 50%, 
+    transparent 100%
+  );
+  animation: progressShine 3s ease-in-out infinite;
+}
+
+@keyframes progressShine {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: -100%; }
+}
+
+/* Текст поверх прогресс-бара */
 .progress-bar-text {
-    position: absolute;             /* Позиционируем поверх */
-    top: 0; left: 0; width: 100%; height: 100%; /* Занимает всю область */
-    display: flex;                  /* Центрируем текст */
-    justify-content: center;
-    align-items: center;
-    color: white;                   /* Белый цвет текста */
-    font-size: 0.85em;              /* Размер шрифта */
-    font-weight: bold;              /* Жирный шрифт */
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8); /* Сильная тень для читаемости */
-    pointer-events: none;           /* Чтобы текст не мешал событиям мыши */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #ffffff;
+  font-size: 0.9em;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  z-index: 2;
 }
 
 /* --- Collect Button --- */
 .collect-button {
-  padding: 10px 25px;             /* Внутренние отступы */
-  font-size: 1.1em;               /* Размер шрифта */
-  font-weight: bold;              /* Жирный шрифт */
-  color: #333;                     /* Темный цвет текста */
-  background: linear-gradient(145deg, #ffd700, #ffec8b); /* Золотой градиент */
-  border: 1px solid #e0b700;      /* Золотая рамка */
-  border-radius: 20px;            /* Скругление */
-  cursor: pointer;                /* Курсор-указатель */
-  transition: all 0.2s ease;      /* Плавные переходы */
-  width: 85%;                     /* Ширина кнопки */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), 0 0 10px rgba(255, 215, 0, 0.2); /* Тень и свечение */
-  /* Чтобы кнопка была чуть выше фона */
+  padding: 14px 32px;
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #1f2937;
+  background: linear-gradient(135deg, 
+    #fbbf24 0%, 
+    #f59e0b 50%, 
+    #d97706 100%
+  );
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  width: 100%;
+  max-width: 280px;
+  
+  /* --- Красивые эффекты --- */
+  box-shadow: 
+    0 8px 20px rgba(245, 158, 11, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  z-index: 1;
+  overflow: hidden;
 }
 
-/* Состояние кнопки при наведении (если не disabled) */
+/* Анимированный фон кнопки */
+.collect-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.2) 50%, 
+    transparent 100%
+  );
+  transition: left 0.6s ease;
+}
+
+.collect-button:hover::before {
+  left: 100%;
+}
+
+/* Hover эффекты для активной кнопки */
 .collect-button:hover:not(:disabled) {
-  background: linear-gradient(145deg, #ffeb3b, #fff59d); /* Светлее градиент */
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4), 0 0 15px rgba(255, 215, 0, 0.3); /* Усиленная тень */
-  transform: translateY(-1px);    /* Легкий подъем */
+  background: linear-gradient(135deg, 
+    #f59e0b 0%, 
+    #d97706 50%, 
+    #b45309 100%
+  );
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 
+    0 12px 28px rgba(245, 158, 11, 0.4),
+    0 6px 16px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-/* Состояние кнопки при нажатии (если не disabled) */
+/* Active состояние при клике */
 .collect-button:active:not(:disabled) {
-  transform: translateY(0);       /* Возвращаем на место */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 5px rgba(255, 215, 0, 0.1); /* Уменьшенная тень */
+  transform: translateY(0) scale(1);
+  transition-duration: 0.1s;
+  box-shadow: 
+    0 4px 12px rgba(245, 158, 11, 0.3),
+    0 2px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-/* Стиль для неактивной (disabled) кнопки */
+/* Disabled состояние */
 .collect-button:disabled {
-  background: linear-gradient(145deg, #aaa, #ccc); /* Серый градиент */
-  border-color: #999;             /* Серая рамка */
-  color: #777;                     /* Серый текст */
-  cursor: not-allowed;            /* Курсор "запрещено" */
-  box-shadow: none;               /* Без тени */
-  opacity: 0.6;                   /* Полупрозрачность */
+  background: linear-gradient(135deg, 
+    #6b7280 0%, 
+    #4b5563 100%
+  );
+  color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  opacity: 0.7;
+}
+
+.collect-button:disabled::before {
+  display: none;
+}
+
+/* Пульсирующий эффект когда есть что собрать */
+.collect-button:not(:disabled) {
+  animation: collectPulse 2s ease-in-out infinite;
+}
+
+@keyframes collectPulse {
+  0%, 100% {
+    box-shadow: 
+      0 8px 20px rgba(245, 158, 11, 0.3),
+      0 4px 12px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 12px 32px rgba(245, 158, 11, 0.5),
+      0 6px 20px rgba(0, 0, 0, 0.3),
+      0 0 30px rgba(245, 158, 11, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* --- Адаптивность --- */
+@media (max-width: 480px) {
+  .income-area {
+    margin: 10px auto;
+    padding: 16px;
+    max-width: 100%;
+  }
+  
+  .income-info {
+    padding: 10px 12px;
+    margin-bottom: 14px;
+  }
+  
+  .income-progress {
+    height: 28px;
+    margin-bottom: 16px;
+  }
+  
+  .collect-button {
+    padding: 12px 24px;
+    font-size: 1em;
+  }
+}
+
+@media (max-width: 350px) {
+  .income-area {
+    padding: 12px;
+  }
+  
+  .income-info {
+    padding: 8px 10px;
+  }
+  
+  .income-progress {
+    height: 24px;
+  }
 }

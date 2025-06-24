@@ -1,52 +1,123 @@
-/* src/components/BuildingArea.css */
+/* src/components/BuildingArea.css - Красивый современный дизайн */
 
 .building-area {
   /* --- Layout & Box Model --- */
-  width: 90%;                     /* Ширина блока */
-  max-width: 480px;               /* Макс. ширина (как у гаража и дохода) */
-  margin: 20px auto 0 auto;       /* Отступы: 20 сверху, авто по бокам, 0 снизу */
-  padding: 15px;                  /* Внутренние отступы */
+  width: 100%;
+  max-width: 420px;
+  margin: 15px auto;
+  padding: 20px;
   box-sizing: border-box;
 
-  /* --- Appearance & Background --- */
-  border-radius: 8px;             /* Скругление углов */
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Внешняя тень */
-  position: relative;             /* Для позиционирования */
-  overflow: hidden;               /* Обрезаем фон по границам */
-  border: 1px solid rgba(255, 255, 255, 0.08); /* Легкая светлая граница */
+  /* --- Современный дизайн --- */
+  background: linear-gradient(135deg, 
+    rgba(30, 35, 50, 0.95) 0%, 
+    rgba(45, 50, 70, 0.9) 50%, 
+    rgba(25, 30, 45, 0.95) 100%
+  );
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  
+  /* --- Красивые тени и эффекты --- */
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  
+  /* --- Анимация появления --- */
+  animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
 
-  /* --- Background Image Settings --- */
-  /* Путь к файлу фона в папке /public/ */
-  /* Пример градиента + фон. Настрой rgba(R,G,B, Alpha) и Alpha под свой фон */
-  /* Если фон сам по себе темный и контрастный, градиент можно убрать */
-  background-image: linear-gradient(rgba(55, 60, 70, 0.2), rgba(55, 60, 70, 0.2)), url('/buildings-background.jpg');
-  background-size: cover;           /* Масштабируем фон */
-  background-position: center center; /* Центрируем фон */
-  background-repeat: no-repeat;     /* Не повторяем фон */
+/* Анимация появления */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Декоративный элемент сверху */
+.building-area::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    #4f46e5 0%, 
+    #06b6d4 25%, 
+    #10b981 50%, 
+    #f59e0b 75%, 
+    #ef4444 100%
+  );
+  border-radius: 16px 16px 0 0;
 }
 
 /* --- Заголовок "Постройки" --- */
 .area-title {
-  text-align: center;             /* Текст по центру */
-  margin: 0 0 15px 0;             /* Отступы: 0 сверху/по бокам, 15 снизу */
-  color: #f0f0f0;                 /* Светлый цвет текста */
-  font-size: 1.1em;               /* Размер шрифта */
-  font-weight: 500;               /* Средняя жирность */
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6); /* Тень для читаемости */
+  text-align: center;
+  margin: 0 0 20px 0;
+  color: #f8fafc;
+  font-size: 1.25em;
+  font-weight: 600;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  position: relative;
+  padding-bottom: 8px;
+}
+
+/* Подчеркивание заголовка */
+.area-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(90deg, #4f46e5, #06b6d4);
+  border-radius: 1px;
 }
 
 /* --- Сетка для Карточек Зданий --- */
 .buildings-grid {
-  display: grid;                  /* Используем Grid для сетки */
-  /* Адаптивные колонки: мин. ширина 85px, макс. - равная доля (1fr) */
-  grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
-  gap: 12px;                      /* Отступы между карточками (чуть больше) */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 16px;
+  padding: 4px;
 }
 
-/* --- Стили для самих карточек зданий (BuildingItem) --- */
-/* Находятся в файле BuildingItem.css */
-/* Если текст/иконки на карточках стали плохо читаемы на новом фоне, */
-/* нужно отредактировать BuildingItem.css, добавив/изменив там: */
-/* - text-shadow для .building-name */
-/* - Возможно, легкий фон для .building-item (например, rgba(0,0,0,0.1)) */
-/* - Цвет .building-icon, если используются шрифтовые иконки */
+/* --- Адаптивность --- */
+@media (max-width: 480px) {
+  .building-area {
+    margin: 10px auto;
+    padding: 16px;
+    max-width: 100%;
+  }
+  
+  .buildings-grid {
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 12px;
+  }
+  
+  .area-title {
+    font-size: 1.1em;
+    margin-bottom: 16px;
+  }
+}
+
+@media (max-width: 350px) {
+  .building-area {
+    padding: 12px;
+  }
+  
+  .buildings-grid {
+    gap: 10px;
+  }
+}
