@@ -2,7 +2,7 @@
 
 // ВРЕМЕННО: Захардкодим URL для отладки на телефоне
 // Удалим эту строку после отладки
-const API_URL = import.meta.env.VITE_REACT_APP_API_URL || 'http://localhost:3000';
+const API_URL = (import.meta.env.VITE_REACT_APP_API_URL || 'http://localhost:3000') + '/api';
 
 const apiClient = async (endpoint, method = 'GET', { body, params } = {}) => {
     const url = new URL(`${API_URL}${endpoint}`);
