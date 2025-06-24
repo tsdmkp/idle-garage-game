@@ -138,7 +138,37 @@ function App() {
         const offlineTimeMs = Math.max(0, now - loadedLastExitTime);
         console.log('Offline time (ms) from exit:', offlineTimeMs);
 
-        loadedBuildings = Array.isArray(initialState.buildings) ? initialState.buildings : INITIAL_BUILDINGS;
+        // ЗАМЕНИТЬ ЭТУ СТРОКУ:
+// loadedBuildings = Array.isArray(initialState.buildings) ? initialState.buildings : INITIAL_BUILDINGS;
+
+// НА ЭТОТ БЛОК:
+console.log("=== BUILDINGS DEBUG ===");
+console.log("Initial INITIAL_BUILDINGS:", INITIAL_BUILDINGS);
+console.log("Loaded buildings from API:", initialState?.buildings);
+
+if (initialState?.buildings && Array.isArray(initialState.buildings) && initialState.buildings.length > 0) {
+    const validBuildings = initialState.buildings.every(building => 
+        building && 
+        typeof building.id === 'string' && 
+        typeof building.name === 'string' && 
+        typeof building.icon === 'string' &&
+        typeof building.level === 'number' &&
+        typeof building.isLocked === 'boolean'
+    );
+    
+    if (validBuildings) {
+        loadedBuildings = initialState.buildings;
+        console.log("Using buildings from API:", loadedBuildings);
+    } else {
+        console.warn("Buildings from API are invalid, using INITIAL_BUILDINGS");
+        loadedBuildings = INITIAL_BUILDINGS;
+    }
+} else {
+    console.warn("No valid buildings from API, using INITIAL_BUILDINGS");
+    loadedBuildings = INITIAL_BUILDINGS;
+}
+console.log("Final buildings set:", loadedBuildings);
+console.log("=== END BUILDINGS DEBUG ===");
         setBuildings(loadedBuildings);
 
         loadedHiredStaff = initialState.hired_staff ?? hiredStaff;
