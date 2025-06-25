@@ -16,24 +16,27 @@ const TUTORIAL_STEPS = [
     text: 'Она генерирует доход каждый час. Чем лучше машина - тем больше доход!',
     target: '.car-showcase',
     position: 'bottom',
-    action: 'next'
+    action: 'next',
+    offset: { top: 20 } // Добавляем отступ
   },
   {
     id: 'income',
     title: 'Накопление дохода',
     text: 'Здесь показано, сколько монет накопилось. Максимум - за 2 часа офлайн режима.',
     target: '.progress-container',
-    position: 'top',
-    action: 'next'
+    position: 'bottom', // Изменено с 'top' на 'bottom'
+    action: 'next',
+    offset: { top: 20 }
   },
   {
     id: 'collect',
     title: 'Собирай монеты!',
     text: 'Нажми эту кнопку, чтобы собрать накопленный доход.',
     target: '.collect-button-main',
-    position: 'top',
+    position: 'bottom', // Изменено с 'top' на 'bottom'
     action: 'collect',
-    highlight: true
+    highlight: true,
+    offset: { top: 20 }
   },
   {
     id: 'tuning',
@@ -41,15 +44,17 @@ const TUTORIAL_STEPS = [
     text: 'Нажми сюда, чтобы открыть тюнинг и улучшить детали машины.',
     target: '.floating-action-button.right',
     position: 'left',
-    action: 'next'
+    action: 'next',
+    offset: { left: -20 }
   },
   {
     id: 'buildings',
     title: 'Развивай бизнес',
     text: 'Постройки дают дополнительный доход. Нажми, чтобы посмотреть доступные здания.',
     target: '.buildings-toggle',
-    position: 'top',
-    action: 'expand-buildings'
+    position: 'bottom',
+    action: 'expand-buildings',
+    offset: { top: 10 }
   },
   {
     id: 'navigation',
@@ -57,7 +62,8 @@ const TUTORIAL_STEPS = [
     text: 'Внизу находится меню с разными разделами: гонки, магазин машин, персонал и другое.',
     target: '.navbar',
     position: 'top',
-    action: 'next'
+    action: 'next',
+    offset: { top: -20 }
   },
   {
     id: 'complete',
@@ -107,23 +113,24 @@ const Tutorial = ({
           const tooltipWidth = 300;
           const tooltipHeight = 150;
           const padding = 20;
+          const offset = step.offset || {};
           
           switch (step.position) {
             case 'top':
-              top = rect.top - tooltipHeight - padding;
-              left = rect.left + rect.width / 2 - tooltipWidth / 2;
+              top = rect.top - tooltipHeight - padding + (offset.top || 0);
+              left = rect.left + rect.width / 2 - tooltipWidth / 2 + (offset.left || 0);
               break;
             case 'bottom':
-              top = rect.bottom + padding;
-              left = rect.left + rect.width / 2 - tooltipWidth / 2;
+              top = rect.bottom + padding + (offset.top || 0);
+              left = rect.left + rect.width / 2 - tooltipWidth / 2 + (offset.left || 0);
               break;
             case 'left':
-              top = rect.top + rect.height / 2 - tooltipHeight / 2;
-              left = rect.left - tooltipWidth - padding;
+              top = rect.top + rect.height / 2 - tooltipHeight / 2 + (offset.top || 0);
+              left = rect.left - tooltipWidth - padding + (offset.left || 0);
               break;
             case 'right':
-              top = rect.top + rect.height / 2 - tooltipHeight / 2;
-              left = rect.right + padding;
+              top = rect.top + rect.height / 2 - tooltipHeight / 2 + (offset.top || 0);
+              left = rect.right + padding + (offset.left || 0);
               break;
             default:
               top = window.innerHeight / 2 - tooltipHeight / 2;
@@ -207,21 +214,36 @@ const Tutorial = ({
   };
 
   return (
-    <div className={`tutorial-overlay ${isVisible ? 'visible' : ''}`} onClick={handleOverlayClick}>
-      {/* Затемнение с вырезом */}
+    <div className={`tutorial-overlay ${isVisible ? 'visible' : ''}`}>
+      {/* Затемнение фона */}
+      <div className="tutorial-backdrop" />
+      
+      {/* Подсветка элемента */}
       {highlightRect && (
-        <>
-          <div className="tutorial-backdrop" />
-          <div 
-            className="tutorial-highlight"
-            style={{
-              top: `${highlightRect.top - 5}px`,
-              left: `${highlightRect.left - 5}px`,
-              width: `${highlightRect.width + 10}px`,
-              height: `${highlightRect.height + 10}px`,
-            }}
-          />
-        </>
+        <div 
+          className="tutorial-highlight"
+          style={{
+            top: `${highlightRect.top - 5}px`,
+            left: `${highlightRect.left - 5}px`,
+            width: `${highlightRect.width + 10}px`,
+            height: `${highlightRect.height + 10}px`,
+          }}
+        />
+      )}
+      
+      {/* Создаем прозрачную область для кликов по подсвеченному элементу */}
+      {highlightRect && step.highlight && (
+        <div
+          style={{
+            position: 'fixed',
+            top: `${highlightRect.top}px`,
+            left: `${highlightRect.left}px`,
+            width: `${highlightRect.width}px`,
+            height: `${highlightRect.height}px`,
+            pointerEvents: 'all',
+            zIndex: 9999
+          }}
+        />
       )}
       
       {/* Подсказка */}

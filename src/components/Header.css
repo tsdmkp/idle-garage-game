@@ -1,6 +1,133 @@
-/* src/components/Header.css - С добавлением стилей для выпадающего меню */
+/* src/components/Header.css - Полная версия с исправлениями */
 
-/* Добавьте эти стили в конец существующего Header.css */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  z-index: 1000;
+  gap: 10px;
+}
+
+/* Информация об игроке - компактная */
+.player-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.player-level {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.85em;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.player-name {
+  color: #e2e8f0;
+  font-weight: 500;
+  font-size: 0.9em;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+  transition: color 0.2s ease;
+}
+
+.player-name:hover {
+  color: #f8fafc;
+}
+
+/* XP бар - скрыт на мобильных для экономии места */
+.xp-bar-container {
+  width: 60px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  display: none; /* Скрываем по умолчанию */
+}
+
+@media (min-width: 480px) {
+  .xp-bar-container {
+    display: block; /* Показываем на больших экранах */
+  }
+  
+  .player-name {
+    max-width: 150px;
+  }
+}
+
+.xp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+  transition: width 0.5s ease;
+}
+
+/* Ресурсы - центральная часть */
+.resources {
+  display: flex;
+  gap: 15px;
+  flex: 0 1 auto;
+}
+
+.resource-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  font-size: 0.95em;
+}
+
+.game-coins {
+  color: #fbbf24;
+}
+
+.jet-coins {
+  color: #a78bfa;
+}
+
+/* Действия хедера */
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.header-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2em;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.header-icon:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+}
+
+.header-icon:active {
+  transform: scale(0.95);
+}
 
 /* Выпадающее меню настроек */
 .settings-dropdown {
@@ -66,18 +193,38 @@
   text-align: center;
 }
 
-/* Обновление позиционирования для header-actions */
-.header-actions {
-  position: relative;
-}
-
-/* Добавляем стили для активной кнопки настроек */
-.header-icon:active {
-  transform: scale(0.95);
-}
-
-/* Исправляем z-index для корректного отображения */
-.header {
-  position: relative;
-  z-index: 1000;
+/* Адаптивность для маленьких экранов */
+@media (max-width: 350px) {
+  .header {
+    padding: 8px 10px;
+    gap: 5px;
+  }
+  
+  .player-info {
+    gap: 5px;
+  }
+  
+  .player-level {
+    padding: 3px 8px;
+    font-size: 0.8em;
+  }
+  
+  .player-name {
+    font-size: 0.85em;
+    max-width: 80px;
+  }
+  
+  .resources {
+    gap: 10px;
+  }
+  
+  .resource-item {
+    font-size: 0.9em;
+  }
+  
+  .header-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 1.1em;
+  }
 }
