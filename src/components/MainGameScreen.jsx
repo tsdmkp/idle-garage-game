@@ -11,9 +11,10 @@ const MainGameScreen = ({
   onCollect, 
   onTuneClick, 
   onOpenCarSelector,
-  onBuildingClick 
+  onBuildingClick,
+  showBuildings,
+  setShowBuildings
 }) => {
-  const [showBuildings, setShowBuildings] = useState(false);
   const [collectAnimation, setCollectAnimation] = useState(false);
   const [coins, setCoins] = useState([]);
   
