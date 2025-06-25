@@ -17,14 +17,14 @@ const TUTORIAL_STEPS = [
     target: '.car-showcase',
     position: 'bottom',
     action: 'next',
-    offset: { top: 20 } // Добавляем отступ
+    offset: { top: 20 }
   },
   {
     id: 'income',
     title: 'Накопление дохода',
     text: 'Здесь показано, сколько монет накопилось. Максимум - за 2 часа офлайн режима.',
     target: '.progress-container',
-    position: 'bottom', // Изменено с 'top' на 'bottom'
+    position: 'bottom',
     action: 'next',
     offset: { top: 20 }
   },
@@ -33,9 +33,10 @@ const TUTORIAL_STEPS = [
     title: 'Собирай монеты!',
     text: 'Нажми эту кнопку, чтобы собрать накопленный доход.',
     target: '.collect-button-main',
-    position: 'bottom', // Изменено с 'top' на 'bottom'
+    position: 'bottom',
     action: 'collect',
     highlight: true,
+    allowInteraction: true, // Разрешаем взаимодействие
     offset: { top: 20 }
   },
   {
@@ -193,21 +194,12 @@ const Tutorial = ({
   };
 
   const handleOverlayClick = (e) => {
-    // Позволяем кликать только по подсвеченным элементам
-    if (step.highlight && highlightRect) {
-      const x = e.clientX;
-      const y = e.clientY;
-      if (
-        x >= highlightRect.left &&
-        x <= highlightRect.right &&
-        y >= highlightRect.top &&
-        y <= highlightRect.bottom
-      ) {
-        // Клик по целевому элементу - пропускаем
-        return;
-      }
+    // Для шагов с allowInteraction не блокируем клики
+    if (step.allowInteraction) {
+      return;
     }
-    // Иначе переходим к следующему шагу
+    
+    // Для остальных шагов переходим дальше при клике
     if (step.action === 'next') {
       handleAction();
     }
@@ -215,35 +207,70 @@ const Tutorial = ({
 
   return (
     <div className={`tutorial-overlay ${isVisible ? 'visible' : ''}`}>
-      {/* Затемнение фона */}
-      <div className="tutorial-backdrop" />
-      
-      {/* Подсветка элемента */}
+      {/* Новый подход к затемнению - 4 div'а вокруг подсвеченного элемента */}
       {highlightRect && (
-        <div 
-          className="tutorial-highlight"
-          style={{
-            top: `${highlightRect.top - 5}px`,
-            left: `${highlightRect.left - 5}px`,
-            width: `${highlightRect.width + 10}px`,
-            height: `${highlightRect.height + 10}px`,
-          }}
-        />
+        <>
+          {/* Верхняя часть */}
+          <div 
+            className="tutorial-shadow"
+            style={{
+              top: 0,
+              left: 0,
+              right: 0,
+              height: `${highlightRect.top - 5}px`
+            }}
+            onClick={handleOverlayClick}
+          />
+          {/* Нижняя часть */}
+          <div 
+            className="tutorial-shadow"
+            style={{
+              top: `${highlightRect.bottom + 5}px`,
+              left: 0,
+              right: 0,
+              bottom: 0
+            }}
+            onClick={handleOverlayClick}
+          />
+          {/* Левая часть */}
+          <div 
+            className="tutorial-shadow"
+            style={{
+              top: `${highlightRect.top - 5}px`,
+              left: 0,
+              width: `${highlightRect.left - 5}px`,
+              height: `${highlightRect.height + 10}px`
+            }}
+            onClick={handleOverlayClick}
+          />
+          {/* Правая часть */}
+          <div 
+            className="tutorial-shadow"
+            style={{
+              top: `${highlightRect.top - 5}px`,
+              left: `${highlightRect.right + 5}px`,
+              right: 0,
+              height: `${highlightRect.height + 10}px`
+            }}
+            onClick={handleOverlayClick}
+          />
+          
+          {/* Рамка подсветки */}
+          <div 
+            className="tutorial-highlight-border"
+            style={{
+              top: `${highlightRect.top - 5}px`,
+              left: `${highlightRect.left - 5}px`,
+              width: `${highlightRect.width + 10}px`,
+              height: `${highlightRect.height + 10}px`,
+            }}
+          />
+        </>
       )}
       
-      {/* Создаем прозрачную область для кликов по подсвеченному элементу */}
-      {highlightRect && step.highlight && (
-        <div
-          style={{
-            position: 'fixed',
-            top: `${highlightRect.top}px`,
-            left: `${highlightRect.left}px`,
-            width: `${highlightRect.width}px`,
-            height: `${highlightRect.height}px`,
-            pointerEvents: 'all',
-            zIndex: 9999
-          }}
-        />
+      {/* Полное затемнение для шагов без target */}
+      {!highlightRect && (
+        <div className="tutorial-shadow-full" onClick={handleOverlayClick} />
       )}
       
       {/* Подсказка */}

@@ -1,4 +1,4 @@
-/* Tutorial.css - Красивые стили для обучения */
+/* Tutorial.css - Исправленная версия с правильной подсветкой */
 
 .tutorial-overlay {
   position: fixed;
@@ -7,7 +7,7 @@
   right: 0;
   bottom: 0;
   z-index: 9997;
-  pointer-events: none; /* Изменено с all на none */
+  pointer-events: none;
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -16,8 +16,16 @@
   opacity: 1;
 }
 
-/* Затемнение фона */
-.tutorial-backdrop {
+/* Затемнение частями */
+.tutorial-shadow {
+  position: fixed;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(2px);
+  pointer-events: all;
+}
+
+/* Полное затемнение */
+.tutorial-shadow-full {
   position: fixed;
   top: 0;
   left: 0;
@@ -25,39 +33,16 @@
   bottom: 0;
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(2px);
-  pointer-events: all; /* Добавлено для перехвата кликов */
+  pointer-events: all;
 }
 
-/* Подсветка целевого элемента - исправленная версия */
-.tutorial-highlight {
+/* Рамка подсветки */
+.tutorial-highlight-border {
   position: fixed;
+  border: 3px solid rgba(251, 191, 36, 0.6);
   border-radius: 12px;
   pointer-events: none;
-  z-index: 9998;
-}
-
-/* Создаем эффект выреза через псевдоэлементы */
-.tutorial-highlight::before {
-  content: '';
-  position: fixed;
-  top: -9999px;
-  left: -9999px;
-  right: -9999px;
-  bottom: -9999px;
-  background: rgba(0, 0, 0, 0.8);
-  z-index: -1;
-}
-
-.tutorial-highlight::after {
-  content: '';
-  position: absolute;
-  top: -5px;
-  left: -5px;
-  right: -5px;
-  bottom: -5px;
-  border-radius: 12px;
   box-shadow: 
-    0 0 0 5px rgba(251, 191, 36, 0.3),
     0 0 30px rgba(251, 191, 36, 0.5),
     inset 0 0 20px rgba(251, 191, 36, 0.2);
   animation: highlightPulse 2s ease-in-out infinite;
@@ -65,14 +50,14 @@
 
 @keyframes highlightPulse {
   0%, 100% {
+    border-color: rgba(251, 191, 36, 0.6);
     box-shadow: 
-      0 0 0 5px rgba(251, 191, 36, 0.3),
       0 0 30px rgba(251, 191, 36, 0.5),
       inset 0 0 20px rgba(251, 191, 36, 0.2);
   }
   50% {
+    border-color: rgba(251, 191, 36, 0.8);
     box-shadow: 
-      0 0 0 8px rgba(251, 191, 36, 0.4),
       0 0 50px rgba(251, 191, 36, 0.7),
       inset 0 0 30px rgba(251, 191, 36, 0.3);
   }
@@ -96,8 +81,8 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   animation: tooltipAppear 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(10px);
-  pointer-events: all; /* Добавлено */
-  z-index: 10000; /* Увеличен z-index */
+  pointer-events: all;
+  z-index: 10000;
 }
 
 @keyframes tooltipAppear {
@@ -238,7 +223,7 @@
   animation: arrowBounce 1s ease-in-out infinite;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
   pointer-events: none;
-  z-index: 10000;
+  z-index: 10001;
 }
 
 @keyframes arrowBounce {

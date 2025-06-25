@@ -62,11 +62,14 @@ const Header = ({
         
         {/* Выпадающее меню настроек */}
         {showMenu && (
-          <div className="settings-dropdown">
+          <div className="settings-dropdown" onClick={(e) => e.stopPropagation()}>
             <button 
               className="dropdown-item"
               onClick={() => {
-                onShowTutorial && onShowTutorial();
+                console.log('Tutorial button clicked');
+                if (onShowTutorial) {
+                  onShowTutorial();
+                }
                 setShowMenu(false);
               }}
             >
