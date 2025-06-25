@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Header from './components/Header';
-import GarageArea from './components/GarageArea';
-import IncomeArea from './components/IncomeArea';
-import BuildingArea from './components/BuildingArea';
+import MainGameScreen from './components/MainGameScreen'; // НОВЫЙ КОМПОНЕНТ
 import NavBar from './components/NavBar';
 import TuningScreen from './components/TuningScreen';
 import RaceScreen from './components/RaceScreen';
@@ -11,9 +9,8 @@ import StaffScreen from './components/StaffScreen';
 import CarSelector from './components/CarSelector';
 import LeaderboardScreen from './components/LeaderboardScreen';
 import {
- 
- 
   calculateUpgradeCost,
+  calculateBuildingCost,
   recalculateStatsAndIncomeBonus,
   calculateTotalIncomeRate,
   simulateRace,
@@ -138,37 +135,33 @@ function App() {
         const offlineTimeMs = Math.max(0, now - loadedLastExitTime);
         console.log('Offline time (ms) from exit:', offlineTimeMs);
 
-        // ЗАМЕНИТЬ ЭТУ СТРОКУ:
-// loadedBuildings = Array.isArray(initialState.buildings) ? initialState.buildings : INITIAL_BUILDINGS;
+        console.log("=== BUILDINGS DEBUG ===");
+        console.log("Initial INITIAL_BUILDINGS:", INITIAL_BUILDINGS);
+        console.log("Loaded buildings from API:", initialState?.buildings);
 
-// НА ЭТОТ БЛОК:
-console.log("=== BUILDINGS DEBUG ===");
-console.log("Initial INITIAL_BUILDINGS:", INITIAL_BUILDINGS);
-console.log("Loaded buildings from API:", initialState?.buildings);
-
-if (initialState?.buildings && Array.isArray(initialState.buildings) && initialState.buildings.length > 0) {
-    const validBuildings = initialState.buildings.every(building => 
-        building && 
-        typeof building.id === 'string' && 
-        typeof building.name === 'string' && 
-        typeof building.icon === 'string' &&
-        typeof building.level === 'number' &&
-        typeof building.isLocked === 'boolean'
-    );
-    
-    if (validBuildings) {
-        loadedBuildings = initialState.buildings;
-        console.log("Using buildings from API:", loadedBuildings);
-    } else {
-        console.warn("Buildings from API are invalid, using INITIAL_BUILDINGS");
-        loadedBuildings = INITIAL_BUILDINGS;
-    }
-} else {
-    console.warn("No valid buildings from API, using INITIAL_BUILDINGS");
-    loadedBuildings = INITIAL_BUILDINGS;
-}
-console.log("Final buildings set:", loadedBuildings);
-console.log("=== END BUILDINGS DEBUG ===");
+        if (initialState?.buildings && Array.isArray(initialState.buildings) && initialState.buildings.length > 0) {
+            const validBuildings = initialState.buildings.every(building => 
+                building && 
+                typeof building.id === 'string' && 
+                typeof building.name === 'string' && 
+                typeof building.icon === 'string' &&
+                typeof building.level === 'number' &&
+                typeof building.isLocked === 'boolean'
+            );
+            
+            if (validBuildings) {
+                loadedBuildings = initialState.buildings;
+                console.log("Using buildings from API:", loadedBuildings);
+            } else {
+                console.warn("Buildings from API are invalid, using INITIAL_BUILDINGS");
+                loadedBuildings = INITIAL_BUILDINGS;
+            }
+        } else {
+            console.warn("No valid buildings from API, using INITIAL_BUILDINGS");
+            loadedBuildings = INITIAL_BUILDINGS;
+        }
+        console.log("Final buildings set:", loadedBuildings);
+        console.log("=== END BUILDINGS DEBUG ===");
         setBuildings(loadedBuildings);
 
         loadedHiredStaff = initialState.hired_staff ?? hiredStaff;
@@ -262,7 +255,7 @@ console.log("=== END BUILDINGS DEBUG ===");
   const handleBuildingClick = (buildingName) => {
     const targetBuilding = buildings.find(b => b.name === buildingName);
     if (!targetBuilding || targetBuilding.isLocked) return;
-    const cost = 100 * Math.pow(2, targetBuilding.level);
+    const cost = calculateBuildingCost(targetBuilding.id, targetBuilding.level);
     if (gameCoins >= cost) {
       const newCoins = gameCoins - cost;
       const updatedBuildings = buildings.map(b =>
@@ -463,23 +456,18 @@ console.log("=== END BUILDINGS DEBUG ===");
       </div>
       <main className="main-content">
         {activeScreen === 'garage' && currentCar && (
-          <div className="garage-screen-layout">
-            <GarageArea
-              car={currentCar}
-              onTuneClick={handleOpenTuning}
-              onOpenCarSelector={handleOpenCarSelector}
-            />
-            <IncomeArea
-              incomeRate={incomeRatePerHour}
-              accumulatedIncome={accumulatedIncome}
-              maxAccumulation={incomeRatePerHour * MAX_OFFLINE_HOURS}
-              onCollect={handleCollect}
-            />
-            <BuildingArea
-              buildings={buildings}
-              onBuildingClick={handleBuildingClick}
-            />
-          </div>
+          <MainGameScreen
+            car={currentCar}
+            incomeRate={incomeRatePerHour}
+            accumulatedIncome={accumulatedIncome}
+            maxAccumulation={incomeRatePerHour * MAX_OFFLINE_HOURS}
+            gameCoins={gameCoins}
+            buildings={buildings}
+            onCollect={handleCollect}
+            onTuneClick={handleOpenTuning}
+            onOpenCarSelector={handleOpenCarSelector}
+            onBuildingClick={handleBuildingClick}
+          />
         )}
         {activeScreen === 'race' && currentCar && (
           <RaceScreen

@@ -1,0 +1,510 @@
+/* MainGameScreen.css - Современный минималистичный дизайн */
+
+.main-game-screen {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 0;
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* === ОСНОВНАЯ ИГРОВАЯ ЗОНА === */
+.game-area {
+  background: linear-gradient(135deg, 
+    rgba(30, 35, 50, 0.95) 0%, 
+    rgba(45, 50, 70, 0.9) 100%
+  );
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 15px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* === ОТОБРАЖЕНИЕ МАШИНЫ === */
+.car-showcase {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.car-name-plate {
+  margin-bottom: 15px;
+}
+
+.car-name-plate h2 {
+  color: #f8fafc;
+  font-size: 1.4em;
+  font-weight: 600;
+  margin: 0;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.car-image-container {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto 15px;
+}
+
+.car-main-image {
+  width: 100%;
+  height: auto;
+  max-height: 200px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.5));
+  transition: all 0.3s ease;
+}
+
+/* Анимация машины когда есть доход */
+.car-main-image.car-earning {
+  animation: carBounce 3s ease-in-out infinite;
+}
+
+@keyframes carBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* Индикатор дохода */
+.income-indicator {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: incomePulse 2s ease-in-out infinite;
+}
+
+@keyframes incomePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.income-icon {
+  font-size: 1.2em;
+}
+
+.income-text {
+  color: #fbbf24;
+  font-weight: 600;
+  font-size: 0.9em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Компактные статы */
+.car-stats-compact {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-icon {
+  font-size: 1.1em;
+  opacity: 0.8;
+}
+
+.stat-value {
+  color: #f1f5f9;
+  font-weight: 600;
+  font-size: 0.95em;
+}
+
+/* === СЕКЦИЯ ПРОГРЕССА И СБОРА === */
+.income-progress-section {
+  margin-top: 25px;
+}
+
+.progress-container {
+  margin-bottom: 15px;
+}
+
+.progress-bar {
+  height: 40px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+}
+
+.progress-shine {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.3) 50%, 
+    transparent 100%
+  );
+  animation: progressShine 3s ease-in-out infinite;
+}
+
+@keyframes progressShine {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: -100%; }
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-weight: 600;
+  font-size: 0.95em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  z-index: 2;
+}
+
+/* === БОЛЬШАЯ КНОПКА СБОРА === */
+.collect-button-main {
+  width: 100%;
+  height: 60px;
+  font-size: 1.2em;
+  font-weight: 700;
+  border: none;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  
+  /* Дефолтное состояние (неактивно) */
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: #9ca3af;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Активное состояние */
+.collect-button-main.can-collect {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+  color: #1f2937;
+  box-shadow: 
+    0 8px 24px rgba(245, 158, 11, 0.4),
+    0 4px 12px rgba(0, 0, 0, 0.2);
+  animation: collectPulse 2s ease-in-out infinite;
+}
+
+@keyframes collectPulse {
+  0%, 100% {
+    box-shadow: 
+      0 8px 24px rgba(245, 158, 11, 0.4),
+      0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 12px 32px rgba(245, 158, 11, 0.6),
+      0 6px 20px rgba(0, 0, 0, 0.3),
+      0 0 40px rgba(245, 158, 11, 0.3);
+  }
+}
+
+.collect-button-main:not(:disabled):hover {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.collect-button-main:not(:disabled):active {
+  transform: translateY(0) scale(1);
+}
+
+.collect-button-main.collecting {
+  animation: collectShake 0.5s ease;
+}
+
+@keyframes collectShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.button-icon {
+  font-size: 1.4em;
+}
+
+.button-text {
+  font-size: 1em;
+}
+
+/* === ПЛАВАЮЩИЕ КНОПКИ === */
+.floating-action-button {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  bottom: 20px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.floating-action-button.left {
+  left: 20px;
+}
+
+.floating-action-button.right {
+  right: 20px;
+}
+
+.floating-action-button:hover {
+  transform: translateY(-2px) scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+}
+
+.floating-action-button:active {
+  transform: translateY(0) scale(1.05);
+}
+
+/* === КОМПАКТНАЯ ЗОНА ПОСТРОЕК === */
+.buildings-compact {
+  background: linear-gradient(135deg, 
+    rgba(30, 35, 50, 0.95) 0%, 
+    rgba(45, 50, 70, 0.9) 100%
+  );
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.buildings-toggle {
+  width: 100%;
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  color: #f1f5f9;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+
+.buildings-toggle:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.toggle-icon {
+  font-size: 0.8em;
+  transition: transform 0.3s ease;
+}
+
+.buildings-compact.expanded .toggle-icon {
+  transform: rotate(0deg);
+}
+
+.buildings-count {
+  margin-left: auto;
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.85em;
+}
+
+.buildings-content {
+  padding: 0 20px 20px;
+  animation: expandIn 0.3s ease-out;
+}
+
+@keyframes expandIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.buildings-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.building-item-compact {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.building-item-compact:hover:not(.locked) {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.building-item-compact.locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.building-item-compact.active {
+  border-color: rgba(34, 197, 94, 0.3);
+  background: rgba(34, 197, 94, 0.05);
+}
+
+.building-item-compact .building-icon {
+  font-size: 2em;
+}
+
+.building-info {
+  flex: 1;
+}
+
+.building-name {
+  font-size: 0.9em;
+  color: #e2e8f0;
+  margin-bottom: 2px;
+}
+
+.building-level {
+  font-size: 0.8em;
+  color: #94a3b8;
+}
+
+.building-item-compact.active .building-level {
+  color: #22c55e;
+}
+
+/* === АНИМАЦИЯ МОНЕТ === */
+.coins-animation-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.flying-coin {
+  position: absolute;
+  bottom: 50%;
+  font-size: 2em;
+  animation: coinFly 2s ease-out forwards;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+}
+
+@keyframes coinFly {
+  0% {
+    transform: translateY(0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-300px) scale(0.5) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* === АДАПТИВНОСТЬ === */
+@media (max-width: 480px) {
+  .game-area {
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  
+  .car-main-image {
+    max-height: 160px;
+  }
+  
+  .collect-button-main {
+    height: 54px;
+    font-size: 1.1em;
+  }
+  
+  .floating-action-button {
+    width: 48px;
+    height: 48px;
+    font-size: 1.3em;
+  }
+  
+  .floating-action-button.left {
+    left: 12px;
+  }
+  
+  .floating-action-button.right {
+    right: 12px;
+  }
+  
+  .buildings-grid-compact {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 350px) {
+  .game-area {
+    padding: 12px;
+  }
+  
+  .car-name-plate h2 {
+    font-size: 1.2em;
+  }
+  
+  .collect-button-main {
+    height: 48px;
+    font-size: 1em;
+  }
+  
+  .stat-item {
+    gap: 2px;
+  }
+  
+  .car-stats-compact {
+    gap: 15px;
+  }
+}
