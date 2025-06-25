@@ -1,205 +1,83 @@
-.header {
+/* src/components/Header.css - С добавлением стилей для выпадающего меню */
+
+/* Добавьте эти стили в конец существующего Header.css */
+
+/* Выпадающее меню настроек */
+.settings-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: linear-gradient(135deg, 
+    rgba(30, 35, 50, 0.98) 0%, 
+    rgba(45, 50, 70, 0.95) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 8px;
+  min-width: 180px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(20px);
+  z-index: 1001;
+  animation: dropdownAppear 0.2s ease-out;
+}
+
+@keyframes dropdownAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 10px 15px;
-  background-color: rgba(51, 51, 51, 0.95);
-  backdrop-filter: blur(10px);
-  color: white;
-  border-bottom: 1px solid #555;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: none;
+  color: #e2e8f0;
   font-size: 0.9em;
-  height: 50px;
-  box-sizing: border-box;
-  position: relative;
-  z-index: 1;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
 }
 
-.player-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
+.dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
 }
 
-.player-level {
-  font-weight: bold;
-  background-color: #555;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.85em;
-  min-width: 35px;
+.dropdown-item:active {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dropdown-icon {
+  font-size: 1.2em;
+  width: 24px;
   text-align: center;
 }
 
-.player-name {
-  font-weight: 500;
-  color: #fff;
-  cursor: pointer;
-  transition: color 0.2s ease;
-  /* Убрали max-width, чтобы исключить обрезку */
-  overflow: visible;
-  text-overflow: unset;
-  white-space: normal;
-}
-
-.player-name:hover {
-  color: #4caf50;
-}
-
-.xp-bar-container {
-  width: 70px;
-  height: 6px;
-  background-color: rgba(85, 85, 85, 0.8);
-  border-radius: 3px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.xp-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #4caf50, #8bc34a);
-  transition: width 0.3s ease;
-  border-radius: 2px;
-}
-
-.resources {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  flex: 2;
-  justify-content: center;
-}
-
-.resource-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-weight: bold;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 0.85em;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(5px);
-}
-
-.resource-item.game-coins {
-  color: #ffd700;
-  background: rgba(255, 215, 0, 0.1);
-  border-color: rgba(255, 215, 0, 0.2);
-}
-
-.resource-item.jet-coins {
-  color: #00bcd4;
-  background: rgba(0, 188, 212, 0.1);
-  border-color: rgba(0, 188, 212, 0.2);
-}
-
+/* Обновление позиционирования для header-actions */
 .header-actions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  flex: 1;
-  justify-content: flex-end;
+  position: relative;
 }
 
-.header-icon {
-  cursor: pointer;
-  font-size: 1.1em;
-  padding: 6px;
-  border-radius: 50%;
-  transition: all 0.2s ease;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.header-icon:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.1);
-}
-
+/* Добавляем стили для активной кнопки настроек */
 .header-icon:active {
   transform: scale(0.95);
 }
 
-/* Адаптивность для маленьких экранов */
-@media (max-width: 480px) {
-  .header {
-    font-size: 0.8em;
-    padding: 8px 12px;
-    height: 45px;
-    gap: 8px;
-  }
-  
-  .player-info {
-    gap: 6px;
-    min-width: 0;
-    flex: 0 1 auto;
-  }
-  
-  .player-name {
-    /* Убрали max-width */
-    font-size: 0.9em;
-  }
-  
-  .xp-bar-container {
-    width: 50px;
-    height: 5px;
-  }
-  
-  .resources {
-    gap: 8px;
-    flex: 1;
-  }
-  
-  .resource-item {
-    padding: 3px 6px;
-    font-size: 0.8em;
-    min-width: 0;
-  }
-  
-  .header-actions {
-    gap: 8px;
-    flex: 0 1 auto;
-  }
-  
-  .header-icon {
-    font-size: 1em;
-    padding: 4px;
-  }
-}
-
-@media (max-width: 350px) {
-  .header {
-    font-size: 0.75em;
-    padding: 6px 8px;
-    height: 40px;
-  }
-  
-  .player-level {
-    font-size: 0.8em;
-    padding: 1px 4px;
-    min-width: 30px;
-  }
-  
-  .player-name {
-    /* Убрали max-width */
-  }
-  
-  .xp-bar-container {
-    display: none;
-  }
-  
-  .resources {
-    gap: 6px;
-  }
-  
-  .resource-item {
-    padding: 2px 4px;
-    font-size: 0.75em;
-  }
-  
-  .header-actions {
-    gap: 6px;
-  }
+/* Исправляем z-index для корректного отображения */
+.header {
+  position: relative;
+  z-index: 1000;
 }

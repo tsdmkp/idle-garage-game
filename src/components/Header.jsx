@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './Header.css';
 
 const Header = ({ 
@@ -7,8 +7,11 @@ const Header = ({
   gameCoins, 
   jetCoins, 
   xpPercentage, 
-  onChangeName 
+  onChangeName,
+  onShowTutorial 
 }) => {
+  const [showMenu, setShowMenu] = useState(false);
+  
   const formatNumber = (num) => {
     if (num >= 1000000) {
       return (num / 1000000).toFixed(1) + 'M';
@@ -46,12 +49,52 @@ const Header = ({
         </div>
       </div>
       <div className="header-actions">
-        <div className="header-icon" title="Настройки" onClick={() => console.log('Settings clicked')}>
+        <div 
+          className="header-icon" 
+          title="Настройки" 
+          onClick={() => setShowMenu(!showMenu)}
+        >
           ⚙️
         </div>
         <div className="header-icon" title="Профиль" onClick={() => console.log('Profile clicked')}>
           👤
         </div>
+        
+        {/* Выпадающее меню настроек */}
+        {showMenu && (
+          <div className="settings-dropdown">
+            <button 
+              className="dropdown-item"
+              onClick={() => {
+                onShowTutorial && onShowTutorial();
+                setShowMenu(false);
+              }}
+            >
+              <span className="dropdown-icon">📖</span>
+              <span>Обучение</span>
+            </button>
+            <button 
+              className="dropdown-item"
+              onClick={() => {
+                console.log('Sound settings');
+                setShowMenu(false);
+              }}
+            >
+              <span className="dropdown-icon">🔊</span>
+              <span>Звук</span>
+            </button>
+            <button 
+              className="dropdown-item"
+              onClick={() => {
+                console.log('About game');
+                setShowMenu(false);
+              }}
+            >
+              <span className="dropdown-icon">ℹ️</span>
+              <span>О игре</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
