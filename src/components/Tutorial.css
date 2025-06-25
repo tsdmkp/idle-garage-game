@@ -1,4 +1,4 @@
-/* Tutorial.css - Красивый и понятный туториал */
+/* Tutorial.css - Красивые стили для обучения */
 
 .tutorial-overlay {
   position: fixed;
@@ -7,7 +7,13 @@
   right: 0;
   bottom: 0;
   z-index: 9999;
-  pointer-events: none;
+  pointer-events: all;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tutorial-overlay.visible {
+  opacity: 1;
 }
 
 /* Затемнение фона */
@@ -17,40 +23,34 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(2px);
-  pointer-events: all;
-  animation: fadeIn 0.3s ease-out;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-/* Подсветка элемента */
+/* Подсветка целевого элемента */
 .tutorial-highlight {
   position: fixed;
-  border: 3px solid #fbbf24;
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: 
-    0 0 0 4px rgba(251, 191, 36, 0.3),
-    0 0 30px rgba(251, 191, 36, 0.5);
+    0 0 0 9999px rgba(0, 0, 0, 0.8),
+    0 0 30px rgba(251, 191, 36, 0.5),
+    inset 0 0 20px rgba(251, 191, 36, 0.2);
   pointer-events: none;
   animation: highlightPulse 2s ease-in-out infinite;
-  z-index: 10000;
 }
 
 @keyframes highlightPulse {
   0%, 100% {
     box-shadow: 
-      0 0 0 4px rgba(251, 191, 36, 0.3),
-      0 0 30px rgba(251, 191, 36, 0.5);
+      0 0 0 9999px rgba(0, 0, 0, 0.8),
+      0 0 30px rgba(251, 191, 36, 0.5),
+      inset 0 0 20px rgba(251, 191, 36, 0.2);
   }
   50% {
     box-shadow: 
-      0 0 0 8px rgba(251, 191, 36, 0.3),
-      0 0 50px rgba(251, 191, 36, 0.7);
+      0 0 0 9999px rgba(0, 0, 0, 0.8),
+      0 0 50px rgba(251, 191, 36, 0.7),
+      inset 0 0 30px rgba(251, 191, 36, 0.3);
   }
 }
 
@@ -61,166 +61,180 @@
     rgba(30, 35, 50, 0.98) 0%, 
     rgba(45, 50, 70, 0.95) 100%
   );
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(251, 191, 36, 0.3);
   border-radius: 16px;
   padding: 24px;
-  max-width: 320px;
+  width: 300px;
+  max-width: 90vw;
   box-shadow: 
-    0 20px 40px rgba(0, 0, 0, 0.5),
-    0 10px 20px rgba(0, 0, 0, 0.3),
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    0 0 60px rgba(251, 191, 36, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  pointer-events: all;
-  animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 10001;
+  animation: tooltipAppear 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
 }
 
-@keyframes slideIn {
+@keyframes tooltipAppear {
   from {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(0.9);
+    transform: scale(0.9) translateY(10px);
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: scale(1) translateY(0);
   }
 }
 
-/* Хедер подсказки */
-.tutorial-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.tutorial-step-counter {
+/* Индикатор шага */
+.tutorial-step-indicator {
+  font-size: 0.75em;
   color: #94a3b8;
-  font-size: 0.85em;
-  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
 }
 
-.tutorial-skip {
-  background: none;
-  border: none;
-  color: #94a3b8;
-  font-size: 0.85em;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-}
-
-.tutorial-skip:hover {
-  color: #cbd5e1;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-/* Контент подсказки */
+/* Заголовок */
 .tutorial-title {
   color: #f8fafc;
-  font-size: 1.2em;
+  font-size: 1.25em;
   font-weight: 600;
   margin: 0 0 12px 0;
-  line-height: 1.3;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-.tutorial-content {
+/* Текст */
+.tutorial-text {
   color: #e2e8f0;
   font-size: 0.95em;
-  line-height: 1.5;
+  line-height: 1.6;
   margin: 0 0 20px 0;
 }
 
-/* Кнопки действий */
+/* Действия */
 .tutorial-actions {
   display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
+  flex-direction: column;
+  gap: 10px;
 }
 
+/* Кнопки */
 .tutorial-button {
-  flex: 1;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 10px;
-  font-size: 0.95em;
+  padding: 12px 24px;
+  font-size: 1em;
   font-weight: 600;
+  border: none;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  text-align: center;
+}
+
+.tutorial-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.tutorial-button:active {
+  transform: translateY(0);
 }
 
 .tutorial-button.primary {
   background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
   color: #1f2937;
+  border: none;
   box-shadow: 
-    0 4px 12px rgba(245, 158, 11, 0.3),
+    0 4px 16px rgba(251, 191, 36, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  animation: primaryButtonPulse 2s ease-in-out infinite;
+}
+
+@keyframes primaryButtonPulse {
+  0%, 100% {
+    box-shadow: 
+      0 4px 16px rgba(251, 191, 36, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 6px 24px rgba(251, 191, 36, 0.5),
+      0 0 30px rgba(251, 191, 36, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
 }
 
 .tutorial-button.primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 
-    0 6px 16px rgba(245, 158, 11, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 }
 
-.tutorial-button.primary:active {
-  transform: translateY(0);
+/* Подсказка */
+.tutorial-hint {
+  color: #fbbf24;
+  font-size: 0.9em;
+  text-align: center;
+  animation: hintBounce 1s ease-in-out infinite;
 }
 
-.tutorial-button.secondary {
-  background: rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+@keyframes hintBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
 }
 
-.tutorial-button.secondary:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+/* Кнопка пропуска */
+.tutorial-skip {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.85em;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+  padding: 4px 8px;
 }
 
-/* Индикатор прогресса */
-.tutorial-progress {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
+.tutorial-skip:hover {
+  color: #cbd5e1;
 }
 
-.progress-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  transition: all 0.3s ease;
-}
-
-.progress-dot.active {
-  background: #fbbf24;
-  box-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
-}
-
-/* Стрелка указатель */
+/* Анимированная стрелка */
 .tutorial-arrow {
   position: fixed;
-  width: 0;
-  height: 0;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-top: 15px solid #fbbf24;
-  filter: drop-shadow(0 2px 8px rgba(251, 191, 36, 0.5));
+  font-size: 2em;
+  transform: translateX(-50%);
   animation: arrowBounce 1s ease-in-out infinite;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+  pointer-events: none;
   z-index: 10000;
 }
 
 @keyframes arrowBounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+  0%, 100% { 
+    transform: translateX(-50%) translateY(0); 
+  }
+  50% { 
+    transform: translateX(-50%) translateY(10px); 
+  }
+}
+
+/* Позиционирование тултипа */
+.tutorial-tooltip.center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 /* Адаптивность */
 @media (max-width: 480px) {
   .tutorial-tooltip {
-    max-width: 280px;
+    width: 280px;
     padding: 20px;
   }
   
@@ -228,23 +242,19 @@
     font-size: 1.1em;
   }
   
-  .tutorial-content {
+  .tutorial-text {
     font-size: 0.9em;
   }
   
   .tutorial-button {
-    padding: 8px 16px;
-    font-size: 0.9em;
+    padding: 10px 20px;
+    font-size: 0.95em;
   }
 }
 
 @media (max-width: 350px) {
   .tutorial-tooltip {
-    max-width: 240px;
+    width: 260px;
     padding: 16px;
-  }
-  
-  .tutorial-actions {
-    gap: 8px;
   }
 }

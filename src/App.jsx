@@ -1,21 +1,7 @@
-{activeScreen === 'garage' && currentCar && (
-          <MainGameScreen
-            car={currentCar}
-            incomeRate={incomeRatePerHour}
-            accumulatedIncome={accumulatedIncome}
-            maxAccumulation={incomeRatePerHour * MAX_OFFLINE_HOURS}
-            gameCoins={gameCoins}
-            buildings={buildings}
-            onCollect={handleCollect}
-            onTuneClick={handleOpenTuning}
-            onOpenCarSelector={handleOpenCarSelector}
-            onBuildingClick={handleBuildingClick}
-            showBuildings={showBuildings}
-            setShowBuildings={setShowBuildings}
-          />
-        )}import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Header from './components/Header';
 import MainGameScreen from './components/MainGameScreen'; // НОВЫЙ КОМПОНЕНТ
+import Tutorial from './components/Tutorial'; // КОМПОНЕНТ ТУТОРИАЛА
 import NavBar from './components/NavBar';
 import TuningScreen from './components/TuningScreen';
 import RaceScreen from './components/RaceScreen';
@@ -72,9 +58,11 @@ function App() {
   const [activeScreen, setActiveScreen] = useState('garage');
   const [isTuningVisible, setIsTuningVisible] = useState(false);
   const [isCarSelectorVisible, setIsCarSelectorVisible] = useState(false);
-  const [showBuildings, setShowBuildings] = useState(false); // Для туториала
-  const [justCollected, setJustCollected] = useState(false); // Для туториала
-  const [isFirstTime, setIsFirstTime] = useState(false); // Для туториала
+  
+  // Состояния для туториала
+  const [isTutorialActive, setIsTutorialActive] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
+  const [hasCompletedTutorial, setHasCompletedTutorial] = useState(false);
 
   const currentCar = playerCars.find(car => car.id === selectedCarId) || playerCars[0] || null;
 
@@ -125,10 +113,6 @@ function App() {
     let loadedBuildings = buildings;
     let loadedHiredStaff = hiredStaff;
     let carToCalculateFrom = currentCar || INITIAL_CAR;
-    
-    // Проверяем, первый ли это запуск
-    const tutorialCompleted = localStorage.getItem('tutorialCompleted');
-    setIsFirstTime(!tutorialCompleted);
 
     try {
       console.log('Attempting apiClient call...');
@@ -146,6 +130,17 @@ function App() {
         setJetCoins(initialState.jet_coins ?? jetCoins);
         setCurrentXp(initialState.current_xp ?? currentXp);
         setXpToNextLevel(initialState.xp_to_next_level ?? xpToNextLevel);
+        
+        // Загружаем состояние туториала
+        const savedTutorial = initialState.has_completed_tutorial;
+        setHasCompletedTutorial(savedTutorial || false);
+        
+        // Показываем туториал для новых игроков
+        if (!savedTutorial && playerLevel === 1 && gameCoins <= STARTING_COINS) {
+          setTimeout(() => {
+            setIsTutorialActive(true);
+          }, 1000);
+        }
 
         const loadedLastCollectedTime = initialState.last_collected_time ? new Date(initialState.last_collected_time).getTime() : Date.now();
         const loadedLastExitTime = initialState.last_exit_time ? new Date(initialState.last_exit_time).getTime() : loadedLastCollectedTime;
@@ -261,9 +256,12 @@ function App() {
       lastCollectedTimeRef.current = collectionTime;
       console.log(`Collected ${incomeToAdd} GC.`);
       
-      // Для туториала
-      setJustCollected(true);
-      setTimeout(() => setJustCollected(false), 1000);
+      // Проверяем шаг туториала
+      if (isTutorialActive && tutorialStep === 3) {
+        setTimeout(() => {
+          setTutorialStep(4);
+        }, 500);
+      }
       
       const userId = tgUserData?.id?.toString() || 'default';
       apiClient('/game_state', 'POST', {
@@ -463,18 +461,27 @@ function App() {
 
   const xpPercentage = xpToNextLevel > 0 ? Math.min((currentXp / xpToNextLevel) * 100, 100) : 0;
   
-  // Обработчик действий туториала
-  const handleTutorialAction = (action) => {
-    switch (action) {
-      case 'expandBuildings':
-        setShowBuildings(true);
-        break;
-    }
+  // Функции для туториала
+  const handleTutorialNext = () => {
+    setTutorialStep(prev => prev + 1);
   };
   
-  // Обработчик завершения туториала
   const handleTutorialComplete = () => {
-    console.log('Tutorial completed!');
+    setIsTutorialActive(false);
+    setHasCompletedTutorial(true);
+    const userId = tgUserData?.id?.toString() || 'default';
+    apiClient('/game_state', 'POST', {
+      userId,
+      has_completed_tutorial: true
+    }).catch(err => console.error('Failed to save tutorial status:', err));
+  };
+  
+  const handleTutorialAction = (action) => {
+    if (action === 'expand-buildings') {
+      // Автоматически раскрываем постройки
+      const event = new MouseEvent('click', { bubbles: true });
+      document.querySelector('.buildings-toggle')?.dispatchEvent(event);
+    }
   };
 
   if (isLoading) {
@@ -571,15 +578,18 @@ function App() {
         onScreenChange={handleNavClick}
       />
       
-      {/* Туториал для новых игроков */}
+      {/* Компонент туториала */}
       <Tutorial
+        isActive={isTutorialActive}
+        currentStep={tutorialStep}
+        onNext={handleTutorialNext}
         onComplete={handleTutorialComplete}
-        gameState={{
-          isFirstTime,
-          justCollected,
-          showBuildings
-        }}
         onAction={handleTutorialAction}
+        gameState={{
+          gameCoins,
+          incomeRate: incomeRatePerHour,
+          accumulatedIncome
+        }}
       />
     </div>
   );
