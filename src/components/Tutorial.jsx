@@ -9,8 +9,6 @@ const Tutorial = ({
   onAction,
   gameState 
 }) => {
-  console.log('Tutorial component rendered:', { isActive, currentStep });
-  
   // Перемещаем TUTORIAL_STEPS внутрь компонента
   const TUTORIAL_STEPS = [
     {
