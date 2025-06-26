@@ -169,6 +169,13 @@ const Tutorial = ({
   if (!isActive || !isVisible) return null;
 
   const handleAction = () => {
+    // Обработка beforeNext действий
+    if (step.beforeNext === 'close-tuning') {
+      if (onAction) {
+        onAction('close-tuning');
+      }
+    }
+    
     switch (step.action) {
       case 'next':
         onNext();
@@ -180,9 +187,7 @@ const Tutorial = ({
         }
         break;
       case 'expand-buildings':
-        if (onAction) {
-          onAction('expand-buildings');
-        }
+        // Больше не нужно, так как здания всегда видимы
         onNext();
         break;
       case 'finish':

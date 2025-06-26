@@ -478,9 +478,10 @@ function App() {
   
   const handleTutorialAction = (action) => {
     if (action === 'expand-buildings') {
-      // Автоматически раскрываем постройки
-      const event = new MouseEvent('click', { bubbles: true });
-      document.querySelector('.buildings-toggle')?.dispatchEvent(event);
+      // Больше не нужно, так как здания всегда видимы
+    } else if (action === 'close-tuning') {
+      // Закрываем тюнинг если он открыт
+      setIsTuningVisible(false);
     }
   };
 
@@ -500,6 +501,10 @@ function App() {
           gameCoins={gameCoins}
           jetCoins={jetCoins}
           xpPercentage={xpPercentage}
+          onShowTutorial={() => {
+            setIsTutorialActive(true);
+            setTutorialStep(0);
+          }}
         />
       </div>
       <main className="main-content">

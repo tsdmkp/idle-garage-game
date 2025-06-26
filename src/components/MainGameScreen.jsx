@@ -11,10 +11,9 @@ const MainGameScreen = ({
   onCollect, 
   onTuneClick, 
   onOpenCarSelector,
-  onBuildingClick,
-  showBuildings,
-  setShowBuildings
+  onBuildingClick 
 }) => {
+  const [showBuildings, setShowBuildings] = useState(true); // Теперь всегда открыты
   const [collectAnimation, setCollectAnimation] = useState(false);
   const [coins, setCoins] = useState([]);
   
@@ -160,40 +159,27 @@ const MainGameScreen = ({
         </button>
       </div>
       
-      {/* Компактная зона построек */}
-      <div className={`buildings-compact ${showBuildings ? 'expanded' : ''}`}>
-        <button 
-          className="buildings-toggle"
-          onClick={() => setShowBuildings(!showBuildings)}
-        >
-          <span className="toggle-icon">{showBuildings ? '▼' : '▶'}</span>
-          <span className="toggle-text">Постройки</span>
-          {activeBuildings.length > 0 && (
-            <span className="buildings-count">{activeBuildings.length}</span>
-          )}
-        </button>
+      {/* Зона построек - всегда видима */}
+      <div className="buildings-section">
+        <h3 className="buildings-title">Постройки</h3>
         
-        {showBuildings && (
-          <div className="buildings-content">
-            <div className="buildings-grid-compact">
-              {buildings.map((building) => (
-                <div 
-                  key={building.id}
-                  className={`building-item-compact ${building.isLocked ? 'locked' : ''} ${building.level > 0 ? 'active' : ''}`}
-                  onClick={() => !building.isLocked && onBuildingClick(building.name)}
-                >
-                  <div className="building-icon">{building.icon}</div>
-                  <div className="building-info">
-                    <div className="building-name">{building.name}</div>
-                    <div className="building-level">
-                      {building.isLocked ? '🔒' : building.level > 0 ? `Ур. ${building.level}` : 'Построить'}
-                    </div>
-                  </div>
+        <div className="buildings-grid-compact">
+          {buildings.map((building) => (
+            <div 
+              key={building.id}
+              className={`building-item-compact ${building.isLocked ? 'locked' : ''} ${building.level > 0 ? 'active' : ''}`}
+              onClick={() => !building.isLocked && onBuildingClick(building.name)}
+            >
+              <div className="building-icon">{building.icon}</div>
+              <div className="building-info">
+                <div className="building-name">{building.name}</div>
+                <div className="building-level">
+                  {building.isLocked ? '🔒' : building.level > 0 ? `Ур. ${building.level}` : 'Построить'}
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
-        )}
+          ))}
+        </div>
       </div>
       
       {/* Анимация монет */}
