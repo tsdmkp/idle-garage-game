@@ -1,80 +1,5 @@
-const step = TUTORIAL_STEPS[currentStep] || TUTORIAL_STEPS[0];import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Tutorial.css';
-
-const TUTORIAL_STEPS = [
-  {
-    id: 'welcome',
-    title: 'Добро пожаловать в Idle Garage! 🚗',
-    text: 'Начни свой путь от ржавой машины до империи автобизнеса!',
-    target: null,
-    position: 'center',
-    action: 'next'
-  },
-  {
-    id: 'car',
-    title: 'Это твоя первая машина',
-    text: 'Она генерирует доход каждый час. Чем лучше машина - тем больше доход!',
-    target: '.car-showcase',
-    position: 'bottom',
-    action: 'next',
-    offset: { top: 20 }
-  },
-  {
-    id: 'income',
-    title: 'Накопление дохода',
-    text: 'Здесь показано, сколько монет накопилось. Максимум - за 2 часа офлайн режима.',
-    target: '.progress-container',
-    position: 'bottom',
-    action: 'next',
-    offset: { top: 20 }
-  },
-  {
-    id: 'collect',
-    title: 'Собирай монеты!',
-    text: 'Нажми эту кнопку, чтобы собрать накопленный доход.',
-    target: '.collect-button-main',
-    position: 'bottom',
-    action: 'collect',
-    highlight: true,
-    allowInteraction: true, // Разрешаем взаимодействие
-    offset: { top: 20 }
-  },
-  {
-    id: 'tuning',
-    title: 'Улучшай свою машину',
-    text: 'Нажми сюда, чтобы открыть тюнинг и улучшить детали машины.',
-    target: '.floating-action-button.right',
-    position: 'left',
-    action: 'next',
-    offset: { left: -20 }
-  },
-  {
-    id: 'buildings',
-    title: 'Развивай бизнес',
-    text: 'Постройки дают дополнительный доход. Нажми, чтобы посмотреть доступные здания.',
-    target: '.buildings-toggle',
-    position: 'bottom',
-    action: 'expand-buildings',
-    offset: { top: 10 }
-  },
-  {
-    id: 'navigation',
-    title: 'Исследуй игру',
-    text: 'Внизу находится меню с разными разделами: гонки, магазин машин, персонал и другое.',
-    target: '.navbar',
-    position: 'top',
-    action: 'next',
-    offset: { top: -20 }
-  },
-  {
-    id: 'complete',
-    title: 'Ты готов! 🎉',
-    text: 'Собирай монеты, улучшай машины, развивай бизнес и стань магнатом автоиндустрии!',
-    target: null,
-    position: 'center',
-    action: 'finish'
-  }
-];
 
 const Tutorial = ({ 
   isActive, 
@@ -84,11 +9,90 @@ const Tutorial = ({
   onAction,
   gameState 
 }) => {
+  // Перемещаем TUTORIAL_STEPS внутрь компонента
+  const TUTORIAL_STEPS = [
+    {
+      id: 'welcome',
+      title: 'Добро пожаловать в Idle Garage! 🚗',
+      text: 'Начни свой путь от ржавой машины до империи автобизнеса!',
+      target: null,
+      position: 'center',
+      action: 'next'
+    },
+    {
+      id: 'car',
+      title: 'Это твоя первая машина',
+      text: 'Она генерирует доход каждый час. Чем лучше машина - тем больше доход!',
+      target: '.car-showcase',
+      position: 'bottom',
+      action: 'next',
+      offset: { top: 20 }
+    },
+    {
+      id: 'income',
+      title: 'Накопление дохода',
+      text: 'Здесь показано, сколько монет накопилось. Максимум - за 2 часа офлайн режима.',
+      target: '.progress-container',
+      position: 'bottom',
+      action: 'next',
+      offset: { top: 20 }
+    },
+    {
+      id: 'collect',
+      title: 'Собирай монеты!',
+      text: 'Нажми эту кнопку, чтобы собрать накопленный доход.',
+      target: '.collect-button-main',
+      position: 'bottom',
+      action: 'collect',
+      highlight: true,
+      allowInteraction: true,
+      offset: { top: 20 }
+    },
+    {
+      id: 'tuning',
+      title: 'Улучшай свою машину',
+      text: 'Нажми сюда, чтобы открыть тюнинг и улучшить детали машины.',
+      target: '.floating-action-button.right',
+      position: 'left',
+      action: 'next',
+      beforeNext: 'close-tuning',
+      offset: { left: -20 }
+    },
+    {
+      id: 'buildings',
+      title: 'Развивай бизнес',
+      text: 'Постройки дают дополнительный доход. Строй и улучшай здания для увеличения прибыли.',
+      target: '.buildings-integrated',
+      position: 'top',
+      action: 'next',
+      offset: { top: -20 }
+    },
+    {
+      id: 'navigation',
+      title: 'Исследуй игру',
+      text: 'Внизу находится меню с разными разделами: гонки, магазин машин, персонал и другое.',
+      target: '.navbar',
+      position: 'top',
+      action: 'next',
+      offset: { top: -20 }
+    },
+    {
+      id: 'complete',
+      title: 'Ты готов! 🎉',
+      text: 'Собирай монеты, улучшай машины, развивай бизнес и стань магнатом автоиндустрии!',
+      target: null,
+      position: 'center',
+      action: 'finish'
+    }
+  ];
+
   const [highlightRect, setHighlightRect] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState({ top: '50%', left: '50%' });
   const [isVisible, setIsVisible] = useState(false);
 
-  // Добавим эффект для закрытия тюнинга при переходе шагов
+  const step = TUTORIAL_STEPS[currentStep] || TUTORIAL_STEPS[0];
+  
+  // Эффект для закрытия тюнинга при переходе шагов
   useEffect(() => {
     // Закрываем тюнинг при переходе от шага тюнинга к следующему
     if (currentStep === 5 && isActive) { // Шаг после тюнинга
