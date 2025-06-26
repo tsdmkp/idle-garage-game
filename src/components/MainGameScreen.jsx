@@ -159,23 +159,19 @@ const MainGameScreen = ({
         </button>
       </div>
       
-      {/* Зона построек - всегда видима */}
-      <div className="buildings-section">
-        <h3 className="buildings-title">Постройки</h3>
-        
-        <div className="buildings-grid-compact">
+      {/* Зона построек - интегрированная */}
+      <div className="buildings-integrated">
+        <div className="buildings-grid-minimal">
           {buildings.map((building) => (
             <div 
               key={building.id}
-              className={`building-item-compact ${building.isLocked ? 'locked' : ''} ${building.level > 0 ? 'active' : ''}`}
+              className={`building-item-minimal ${building.isLocked ? 'locked' : ''} ${building.level > 0 ? 'active' : ''}`}
               onClick={() => !building.isLocked && onBuildingClick(building.name)}
+              title={building.name}
             >
               <div className="building-icon">{building.icon}</div>
-              <div className="building-info">
-                <div className="building-name">{building.name}</div>
-                <div className="building-level">
-                  {building.isLocked ? '🔒' : building.level > 0 ? `Ур. ${building.level}` : 'Построить'}
-                </div>
+              <div className="building-level-badge">
+                {building.isLocked ? '🔒' : building.level > 0 ? building.level : '+'}
               </div>
             </div>
           ))}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+const step = TUTORIAL_STEPS[currentStep] || TUTORIAL_STEPS[0];import React, { useState, useEffect } from 'react';
 import './Tutorial.css';
 
 const TUTORIAL_STEPS = [
@@ -88,7 +88,15 @@ const Tutorial = ({
   const [tooltipPosition, setTooltipPosition] = useState({ top: '50%', left: '50%' });
   const [isVisible, setIsVisible] = useState(false);
 
-  const step = TUTORIAL_STEPS[currentStep] || TUTORIAL_STEPS[0];
+  // Добавим эффект для закрытия тюнинга при переходе шагов
+  useEffect(() => {
+    // Закрываем тюнинг при переходе от шага тюнинга к следующему
+    if (currentStep === 5 && isActive) { // Шаг после тюнинга
+      if (onAction) {
+        onAction('close-tuning');
+      }
+    }
+  }, [currentStep, isActive, onAction]);
 
   useEffect(() => {
     if (!isActive) {
