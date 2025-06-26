@@ -9,6 +9,8 @@ const Tutorial = ({
   onAction,
   gameState 
 }) => {
+  console.log('Tutorial component rendered:', { isActive, currentStep });
+  
   // Перемещаем TUTORIAL_STEPS внутрь компонента
   const TUTORIAL_STEPS = [
     {
@@ -94,13 +96,18 @@ const Tutorial = ({
   
   // Эффект для закрытия тюнинга при переходе шагов
   useEffect(() => {
-    // Закрываем тюнинг при переходе от шага тюнинга к следующему
-    if (currentStep === 5 && isActive) { // Шаг после тюнинга
-      if (onAction) {
-        onAction('close-tuning');
-      }
+    // Закрываем тюнинг только при переходе НА шаг с постройками (шаг 5)
+    if (currentStep === 5 && isActive) {
+      // Используем setTimeout чтобы избежать обновления во время рендера
+      const timer = setTimeout(() => {
+        if (onAction) {
+          onAction('close-tuning');
+        }
+      }, 100);
+      
+      return () => clearTimeout(timer);
     }
-  }, [currentStep, isActive, onAction]);
+  }, [currentStep]); // Убираем onAction и isActive из зависимостей
 
   useEffect(() => {
     if (!isActive) {
