@@ -126,6 +126,14 @@ function App() {
           setPlayerName(initialState.first_name);
           console.log('Player name updated from backend:', initialState.first_name);
         }
+        
+        // ВРЕМЕННАЯ ОТЛАДКА для поиска 10 млн
+        console.log('💰 COINS CHECK:', {
+          from_backend: initialState.game_coins,
+          current_state: gameCoins,
+          will_set: initialState.game_coins ?? gameCoins
+        });
+        
         setGameCoins(initialState.game_coins ?? gameCoins);
         setJetCoins(initialState.jet_coins ?? jetCoins);
         setCurrentXp(initialState.current_xp ?? currentXp);
