@@ -168,7 +168,7 @@ const Tutorial = ({
     };
   }, [isActive, step, currentStep]);
 
-  if (!isActive || !isVisible) return null;
+  if (!isActive) return null;
 
   const handleAction = () => {
     // Обработка beforeNext действий
@@ -213,7 +213,7 @@ const Tutorial = ({
   };
 
   return (
-    <div className={`tutorial-overlay ${isVisible ? 'visible' : ''}`}>
+    <div className={`tutorial-overlay ${isVisible ? 'visible' : ''}`} style={{ display: isActive ? 'block' : 'none' }}>
       {/* Новый подход к затемнению - 4 div'а вокруг подсвеченного элемента */}
       {highlightRect && (
         <>
