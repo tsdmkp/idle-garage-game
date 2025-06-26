@@ -136,9 +136,10 @@ function App() {
         setHasCompletedTutorial(savedTutorial || false);
         
         // Показываем туториал для новых игроков
-        if (!savedTutorial && playerLevel === 1 && gameCoins <= STARTING_COINS) {
+        if (!savedTutorial) {
           setTimeout(() => {
             setIsTutorialActive(true);
+            setTutorialStep(0);
           }, 1000);
         }
 

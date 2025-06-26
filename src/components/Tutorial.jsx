@@ -93,21 +93,6 @@ const Tutorial = ({
   const [isVisible, setIsVisible] = useState(false);
 
   const step = TUTORIAL_STEPS[currentStep] || TUTORIAL_STEPS[0];
-  
-  // Эффект для закрытия тюнинга при переходе шагов
-  useEffect(() => {
-    // Закрываем тюнинг только при переходе НА шаг с постройками (шаг 5)
-    if (currentStep === 5 && isActive) {
-      // Используем setTimeout чтобы избежать обновления во время рендера
-      const timer = setTimeout(() => {
-        if (onAction) {
-          onAction('close-tuning');
-        }
-      }, 100);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [currentStep]); // Убираем onAction и isActive из зависимостей
 
   useEffect(() => {
     if (!isActive) {
