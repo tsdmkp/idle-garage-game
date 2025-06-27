@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Header from './components/Header';
 import MainGameScreen from './components/MainGameScreen';
 import Tutorial from './components/Tutorial';
@@ -103,6 +103,16 @@ function App() {
 
   // Отдельный useEffect для загрузки данных
   useEffect(() => {
+    // Ждем пока загрузятся данные пользователя
+    if (isTgApp && !tgUserData) {
+      console.log('Waiting for Telegram user data...');
+      return; // Не загружаем пока нет данных пользователя
+    }
+    
+    // Сбрасываем флаг при изменении пользователя
+    setHasLoadedData(false);
+    
+    // Загружаем только когда есть данные или это не Telegram
     if (tgUserData || !isTgApp) {
       loadInitialData();
     }
@@ -120,7 +130,7 @@ function App() {
     }
   }, [incomeRatePerHour, tgUserData]);
 
-  const loadInitialData = async () => {
+  const loadInitialData = useCallback(async () => {
     // Защита от повторной загрузки
     if (hasLoadedData) {
       console.log('Data already loaded, skipping...');
@@ -260,7 +270,7 @@ function App() {
       setIsLoading(false);
       console.log('isLoading set to false. Initialization finished.');
     }
-  };
+  }, [tgUserData]); // Зависимость от tgUserData
 
   useEffect(() => {
     if (incomeRatePerHour <= 0 || isLoading) return;
