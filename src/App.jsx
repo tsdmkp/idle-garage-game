@@ -39,6 +39,7 @@ const INITIAL_HIRED_STAFF = (() => {
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
+  const [hasLoadedData, setHasLoadedData] = useState(false); // Защита от повторной загрузки
   const [error, setError] = useState(null);
   const [tgUserData, setTgUserData] = useState(null);
   const [isTgApp, setIsTgApp] = useState(false);
@@ -86,10 +87,10 @@ function App() {
       setIsTgApp(false);
       console.warn('App: Telegram initData not found.');
     }
-    loadInitialData();
+    
     return () => {
       if (tgUserData) {
-        const userId = tgUserData.id.toString() || 'default';
+        const userId = tgUserData.id?.toString() || 'default';
         apiClient('/game_state', 'POST', {
           body: {
             userId,
@@ -98,7 +99,14 @@ function App() {
         }).catch(err => console.error('Failed to save last exit time:', err));
       }
     };
-  }, [tgUserData]);
+  }, []); // Убираем зависимость от tgUserData
+
+  // Отдельный useEffect для загрузки данных
+  useEffect(() => {
+    if (tgUserData || !isTgApp) {
+      loadInitialData();
+    }
+  }, [tgUserData, isTgApp]);
 
   useEffect(() => {
     if (incomeRatePerHour > 0 && tgUserData) {
@@ -113,14 +121,24 @@ function App() {
   }, [incomeRatePerHour, tgUserData]);
 
   const loadInitialData = async () => {
+    // Защита от повторной загрузки
+    if (hasLoadedData) {
+      console.log('Data already loaded, skipping...');
+      return;
+    }
+    
     console.log('loadInitialData started...');
+    setHasLoadedData(true);
+    
+    // Правильно определяем userId
+    const userId = tgUserData?.id?.toString() || 'default';
+    console.log('Loading data for userId:', userId);
+    
     let loadedBuildings = buildings;
     let loadedHiredStaff = hiredStaff;
     let carToCalculateFrom = currentCar || INITIAL_CAR;
 
     try {
-      console.log('Attempting apiClient call...');
-      const userId = tgUserData?.id?.toString() || 'default';
       const initialState = await apiClient('/game_state', 'GET', { params: { userId } });
       console.log('Received initial state from backend:', initialState);
 
