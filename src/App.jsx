@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Header from './components/Header';
-import MainGameScreen from './components/MainGameScreen'; // НОВЫЙ КОМПОНЕНТ
-import Tutorial from './components/Tutorial'; // КОМПОНЕНТ ТУТОРИАЛА
+import MainGameScreen from './components/MainGameScreen';
+import Tutorial from './components/Tutorial';
 import NavBar from './components/NavBar';
 import TuningScreen from './components/TuningScreen';
 import RaceScreen from './components/RaceScreen';
@@ -91,8 +91,10 @@ function App() {
       if (tgUserData) {
         const userId = tgUserData.id.toString() || 'default';
         apiClient('/game_state', 'POST', {
-          userId,
-          last_exit_time: new Date().toISOString(),
+          body: {
+            userId,
+            last_exit_time: new Date().toISOString(),
+          }
         }).catch(err => console.error('Failed to save last exit time:', err));
       }
     };
@@ -102,8 +104,10 @@ function App() {
     if (incomeRatePerHour > 0 && tgUserData) {
       const userId = tgUserData.id.toString() || 'default';
       apiClient('/game_state', 'POST', {
-        userId,
-        income_rate_per_hour: incomeRatePerHour,
+        body: {
+          userId,
+          income_rate_per_hour: incomeRatePerHour,
+        }
       }).catch(err => console.error('Failed to sync income rate:', err));
     }
   }, [incomeRatePerHour, tgUserData]);
@@ -126,13 +130,6 @@ function App() {
           setPlayerName(initialState.first_name);
           console.log('Player name updated from backend:', initialState.first_name);
         }
-        
-        // ВРЕМЕННАЯ ОТЛАДКА для поиска 10 млн
-        console.log('💰 COINS CHECK:', {
-          from_backend: initialState.game_coins,
-          current_state: gameCoins,
-          will_set: initialState.game_coins ?? gameCoins
-        });
         
         // Преобразуем строки в числа и проверяем на адекватность
         let coinsToSet = initialState.game_coins;
@@ -297,7 +294,7 @@ function App() {
         selected_car_id: selectedCarId
       };
       console.log('📤 Saving data after collect:', saveData);
-      apiClient('/game_state', 'POST', saveData).catch(err => console.error('Failed to save collect:', err));
+      apiClient('/game_state', 'POST', { body: saveData }).catch(err => console.error('Failed to save collect:', err));
     }
   };
 
@@ -317,13 +314,15 @@ function App() {
       console.log(`Building ${buildingName} upgraded. New rate: ${newTotalRate}/hour.`);
       const userId = tgUserData?.id?.toString() || 'default';
       apiClient('/game_state', 'POST', {
-        userId,
-        game_coins: newCoins,
-        buildings: updatedBuildings,
-        income_rate_per_hour: newTotalRate,
-        player_cars: playerCars,
-        hired_staff: hiredStaff,
-        selected_car_id: selectedCarId
+        body: {
+          userId,
+          game_coins: newCoins,
+          buildings: updatedBuildings,
+          income_rate_per_hour: newTotalRate,
+          player_cars: playerCars,
+          hired_staff: hiredStaff,
+          selected_car_id: selectedCarId
+        }
       }).catch(err => console.error('Failed to save building:', err));
     }
   };
@@ -362,13 +361,15 @@ function App() {
       console.log(`Part "${part.name}" upgraded. New coins: ${newCoins}`);
       const userId = tgUserData?.id?.toString() || 'default';
       apiClient('/game_state', 'POST', {
-        userId,
-        game_coins: newCoins,
-        player_cars: updatedPlayerCars,
-        income_rate_per_hour: incomeRatePerHour,
-        buildings,
-        hired_staff: hiredStaff,
-        selected_car_id: selectedCarId
+        body: {
+          userId,
+          game_coins: newCoins,
+          player_cars: updatedPlayerCars,
+          income_rate_per_hour: incomeRatePerHour,
+          buildings,
+          hired_staff: hiredStaff,
+          selected_car_id: selectedCarId
+        }
       }).catch(err => console.error('Failed to save part upgrade:', err));
     } else {
       console.log('Not enough coins for upgrade or invalid cost:', cost);
@@ -383,14 +384,16 @@ function App() {
       setCurrentXp(raceOutcome.newCurrentXp);
       const userId = tgUserData?.id?.toString() || 'default';
       apiClient('/game_state', 'POST', {
-        userId,
-        game_coins: raceOutcome.newGameCoins,
-        current_xp: raceOutcome.newCurrentXp,
-        income_rate_per_hour: incomeRatePerHour,
-        buildings,
-        player_cars: playerCars,
-        hired_staff: hiredStaff,
-        selected_car_id: selectedCarId
+        body: {
+          userId,
+          game_coins: raceOutcome.newGameCoins,
+          current_xp: raceOutcome.newCurrentXp,
+          income_rate_per_hour: incomeRatePerHour,
+          buildings,
+          player_cars: playerCars,
+          hired_staff: hiredStaff,
+          selected_car_id: selectedCarId
+        }
       }).catch(err => console.error('Failed to save race:', err));
       return { result: raceOutcome.result, reward: raceOutcome.reward };
     } else {
@@ -415,13 +418,15 @@ function App() {
     console.log(`Bought car ${carData.name}.`);
     const userId = tgUserData?.id?.toString() || 'default';
     apiClient('/game_state', 'POST', {
-      userId,
-      game_coins: newCoins,
-      player_cars: updatedPlayerCars,
-      income_rate_per_hour: incomeRatePerHour,
-      buildings,
-      hired_staff: hiredStaff,
-      selected_car_id: selectedCarId
+      body: {
+        userId,
+        game_coins: newCoins,
+        player_cars: updatedPlayerCars,
+        income_rate_per_hour: incomeRatePerHour,
+        buildings,
+        hired_staff: hiredStaff,
+        selected_car_id: selectedCarId
+      }
     }).catch(err => console.error('Failed to save car purchase:', err));
   };
 
@@ -439,13 +444,15 @@ function App() {
       console.log(`Hired/upgraded staff ${staffId}. New rate: ${newTotalRate}/hour`);
       const userId = tgUserData?.id?.toString() || 'default';
       apiClient('/game_state', 'POST', {
-        userId,
-        game_coins: newCoins,
-        hired_staff: updatedHiredStaff,
-        income_rate_per_hour: newTotalRate,
-        buildings,
-        player_cars: playerCars,
-        selected_car_id: selectedCarId
+        body: {
+          userId,
+          game_coins: newCoins,
+          hired_staff: updatedHiredStaff,
+          income_rate_per_hour: newTotalRate,
+          buildings,
+          player_cars: playerCars,
+          selected_car_id: selectedCarId
+        }
       }).catch(err => console.error('Failed to save staff:', err));
     } else {
       console.log('Not enough coins for staff hire/upgrade:', cost);
@@ -472,12 +479,14 @@ function App() {
       }
       const userId = tgUserData?.id?.toString() || 'default';
       apiClient('/game_state', 'POST', {
-        userId,
-        selected_car_id: carId,
-        income_rate_per_hour: incomeRatePerHour,
-        buildings,
-        player_cars: playerCars,
-        hired_staff: hiredStaff
+        body: {
+          userId,
+          selected_car_id: carId,
+          income_rate_per_hour: incomeRatePerHour,
+          buildings,
+          player_cars: playerCars,
+          hired_staff: hiredStaff
+        }
       }).catch(err => console.error('Failed to save car selection:', err));
     }
     setIsCarSelectorVisible(false);
@@ -495,8 +504,10 @@ function App() {
     setHasCompletedTutorial(true);
     const userId = tgUserData?.id?.toString() || 'default';
     apiClient('/game_state', 'POST', {
-      userId,
-      has_completed_tutorial: true
+      body: {
+        userId,
+        has_completed_tutorial: true
+      }
     }).catch(err => console.error('Failed to save tutorial status:', err));
   };
   
