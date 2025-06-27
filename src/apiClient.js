@@ -1,7 +1,5 @@
 // src/apiClient.js
 
-// ВРЕМЕННО: Захардкодим URL для отладки на телефоне
-// Удалим эту строку после отладки
 const API_URL = (import.meta.env.VITE_REACT_APP_API_URL || 'http://localhost:3000') + '/api';
 
 const apiClient = async (endpoint, method = 'GET', { body, params } = {}) => {
@@ -9,14 +7,6 @@ const apiClient = async (endpoint, method = 'GET', { body, params } = {}) => {
     if (params) {
         Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
     }
-
-    console.log(`[apiClient DEBUG] Final URL for fetch: ${url.toString()}`);
-    console.log(`[apiClient DEBUG] Method: ${method}, Body:`, body || 'None');
-    console.log(`[apiClient DEBUG] Headers:`, {
-        'Content-Type': 'application/json',
-        'X-Telegram-Init-Data': window.Telegram?.WebApp?.initData || 'MISSING_INIT_DATA'
-    });
-    console.log('[apiClient DEBUG] Platform:', navigator.userAgent);
 
     const options = {
         method,
@@ -32,15 +22,15 @@ const apiClient = async (endpoint, method = 'GET', { body, params } = {}) => {
 
     try {
         const response = await fetch(url.toString(), options);
-        console.log(`[apiClient] Response status: ${response.status}`);
+        
         if (!response.ok) {
             const errorText = await response.text();
-            console.error(`[apiClient] HTTP error! Status: ${response.status}, Body: ${errorText}`);
+            console.error(`[apiClient] Error ${response.status} for ${endpoint}:`, errorText);
             throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
         }
         return await response.json();
     } catch (error) {
-        console.error(`[apiClient] Error fetching ${endpoint}:`, error.message, error.stack);
+        console.error(`[apiClient] Failed ${endpoint}:`, error.message);
         throw error;
     }
 };

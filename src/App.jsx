@@ -258,7 +258,6 @@ function App() {
       }
       const potentialTotalIncome = timePassedTotalSeconds * incomePerSecond;
       const newAccumulated = Math.min(potentialTotalIncome, maxAccumulationCap);
-      console.log('Accumulated income:', newAccumulated);
       setAccumulatedIncome(isFinite(newAccumulated) && newAccumulated >= 0 ? newAccumulated : 0);
     }, UPDATE_INTERVAL);
     return () => clearInterval(intervalId);
@@ -503,10 +502,19 @@ function App() {
     setIsTutorialActive(false);
     setHasCompletedTutorial(true);
     const userId = tgUserData?.id?.toString() || 'default';
+    
+    // Отправляем полные данные, а не только флаг туториала
     apiClient('/game_state', 'POST', {
       body: {
         userId,
-        has_completed_tutorial: true
+        has_completed_tutorial: true,
+        // Добавляем остальные поля чтобы избежать ошибки 500
+        game_coins: gameCoins,
+        income_rate_per_hour: incomeRatePerHour,
+        buildings: buildings,
+        player_cars: playerCars,
+        hired_staff: hiredStaff,
+        selected_car_id: selectedCarId
       }
     }).catch(err => console.error('Failed to save tutorial status:', err));
   };
