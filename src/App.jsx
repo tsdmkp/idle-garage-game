@@ -103,20 +103,18 @@ function App() {
 
   // Отдельный useEffect для загрузки данных
   useEffect(() => {
-    // Ждем пока загрузятся данные пользователя
-    if (isTgApp && !tgUserData) {
-      console.log('Waiting for Telegram user data...');
-      return; // Не загружаем пока нет данных пользователя
-    }
-    
-    // Сбрасываем флаг при изменении пользователя
-    setHasLoadedData(false);
-    
-    // Загружаем только когда есть данные или это не Telegram
-    if (tgUserData || !isTgApp) {
+    // Загружаем ТОЛЬКО когда есть tgUserData с id
+    if (tgUserData && tgUserData.id) {
+      console.log('✅ tgUserData ready, loading data for userId:', tgUserData.id);
       loadInitialData();
+    } else if (!isTgApp) {
+      // Если это не Telegram app, загружаем с default
+      console.log('📱 Not a Telegram app, loading default data');
+      loadInitialData();
+    } else {
+      console.log('⏳ Waiting for tgUserData...');
     }
-  }, [tgUserData, isTgApp]);
+  }, [tgUserData?.id, isTgApp, loadInitialData]);
 
   useEffect(() => {
     if (incomeRatePerHour > 0 && tgUserData) {
@@ -137,12 +135,23 @@ function App() {
       return;
     }
     
+    // КРИТИЧЕСКАЯ ПРОВЕРКА - ждем tgUserData
+    if (isTgApp && (!tgUserData || !tgUserData.id)) {
+      console.log('❌ Cannot load data - tgUserData not ready yet!');
+      return;
+    }
+    
     console.log('loadInitialData started...');
     setHasLoadedData(true);
     
     // Правильно определяем userId
     const userId = tgUserData?.id?.toString() || 'default';
     console.log('Loading data for userId:', userId);
+    
+    // Дополнительная проверка
+    if (userId === 'default' && isTgApp) {
+      console.error('⚠️ WARNING: Using default userId in Telegram app!');
+    }
     
     let loadedBuildings = buildings;
     let loadedHiredStaff = hiredStaff;
@@ -270,7 +279,7 @@ function App() {
       setIsLoading(false);
       console.log('isLoading set to false. Initialization finished.');
     }
-  }, [tgUserData]); // Зависимость от tgUserData
+  }, [tgUserData, isTgApp]); // Зависимости от tgUserData и isTgApp
 
   useEffect(() => {
     if (incomeRatePerHour <= 0 || isLoading) return;
