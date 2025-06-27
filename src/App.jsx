@@ -134,8 +134,20 @@ function App() {
           will_set: initialState.game_coins ?? gameCoins
         });
         
-        setGameCoins(initialState.game_coins ?? gameCoins);
-        setJetCoins(initialState.jet_coins ?? jetCoins);
+        // Преобразуем строки в числа и проверяем на адекватность
+        let coinsToSet = initialState.game_coins;
+        if (typeof coinsToSet === 'string') {
+          coinsToSet = parseInt(coinsToSet) || STARTING_COINS;
+        }
+        
+        // Если это первый запуск (уровень 1) и монет подозрительно много - сбрасываем
+        if (playerLevel === 1 && coinsToSet > 10000) {
+          console.warn('🚨 Сброс подозрительного баланса:', coinsToSet, '→', STARTING_COINS);
+          coinsToSet = STARTING_COINS;
+        }
+        
+        setGameCoins(coinsToSet || STARTING_COINS);
+        setJetCoins(parseInt(initialState.jet_coins) || 0);
         setCurrentXp(initialState.current_xp ?? currentXp);
         setXpToNextLevel(initialState.xp_to_next_level ?? xpToNextLevel);
         
@@ -273,7 +285,8 @@ function App() {
       }
       
       const userId = tgUserData?.id?.toString() || 'default';
-      apiClient('/game_state', 'POST', {
+      // Убедимся что отправляем правильные данные
+      const saveData = {
         userId,
         game_coins: newTotalCoins,
         last_collected_time: new Date(collectionTime).toISOString(),
@@ -282,7 +295,9 @@ function App() {
         player_cars: playerCars,
         hired_staff: hiredStaff,
         selected_car_id: selectedCarId
-      }).catch(err => console.error('Failed to save collect:', err));
+      };
+      console.log('📤 Saving data after collect:', saveData);
+      apiClient('/game_state', 'POST', saveData).catch(err => console.error('Failed to save collect:', err));
     }
   };
 

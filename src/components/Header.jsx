@@ -13,12 +13,15 @@ const Header = ({
   const [showMenu, setShowMenu] = useState(false);
   
   const formatNumber = (num) => {
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(1) + 'M';
-    } else if (num >= 1000) {
-      return (num / 1000).toFixed(1) + 'K';
+    // Преобразуем в число если это строка
+    const number = typeof num === 'string' ? parseInt(num) || 0 : num;
+    
+    if (number >= 1000000) {
+      return (number / 1000000).toFixed(1) + 'M';
+    } else if (number >= 1000) {
+      return (number / 1000).toFixed(1) + 'K';
     }
-    return num.toString();
+    return number.toString();
   };
 
   console.log('Header rendering with playerName:', playerName);
