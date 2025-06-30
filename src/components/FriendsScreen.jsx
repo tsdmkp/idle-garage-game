@@ -12,7 +12,7 @@ const FriendsScreen = ({ tgUserData }) => {
   const generateReferralLink = () => {
     if (!tgUserData?.id) return '';
     const botUsername = 'GarageGame01Bot'; // Замените на имя вашего бота
-    const appName = 'Garage Game'; // Замените на имя вашего приложения
+    const appName = 'GarageGame'; // Замените на имя вашего приложения
     return `https://t.me/${botUsername}/${appName}?startapp=ref_${tgUserData.id}`;
   };
 
