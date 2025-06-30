@@ -203,6 +203,8 @@ function App() {
             setTimeout(() => {
               setIsTutorialActive(true);
               setTutorialStep(0);
+              // Даем новому игроку стартовый доход для туториала
+              setAccumulatedIncome(25); // Достаточно для сбора в туториале
             }, 1000);
           } else {
             console.log('⏭️ Туториал пропущен:', { 

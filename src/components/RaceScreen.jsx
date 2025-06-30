@@ -182,11 +182,6 @@ function RaceScreen({ playerCar, onStartRace }) {
         <div className="race-header">
           <h2>🏁 Уличные Гонки</h2>
           
-          {/* ОТЛАДОЧНАЯ ИНФОРМАЦИЯ - можно удалить позже */}
-          <div style={{ fontSize: '0.7rem', color: '#888', margin: '5px 0' }}>
-            Debug: R={isRacing.toString()}, Ret={isReturning.toString()}, Wait={isWaitingForReturn.toString()}, C={countdown} | Disabled={isButtonDisabled.toString()}
-          </div>
-          
           {winStreak > 1 && (
             <div className="win-streak">
               🔥 Серия побед: {winStreak}
