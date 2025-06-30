@@ -9,6 +9,7 @@ import ShopScreen from './components/ShopScreen';
 import StaffScreen from './components/StaffScreen';
 import CarSelector from './components/CarSelector';
 import LeaderboardScreen from './components/LeaderboardScreen';
+import FriendsScreen from './components/FriendsScreen';
 import {
   calculateUpgradeCost,
   calculateBuildingCost,
@@ -639,6 +640,11 @@ function App() {
         )}
         {activeScreen === 'leaderboard' && (
           <LeaderboardScreen
+            tgUserData={tgUserData}
+          />
+        )}
+        {activeScreen === 'friends' && (
+          <FriendsScreen
             tgUserData={tgUserData}
           />
         )}

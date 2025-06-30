@@ -1,29 +1,28 @@
+// Обновите NavBar.jsx
+
 import React from 'react';
 import './NavBar.css';
 
-// Принимает текущий активный экран и обработчик клика
 function NavBar({ activeScreen, onScreenChange }) {
-  // Список элементов навигации
   const navItems = [
-    { id: 'garage', icon: '🚗', label: 'Гараж' },
+    { id: 'garage', icon: '🏠', label: 'Гараж' },
     { id: 'race', icon: '🏁', label: 'Гонки' },
-    { id: 'shop', icon: '🛒', label: 'Автосалон' },
+    { id: 'shop', icon: '🛒', label: 'Магазин' },
     { id: 'staff', icon: '👥', label: 'Персонал' },
-    { id: 'leaderboard', icon: '🏆', label: 'Рекорды' },
-    { id: 'p2e', icon: '💎', label: 'P2E' },
+    { id: 'friends', icon: '🤝', label: 'Друзья' }, // НОВАЯ КНОПКА
+    { id: 'leaderboard', icon: '🏆', label: 'Рейтинг' }
   ];
 
   return (
     <nav className="navbar">
-      {navItems.map((item) => (
+      {navItems.map(item => (
         <button
           key={item.id}
           className={`nav-item ${activeScreen === item.id ? 'active' : ''}`}
-          onClick={() => onScreenChange(item.id)} // Используем onScreenChange
-          title={item.label} // Подсказка для десктопа
+          onClick={() => onScreenChange(item.id)}
         >
-          <div className="nav-icon">{item.icon}</div>
-          <div className="nav-label">{item.label}</div>
+          <span className="nav-icon">{item.icon}</span>
+          <span className="nav-label">{item.label}</span>
         </button>
       ))}
     </nav>

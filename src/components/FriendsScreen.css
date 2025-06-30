@@ -1,0 +1,456 @@
+.friends-screen {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 0;
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.friends-content {
+  padding: 15px;
+  padding-top: 85px;
+  padding-bottom: 85px;
+  max-width: 500px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Заголовок */
+.friends-header {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.friends-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 1.8rem;
+  font-weight: 800;
+  background: linear-gradient(45deg, #ffd700, #ffeb3b, #ff9800);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.friends-header p {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 0.95rem;
+}
+
+/* Статус реферера */
+.referrer-status {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 20px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.referrer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 25px;
+  border: 2px solid;
+  background: rgba(255, 255, 255, 0.1);
+  margin-bottom: 15px;
+}
+
+.referrer-icon {
+  font-size: 1.2rem;
+}
+
+.referrer-name {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.referrer-stats {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-bottom: 10px;
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat-number {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #ffd700;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.next-level {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  margin-top: 8px;
+}
+
+/* Награды в ожидании */
+.pending-rewards {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  border-radius: 15px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+  animation: rewardPulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes rewardPulse {
+  0% { box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3); }
+  100% { box-shadow: 0 12px 35px rgba(255, 107, 107, 0.5); }
+}
+
+.pending-rewards h3 {
+  margin: 0 0 15px 0;
+  font-size: 1.3rem;
+}
+
+.rewards-list {
+  margin-bottom: 15px;
+}
+
+.reward-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.reward-item:last-child {
+  border-bottom: none;
+}
+
+.claim-rewards-btn {
+  background: linear-gradient(135deg, #4caf50, #66bb6a);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.claim-rewards-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+/* Секция приглашений */
+.invite-section {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.invite-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.invite-benefit {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.benefit-icon {
+  font-size: 1.3rem;
+  width: 40px;
+  text-align: center;
+}
+
+.benefit-text {
+  flex: 1;
+}
+
+.benefit-text strong {
+  color: #ffd700;
+  font-weight: 700;
+}
+
+.invite-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.invite-btn {
+  flex: 1;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.invite-btn.primary {
+  background: linear-gradient(135deg, #2196f3, #42a5f5);
+  color: white;
+  box-shadow: 0 6px 20px rgba(33, 150, 243, 0.3);
+}
+
+.invite-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(33, 150, 243, 0.4);
+}
+
+.invite-btn.secondary {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.invite-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Таблица наград */
+.rewards-table {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.rewards-table h3 {
+  margin: 0 0 15px 0;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+.rewards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reward-milestone {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid transparent;
+  position: relative;
+}
+
+.reward-milestone.unlocked {
+  background: rgba(76, 175, 80, 0.2);
+  border-color: #4caf50;
+}
+
+.reward-milestone.locked {
+  opacity: 0.6;
+}
+
+.milestone-icon {
+  font-size: 1.5rem;
+  width: 40px;
+  text-align: center;
+}
+
+.milestone-text {
+  flex: 1;
+}
+
+.milestone-target {
+  font-weight: 700;
+  color: #ffd700;
+  font-size: 0.9rem;
+}
+
+.milestone-reward {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.milestone-check {
+  font-size: 1.2rem;
+  color: #4caf50;
+}
+
+/* Список друзей */
+.friends-list {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.friends-list h3 {
+  margin: 0 0 15px 0;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+.friends-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.friend-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.friend-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff6b6b, #ffd93d);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: white;
+}
+
+.friend-info {
+  flex: 1;
+}
+
+.friend-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.friend-date {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.friend-reward {
+  color: #4caf50;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+/* Если друзей нет */
+.no-friends {
+  text-align: center;
+  padding: 40px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.no-friends-icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+}
+
+.no-friends-text h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.2rem;
+}
+
+.no-friends-text p {
+  margin: 0;
+  opacity: 0.8;
+  font-size: 0.9rem;
+}
+
+/* Состояния загрузки и ошибки */
+.friends-loading,
+.friends-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  text-align: center;
+  gap: 15px;
+}
+
+.loading-icon {
+  font-size: 3rem;
+  animation: bounce 1s ease-in-out infinite alternate;
+}
+
+@keyframes bounce {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-10px); }
+}
+
+.friends-error div:first-child {
+  font-size: 3rem;
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+  .friends-content {
+    padding: 10px;
+    padding-top: 80px;
+    padding-bottom: 80px;
+    gap: 15px;
+  }
+
+  .referrer-stats {
+    gap: 20px;
+  }
+
+  .stat-number {
+    font-size: 1.3rem;
+  }
+
+  .invite-buttons {
+    flex-direction: column;
+  }
+
+  .invite-btn {
+    padding: 12px 16px;
+    font-size: 0.9rem;
+  }
+
+  .rewards-grid {
+    gap: 8px;
+  }
+
+  .reward-milestone {
+    padding: 12px;
+  }
+
+  .milestone-icon {
+    font-size: 1.3rem;
+    width: 35px;
+  }
+}
