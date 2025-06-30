@@ -27,7 +27,8 @@ function RaceScreen({ playerCar, onStartRace }) {
   const [reward, setReward] = useState(null);
   const [isRacing, setIsRacing] = useState(false);
   const [shouldAnimate, setShouldAnimate] = useState(false);
-  const [isReturning, setIsReturning] = useState(false); // Новое состояние для возврата
+  const [isReturning, setIsReturning] = useState(false); 
+  const [isWaitingForReturn, setIsWaitingForReturn] = useState(false); // НОВОЕ состояние
   const [opponentCarImageUrl, setOpponentCarImageUrl] = useState(() => getRandomOpponentImage());
   const [opponentName, setOpponentName] = useState(() => getRandomOpponentName());
   const [countdown, setCountdown] = useState(0); // Обратный отсчет
@@ -52,7 +53,7 @@ function RaceScreen({ playerCar, onStartRace }) {
 
   // Обработчик смены сложности
   const handleDifficultyChange = (difficulty) => {
-    if (isRacing || isReturning) return;
+    if (isRacing || isReturning || isWaitingForReturn) return;
     setSelectedDifficulty(difficulty);
     setRaceResult(null);
     setReward(null);
@@ -76,38 +77,36 @@ function RaceScreen({ playerCar, onStartRace }) {
 
   // Главный обработчик гонки
   const handleRaceClick = async () => {
-    if (isRacing || isReturning || !playerCar) return;
+    if (isRacing || isReturning || isWaitingForReturn || !playerCar) {
+      console.log('🚫 Race blocked:', { isRacing, isReturning, isWaitingForReturn, playerCar: !!playerCar });
+      return;
+    }
+    
+    console.log('🏁 Starting race sequence...');
     
     // Сбрасываем предыдущие результаты
     setRaceResult(null);
     setReward(null);
     
     // Запускаем обратный отсчет
-    console.log('🏁 Starting countdown...');
+    console.log('⏰ Starting countdown...');
     startCountdown();
     
     // Ждем завершения обратного отсчета
     await new Promise(resolve => setTimeout(resolve, 2500));
     
     // Начинаем гонку
+    console.log('🚗 Race animation started');
     setIsRacing(true);
     setShouldAnimate(true);
     setTotalRaces(prev => prev + 1);
-    
-    console.log('🏁 Race started!');
-    
-    // Имитируем звук старта
-    // raceStartSound.current?.play();
     
     // Ждем анимацию гонки (2.5 секунды)
     await new Promise(resolve => setTimeout(resolve, 2500));
     
     // Получаем результат гонки
     const resultData = await onStartRace(selectedDifficulty);
-    console.log('🏁 Race result:', resultData);
-    
-    // Имитируем звук финиша
-    // raceFinishSound.current?.play();
+    console.log('🏁 Race result received:', resultData);
     
     // Устанавливаем результат
     if (resultData && typeof resultData.result === 'string') {
@@ -126,19 +125,24 @@ function RaceScreen({ playerCar, onStartRace }) {
       setWinStreak(0);
     }
     
+    // КРИТИЧНО: завершаем гонку, но блокируем кнопку до возврата
     setIsRacing(false);
+    setIsWaitingForReturn(true); // БЛОКИРУЕМ кнопку
+    console.log('🏁 Race finished, waiting for return...');
     
     // Показываем результат 2 секунды, затем возвращаем машины
     setTimeout(() => {
-      console.log('🏁 Starting return animation...');
+      console.log('🔄 Starting return animation...');
       setIsReturning(true);
       setShouldAnimate(false);
       
       // Через 2.5 секунды возврата машины полностью вернулись
       setTimeout(() => {
-        setIsReturning(false); // ТОЛЬКО ЗДЕСЬ кнопка снова станет активной
+        console.log('✅ Cars returned, button should be active now');
+        setIsReturning(false);
+        setIsWaitingForReturn(false); // РАЗБЛОКИРУЕМ кнопку
         changeOpponent();
-        console.log('🏁 Cars returned to start, new opponent ready!');
+        console.log('🏁 Full cycle complete, ready for next race');
       }, 2500);
     }, 2000);
   };
@@ -157,12 +161,13 @@ function RaceScreen({ playerCar, onStartRace }) {
   const getButtonStatus = () => {
     if (countdown > 0) return `${countdown}`;
     if (isRacing) return 'Гонка!';
+    if (isWaitingForReturn) return 'Ждем возврата...';
     if (isReturning) return 'Возврат...';
     return 'Начать Заезд!';
   };
 
-  // ИСПРАВЛЕННАЯ ЛОГИКА: кнопка неактивна до полного завершения цикла
-  const isButtonDisabled = isRacing || isReturning || !playerCar || countdown > 0;
+  // ИСПРАВЛЕННАЯ ЛОГИКА: кнопка неактивна до полного завершения ВСЕГО цикла
+  const isButtonDisabled = isRacing || isReturning || isWaitingForReturn || !playerCar || countdown > 0;
 
   // Получаем данные машины игрока
   const { name: carName, stats: carStats, imageUrl: playerImageUrl } = playerCar || {};
@@ -174,6 +179,12 @@ function RaceScreen({ playerCar, onStartRace }) {
         {/* Поднимаем заголовок выше */}
         <div className="race-header">
           <h2>🏁 Уличные Гонки</h2>
+          
+          {/* ОТЛАДОЧНАЯ ИНФОРМАЦИЯ - можно удалить позже */}
+          <div style={{ fontSize: '0.7rem', color: '#888', margin: '5px 0' }}>
+            Debug: Racing={isRacing.toString()}, Returning={isReturning.toString()}, Waiting={isWaitingForReturn.toString()}, Countdown={countdown}
+          </div>
+          
           {winStreak > 1 && (
             <div className="win-streak">
               🔥 Серия побед: {winStreak}
@@ -281,6 +292,11 @@ function RaceScreen({ playerCar, onStartRace }) {
             className={`start-race-button ${countdown > 0 ? 'countdown' : ''} ${isRacing ? 'racing' : ''}`}
             onClick={handleRaceClick}
             disabled={isButtonDisabled}
+            style={{
+              // Добавляем визуальную индикацию заблокированной кнопки
+              opacity: isButtonDisabled ? 0.6 : 1,
+              cursor: isButtonDisabled ? 'not-allowed' : 'pointer'
+            }}
           >
             {getButtonStatus()}
           </button>
