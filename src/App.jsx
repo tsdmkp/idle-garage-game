@@ -118,67 +118,55 @@ function App() {
     incomeRatePerHour, buildings, playerCars, selectedCarId, hiredStaff, hasCompletedTutorial
   ]);
 
-  // Инициализация Telegram WebApp
+  // Инициализация Telegram WebApp И загрузка данных
   useEffect(() => {
-    console.log('🚀 Инициализация Telegram WebApp...');
-    const tg = window.Telegram?.WebApp;
-    if (tg) {
-      console.log('✅ Telegram WebApp найден');
-      setIsTgApp(true);
-      const userData = tg.initDataUnsafe?.user || null;
-      console.log('👤 Telegram user data:', JSON.stringify(userData, null, 2));
-      setTgUserData(userData);
+    const initializeApp = async () => {
+      console.log('🚀 Инициализация приложения...');
       
-      if (userData && typeof userData === 'object') {
-        const firstName = userData.first_name || userData.firstName || userData.username || 'Игрок';
-        setPlayerName(firstName);
-        console.log('📝 Player name установлен:', firstName);
+      // Сначала инициализируем Telegram
+      const tg = window.Telegram?.WebApp;
+      if (tg) {
+        console.log('✅ Telegram WebApp найден');
+        setIsTgApp(true);
+        const userData = tg.initDataUnsafe?.user || null;
+        console.log('👤 Telegram user data:', JSON.stringify(userData, null, 2));
+        setTgUserData(userData);
+        
+        if (userData && typeof userData === 'object') {
+          const firstName = userData.first_name || userData.firstName || userData.username || 'Игрок';
+          setPlayerName(firstName);
+          console.log('📝 Player name установлен:', firstName);
+        } else {
+          console.warn('⚠️ Нет валидных данных пользователя в userData:', userData);
+        }
+        
+        tg.ready();
+        tg.expand();
+        tg.BackButton.hide();
+        tg.MainButton.hide();
+
+        // Теперь загружаем данные с правильным userId
+        if (userData?.id) {
+          await loadGameData(userData.id.toString());
+        } else {
+          console.error('❌ Нет userId в Telegram данных');
+          setError('Ошибка получения данных пользователя Telegram');
+          setIsLoading(false);
+        }
       } else {
-        console.warn('⚠️ Нет валидных данных пользователя в userData:', userData);
-      }
-      
-      tg.ready();
-      tg.expand();
-      tg.BackButton.hide();
-      tg.MainButton.hide();
-    } else {
-      console.log('⚠️ Telegram WebApp не найден, режим standalone');
-      setIsTgApp(false);
-    }
-    
-    return () => {
-      const userId = getUserId();
-      if (userId) {
-        apiClient('/game_state', 'POST', {
-          body: {
-            userId: userId,
-            last_exit_time: new Date().toISOString(),
-          }
-        }).catch(err => console.error('Failed to save last exit time:', err));
+        console.log('⚠️ Telegram WebApp не найден, режим standalone');
+        setIsTgApp(false);
+        // Загружаем данные для standalone режима
+        await loadGameData('default');
       }
     };
-  }, []);
 
-  // Загрузка данных
-  useEffect(() => {
-    console.log('🔄 useEffect загрузки данных triggered:', {
-      hasLoadedData,
-      isTgApp,
-      tgUserDataId: tgUserData?.id
-    });
+    const loadGameData = async (userId) => {
+      if (hasLoadedData) {
+        console.log('⏭️ Данные уже загружены, пропускаем...');
+        return;
+      }
 
-    if (hasLoadedData) {
-      console.log('⏭️ Данные уже загружены, пропускаем...');
-      return;
-    }
-
-    const userId = getUserId();
-    if (!userId) {
-      console.log('⏳ userId не готов, ждем...');
-      return;
-    }
-
-    const loadData = async () => {
       console.log('📥 Начинаем загрузку данных для userId:', userId);
       setHasLoadedData(true);
       
@@ -302,8 +290,24 @@ function App() {
       }
     };
 
-    loadData();
-  }, [getUserId, hasLoadedData]);
+    // Запускаем инициализацию только один раз
+    if (!hasLoadedData) {
+      initializeApp();
+    }
+
+    return () => {
+      // Сохраняем время выхода при размонтировании
+      const userId = getUserId();
+      if (userId) {
+        apiClient('/game_state', 'POST', {
+          body: {
+            userId: userId,
+            last_exit_time: new Date().toISOString(),
+          }
+        }).catch(err => console.error('Failed to save last exit time:', err));
+      }
+    };
+  }, []); // Пустой массив - запускаем только один раз
 
   // Таймер дохода
   useEffect(() => {
