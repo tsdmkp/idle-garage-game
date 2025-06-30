@@ -56,26 +56,26 @@ body {
 .race-screen__content {
   position: relative;
   z-index: 1;
-  padding: 5px 15px;
-  padding-top: 50px; /* Максимально поднимаем контент */
+  padding: 15px;
+  padding-top: 55px; /* Оставляем поднятым, но не слишком */
   padding-bottom: 85px;
   box-sizing: border-box;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px; /* Еще меньше отступы между элементами */
+  gap: 15px; /* Возвращаем нормальные отступы */
 }
 
 /* Заголовок и статистика */
 .race-header {
   text-align: center;
-  margin-bottom: 2px; /* Минимальный отступ */
+  margin-bottom: 8px; /* Чуть больше отступ */
 }
 
 .race-header h2 {
-  margin: 0 0 3px 0;
-  font-size: 1.6rem; /* Еще меньше заголовок */
+  margin: 0 0 8px 0;
+  font-size: 1.7rem; /* Чуть больше заголовок */
   font-weight: 800;
   background: linear-gradient(45deg, #ff6b6b, #ffd93d, #6bcf7f, #4d9de0);
   background-size: 300% 300%;
@@ -115,8 +115,8 @@ body {
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
-  padding: 12px 8px; /* Уменьшили padding */
+  border-radius: 15px;
+  padding: 15px 10px; /* Возвращаем нормальный padding */
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
@@ -242,7 +242,7 @@ body {
 /* Зона анимации гонки */
 .race-animation-area {
   width: 100%;
-  padding: 8px 0; /* Уменьшили отступы */
+  padding: 12px 0; /* Чуть больше отступы */
   display: flex;
   justify-content: center;
   box-sizing: border-box;
@@ -409,7 +409,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px; /* Уменьшили отступы */
+  gap: 15px; /* Возвращаем нормальные отступы */
   width: 100%;
   max-width: 350px;
 }
@@ -490,8 +490,8 @@ body {
 
 /* Блок результата гонки */
 .race-result {
-  padding: 15px; /* Уменьшили padding */
-  border-radius: 12px;
+  padding: 18px; /* Чуть больше padding */
+  border-radius: 15px;
   background: linear-gradient(145deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6));
   backdrop-filter: blur(15px);
   border: 2px solid;
@@ -518,8 +518,8 @@ body {
 
 .race-result.win h3 {
   color: #81c784;
-  margin: 0 0 8px 0; /* Уменьшили отступы */
-  font-size: 1.3rem;
+  margin: 0 0 10px 0; /* Возвращаем нормальные отступы */
+  font-size: 1.4rem;
   font-weight: 800;
   text-shadow: 0 0 20px rgba(129, 199, 132, 0.6);
 }
@@ -551,16 +551,16 @@ body {
 }
 
 .race-result p {
-  margin: 0 0 8px 0; /* Уменьшили отступы */
+  margin: 0 0 10px 0; /* Возвращаем нормальные отступы */
   color: #ffffff;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 600;
   line-height: 1.4;
 }
 
 .race-tip {
-  margin-top: 8px; /* Уменьшили отступ */
-  padding: 6px 10px;
+  margin-top: 10px; /* Возвращаем нормальный отступ */
+  padding: 8px 12px;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   font-size: 0.9rem;
@@ -571,14 +571,14 @@ body {
 /* --- Адаптация для маленьких экранов --- */
 @media (max-width: 480px) {
   .race-screen__content {
-    padding: 5px 10px;
-    padding-top: 45px; /* Еще выше на мобильных */
+    padding: 10px;
+    padding-top: 50px; /* Чуть ниже на мобильных */
     padding-bottom: 80px;
-    gap: 6px; /* Минимальные отступы */
+    gap: 12px; /* Нормальные отступы */
   }
   
   .race-header h2 {
-    font-size: 1.3rem; /* Еще меньше на мобильных */
+    font-size: 1.5rem; /* Нормальный размер на мобильных */
   }
   
   .participants-info {
@@ -651,14 +651,14 @@ body {
 /* Дополнительные улучшения для очень маленьких экранов */
 @media (max-width: 320px) {
   .race-screen__content {
-    padding: 5px 8px;
-    padding-top: 40px; /* Максимально высоко */
+    padding: 8px;
+    padding-top: 45px; /* Умеренно высоко */
     padding-bottom: 75px;
-    gap: 5px; /* Супер минимальные отступы */
+    gap: 10px; /* Нормальные отступы */
   }
   
   .race-header h2 {
-    font-size: 1.2rem; /* Самый маленький заголовок */
+    font-size: 1.4rem; /* Нормальный размер */
   }
   
   .participants-info {

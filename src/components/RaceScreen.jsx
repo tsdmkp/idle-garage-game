@@ -134,9 +134,9 @@ function RaceScreen({ playerCar, onStartRace }) {
       setIsReturning(true);
       setShouldAnimate(false);
       
-      // Через 2.5 секунды возврата меняем оппонента и разрешаем новую гонку
+      // Через 2.5 секунды возврата машины полностью вернулись
       setTimeout(() => {
-        setIsReturning(false);
+        setIsReturning(false); // ТОЛЬКО ЗДЕСЬ кнопка снова станет активной
         changeOpponent();
         console.log('🏁 Cars returned to start, new opponent ready!');
       }, 2500);
@@ -161,6 +161,7 @@ function RaceScreen({ playerCar, onStartRace }) {
     return 'Начать Заезд!';
   };
 
+  // ИСПРАВЛЕННАЯ ЛОГИКА: кнопка неактивна до полного завершения цикла
   const isButtonDisabled = isRacing || isReturning || !playerCar || countdown > 0;
 
   // Получаем данные машины игрока
