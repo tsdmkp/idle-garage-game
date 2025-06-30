@@ -284,8 +284,8 @@ function RaceScreen({ playerCar, onStartRace }) {
             {getButtonStatus()}
           </button>
 
-          {/* Результат гонки */}
-          {!isRacing && !isReturning && countdown === 0 && raceResult && (
+          {/* Результат гонки - показываем как только есть результат */}
+          {raceResult && countdown === 0 && (
             <div className={`race-result ${raceResult}`}>
               <h3>
                 {raceResult === 'win' ? '🏆 ПОБЕДА!' : 
