@@ -17,7 +17,7 @@ import {
   simulateRace,
   calculateStaffCost,
   getInitialPlayerCar,
-  BASE_CAR_STATS, // Возможно не используется напрямую, но оставлено для полноты
+  BASE_CAR_STATS,
   CAR_CATALOG,
   STAFF_CATALOG,
   INITIAL_BUILDINGS,
@@ -28,7 +28,6 @@ import {
 import apiClient from './apiClient';
 import './App.css';
 
-// Инициализация начальных значений, чтобы избежать проблем с 'undefined'
 const INITIAL_CAR = getInitialPlayerCar();
 const INITIAL_HIRED_STAFF = (() => {
   const init = {};
@@ -40,7 +39,6 @@ const INITIAL_HIRED_STAFF = (() => {
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
-  const [hasLoadedData, setHasLoadedData] = useState(false); // Защита от повторной загрузки
   const [error, setError] = useState(null);
   const [tgUserData, setTgUserData] = useState(null);
   const [isTgApp, setIsTgApp] = useState(false);
@@ -61,38 +59,32 @@ function App() {
   const [isTuningVisible, setIsTuningVisible] = useState(false);
   const [isCarSelectorVisible, setIsCarSelectorVisible] = useState(false);
   
-  // Состояния для туториала
   const [isTutorialActive, setIsTutorialActive] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
   const [hasCompletedTutorial, setHasCompletedTutorial] = useState(false);
 
-  // Определяем текущую машину. Используем currentCar || playerCars[0] || null для безопасности.
   const currentCar = playerCars.find(car => car.id === selectedCarId) || playerCars[0] || null;
 
-  // Глобальная функция для сохранения состояния игры
-  // Это помогает убедиться, что мы всегда отправляем полный и консистентный набор данных
-  // при каждом вызове сохранения, чтобы избежать частичной перезаписи.
-  const saveGameState = useCallback(async (updates = {}) => {
-    // Определяем userId надежно
-    const userId = tgUserData?.id?.toString();
+  // Определяем userId правильно
+  const getUserId = useCallback(() => {
+    if (isTgApp && tgUserData?.id) {
+      return tgUserData.id.toString();
+    } else if (!isTgApp) {
+      return 'default';
+    }
+    return null; // userId не готов
+  }, [isTgApp, tgUserData?.id]);
 
-    // Если userId отсутствует или это Telegram приложение и userId еще не установлен,
-    // не пытаемся сохранить данные.
-    if (!userId && isTgApp) {
-      console.warn('⚠️ Отмена сохранения: tgUserData.id отсутствует в Telegram приложении.');
+  const saveGameState = useCallback(async (updates = {}) => {
+    const userId = getUserId();
+    if (!userId) {
       return;
     }
-    // Если это не Telegram приложение, используем 'default' userId
-    const finalUserId = userId || 'default';
-    if (finalUserId === 'default' && isTgApp) {
-        console.warn('⚠️ ВНИМАНИЕ: Используется userId по умолчанию в Telegram приложении. Проверьте инициализацию tgUserData.');
-    }
 
-    // Собираем полное текущее состояние для отправки
     const stateToSave = {
-      userId: finalUserId,
+      userId: userId,
       player_level: playerLevel,
-      first_name: playerName, // Отправляем имя, может пригодиться на бэкенде
+      first_name: playerName,
       game_coins: gameCoins,
       jet_coins: jetCoins,
       current_xp: currentXp,
@@ -104,116 +96,76 @@ function App() {
       selected_car_id: selectedCarId,
       hired_staff: hiredStaff,
       has_completed_tutorial: hasCompletedTutorial,
-      // Дополнительные поля, которые могут быть важны для бэкенда
-      last_exit_time: new Date().toISOString(), // Обновляем время выхода при каждом сохранении
-      ...updates // Применяем любые специфичные обновления, переданные в функцию
+      last_exit_time: new Date().toISOString(),
+      ...updates
     };
 
     try {
-      console.log('📤 Сохранение состояния игры:', stateToSave);
       await apiClient('/game_state', 'POST', { body: stateToSave });
-      console.log('✅ Состояние игры успешно сохранено.');
     } catch (err) {
-      console.error('❌ Ошибка при сохранении состояния игры:', err.message);
-      // Можно добавить UI-уведомление об ошибке сохранения
+      console.error('Ошибка сохранения:', err.message);
     }
   }, [
-    tgUserData, isTgApp, playerLevel, playerName, gameCoins, jetCoins, currentXp, xpToNextLevel,
-    incomeRatePerHour, accumulatedIncome, buildings, playerCars, selectedCarId, hiredStaff,
-    hasCompletedTutorial // Добавлена зависимость hasCompletedTutorial
+    getUserId, playerLevel, playerName, gameCoins, jetCoins, currentXp, xpToNextLevel,
+    incomeRatePerHour, buildings, playerCars, selectedCarId, hiredStaff, hasCompletedTutorial
   ]);
 
-  // Эффект для инициализации Telegram Web App
+  // Инициализация Telegram WebApp
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
     if (tg) {
       setIsTgApp(true);
       const userData = tg.initDataUnsafe?.user || null;
       setTgUserData(userData);
-      console.log('App: Telegram user data structure:', JSON.stringify(userData, null, 2));
+      
       if (userData && typeof userData === 'object') {
         const firstName = userData.first_name || userData.firstName || userData.username || 'Игрок';
         setPlayerName(firstName);
-        console.log('Player name set to:', firstName);
-      } else {
-        console.warn('No valid user data in tgUserData:', userData);
       }
+      
       tg.ready();
       tg.expand();
-      // Установка кнопки "Назад" или других элементов UI Telegram
       tg.BackButton.hide();
       tg.MainButton.hide();
     } else {
       setIsTgApp(false);
-      console.warn('App: Telegram initData not found. Running in standalone mode.');
     }
     
-    // При размонтировании компонента пытаемся сохранить время выхода
-    // Это теперь будет делать saveGameState, но мы можем вызвать ее здесь
-    // для фиксации последнего времени выхода перед закрытием
     return () => {
-      // Здесь мы не можем использовать saveGameState напрямую, так как состояния могут быть устаревшими
-      // Лучше использовать ссылку на функцию для чистой функции
-      const userIdOnExit = tgUserData?.id?.toString() || 'default';
-      if (userIdOnExit) {
+      const userId = getUserId();
+      if (userId) {
         apiClient('/game_state', 'POST', {
           body: {
-            userId: userIdOnExit,
+            userId: userId,
             last_exit_time: new Date().toISOString(),
           }
-        }).catch(err => console.error('Failed to save last exit time on unmount:', err));
+        }).catch(err => console.error('Failed to save last exit time:', err));
       }
     };
-  }, []); // Пустой массив зависимостей: эффект запускается только один раз при монтировании
+  }, []);
 
-  // Отдельный useEffect для загрузки данных
+  // Загрузка данных
   useEffect(() => {
     const loadData = async () => {
-      // Защита от повторной загрузки
-      if (hasLoadedData) {
-        console.log('Data already loaded, skipping...');
-        return;
+      const userId = getUserId();
+      if (!userId) {
+        return; // Ждем пока userId будет готов
       }
-      
-      // КРИТИЧЕСКАЯ ПРОВЕРКА - ждем tgUserData
-      if (isTgApp && (!tgUserData || !tgUserData.id)) {
-        console.log('❌ Невозможно загрузить данные - tgUserData еще не готов!');
-        return;
-      }
-      
-      console.log('loadInitialData started...');
-      setHasLoadedData(true);
-      
-      // Правильно определяем userId для загрузки
-      const userId = tgUserData?.id?.toString() || 'default';
-      console.log('Loading data for userId:', userId);
       
       try {
         const initialState = await apiClient('/game_state', 'GET', { params: { userId } });
-        console.log('Получено начальное состояние от бэкенда:', initialState);
 
         if (initialState && typeof initialState === 'object') {
-          // Обновляем состояние на основе загруженных данных
+          // Обновляем состояние из бэкенда
           setPlayerLevel(initialState.player_level ?? playerLevel);
           if (initialState.first_name && initialState.first_name !== 'Игрок') {
             setPlayerName(initialState.first_name);
-            console.log('Имя игрока обновлено с бэкенда:', initialState.first_name);
           }
           
-          // Преобразуем строки в числа и проверяем на адекватность
           let coinsToSet = initialState.game_coins;
           if (typeof coinsToSet === 'string') {
             coinsToSet = parseInt(coinsToSet) || STARTING_COINS;
           }
-          
-          // Если это первый запуск (уровень 1) и монет подозрительно много - сбрасываем
-          if (playerLevel === 1 && coinsToSet > 10000 && coinsToSet !== STARTING_COINS) {
-            console.warn('🚨 Сброс подозрительного баланса:', coinsToSet, '→', STARTING_COINS);
-            coinsToSet = STARTING_COINS;
-            // Здесь можно вызвать saveGameState, чтобы сбросить баланс на бэкенде
-            saveGameState({ game_coins: STARTING_COINS });
-          }
-          
           setGameCoins(coinsToSet || STARTING_COINS);
           setJetCoins(parseInt(initialState.jet_coins) || 0);
           setCurrentXp(initialState.current_xp ?? currentXp);
@@ -232,35 +184,24 @@ function App() {
           const loadedLastCollectedTime = initialState.last_collected_time ? new Date(initialState.last_collected_time).getTime() : Date.now();
           const loadedLastExitTime = initialState.last_exit_time ? new Date(initialState.last_exit_time).getTime() : loadedLastCollectedTime;
           lastCollectedTimeRef.current = isFinite(loadedLastCollectedTime) ? loadedLastCollectedTime : Date.now();
-          console.log('Загружено время последнего сбора:', lastCollectedTimeRef.current);
-          console.log('Загружено время последнего выхода:', loadedLastExitTime);
 
           const now = Date.now();
           const offlineTimeMs = Math.max(0, now - loadedLastExitTime);
-          console.log('Оффлайн время (мс) с момента выхода:', offlineTimeMs);
 
           let loadedBuildings = INITIAL_BUILDINGS;
           if (initialState?.buildings && Array.isArray(initialState.buildings) && initialState.buildings.length > 0) {
-              // Дополнительная проверка на валидность загруженных данных о зданиях
-              const validBuildings = initialState.buildings.every(building => 
-                  building && 
-                  typeof building.id === 'string' && 
-                  typeof building.name === 'string' && 
-                  typeof building.icon === 'string' &&
-                  typeof building.level === 'number' &&
-                  typeof building.isLocked === 'boolean'
-              );
-              
-              if (validBuildings) {
-                  loadedBuildings = initialState.buildings;
-                  console.log("Используются здания из API:", loadedBuildings);
-              } else {
-                  console.warn("Здания из API недействительны, используются начальные здания.");
-                  loadedBuildings = INITIAL_BUILDINGS;
-              }
-          } else {
-              console.warn("Нет действительных зданий из API, используются начальные здания.");
-              loadedBuildings = INITIAL_BUILDINGS;
+            const validBuildings = initialState.buildings.every(building => 
+              building && 
+              typeof building.id === 'string' && 
+              typeof building.name === 'string' && 
+              typeof building.icon === 'string' &&
+              typeof building.level === 'number' &&
+              typeof building.isLocked === 'boolean'
+            );
+            
+            if (validBuildings) {
+              loadedBuildings = initialState.buildings;
+            }
           }
           setBuildings(loadedBuildings);
 
@@ -270,7 +211,7 @@ function App() {
           const loadedPlayerCarsRaw = Array.isArray(initialState.player_cars) ? initialState.player_cars : [INITIAL_CAR];
           const loadedPlayerCars = loadedPlayerCarsRaw.map(sc =>
             sc && sc.id && sc.parts ? { ...sc, stats: recalculateStatsAndIncomeBonus(sc.id, sc.parts).stats } : null
-          ).filter(Boolean); // Фильтруем null, если есть невалидные объекты
+          ).filter(Boolean);
           const actualPlayerCars = loadedPlayerCars.length > 0 ? loadedPlayerCars : [INITIAL_CAR];
           setPlayerCars(actualPlayerCars);
 
@@ -281,26 +222,16 @@ function App() {
           setSelectedCarId(finalSelectedCarId);
 
           const carToCalculateFrom = actualPlayerCars.find(c => c.id === finalSelectedCarId) || actualPlayerCars[0] || INITIAL_CAR;
-
-          // Важно: если carToCalculateFrom отсутствует, это может привести к ошибкам
-          if (!carToCalculateFrom) {
-            console.error('Не удалось определить машину для расчета дохода. Используется INITIAL_CAR.');
-            // Можно установить carToCalculateFrom в INITIAL_CAR для продолжения работы
-          }
-
           const initialTotalRate = calculateTotalIncomeRate(loadedBuildings, carToCalculateFrom, loadedHiredStaff);
           setIncomeRatePerHour(initialTotalRate);
+          
           let offlineIncome = 0;
           if (offlineTimeMs > 0 && initialTotalRate > 0) {
             offlineIncome = (initialTotalRate / 3600) * Math.min(offlineTimeMs / 1000, MAX_OFFLINE_HOURS * 3600);
-            console.log(`Рассчитан оффлайн доход: ${offlineIncome.toFixed(2)} за ${offlineTimeMs / 1000} секунд`);
           }
           setAccumulatedIncome(offlineIncome);
-          console.log(`Финальный рассчитанный доход: ${initialTotalRate}/час, оффлайн доход: ${offlineIncome.toFixed(2)}`);
         } else {
-          console.warn('Бэкенд вернул недействительное начальное состояние. Используются значения по умолчанию.');
           setError('Не удалось получить данные игрока');
-          // Если данные невалидны, убедитесь, что состояния сброшены или установлены в разумные значения
           setBuildings(INITIAL_BUILDINGS);
           setPlayerCars([INITIAL_CAR]);
           setSelectedCarId(INITIAL_CAR.id);
@@ -308,39 +239,38 @@ function App() {
           setIncomeRatePerHour(calculateTotalIncomeRate(INITIAL_BUILDINGS, INITIAL_CAR, INITIAL_HIRED_STAFF));
         }
       } catch (err) {
-        console.error('Ошибка при получении начального состояния игры:', err.message);
-        setError(`Ошибка загрузки: ${err.message}. Попробуйте позже.`);
+        console.error('Ошибка загрузки:', err.message);
+        setError(`Ошибка загрузки: ${err.message}`);
       } finally {
         setIsLoading(false);
-        console.log('isLoading установлено в false. Инициализация завершена.');
       }
     };
 
-    // Запускаем загрузку, как только tgUserData.id или факт того, что это не TgApp, будет определен
-    if (tgUserData?.id || !isTgApp) {
-        loadData();
-    } else {
-        console.log('Ожидание tgUserData или определения режима работы (Telegram/Standalone)...');
+    // Загружаем только когда userId готов
+    const userId = getUserId();
+    if (userId) {
+      loadData();
     }
-  }, [tgUserData?.id, isTgApp, hasLoadedData, saveGameState]); // Добавлена saveGameState в зависимости
+  }, [getUserId]); // Зависимость только от getUserId
 
-  // Эффект для обновления дохода в реальном времени
+  // Таймер дохода
   useEffect(() => {
     if (incomeRatePerHour <= 0 || isLoading) return;
-    console.log('Таймер дохода запущен со скоростью:', incomeRatePerHour);
+    
     const incomePerSecond = incomeRatePerHour / 3600;
     const maxAccumulationCap = incomeRatePerHour * MAX_OFFLINE_HOURS;
+    
     const intervalId = setInterval(() => {
       const now = Date.now();
       const timePassedTotalSeconds = (now - lastCollectedTimeRef.current) / 1000;
       if (!isFinite(timePassedTotalSeconds) || !isFinite(incomePerSecond) || timePassedTotalSeconds < 0) {
-        console.error('Неверное время или скорость дохода:', { timePassedTotalSeconds, incomePerSecond, now, lastCollectedTime: lastCollectedTimeRef.current });
         return;
       }
       const potentialTotalIncome = timePassedTotalSeconds * incomePerSecond;
       const newAccumulated = Math.min(potentialTotalIncome, maxAccumulationCap);
       setAccumulatedIncome(isFinite(newAccumulated) && newAccumulated >= 0 ? newAccumulated : 0);
     }, UPDATE_INTERVAL);
+    
     return () => clearInterval(intervalId);
   }, [incomeRatePerHour, isLoading]);
 
@@ -352,16 +282,13 @@ function App() {
       setAccumulatedIncome(0);
       const collectionTime = Date.now();
       lastCollectedTimeRef.current = collectionTime;
-      console.log(`Собрано ${incomeToAdd} GC.`);
       
-      // Проверяем шаг туториала
       if (isTutorialActive && tutorialStep === 3) {
         setTimeout(() => {
           setTutorialStep(4);
         }, 500);
       }
       
-      // Вызываем глобальную функцию сохранения
       saveGameState({
         game_coins: newTotalCoins,
         last_collected_time: new Date(collectionTime).toISOString(),
@@ -378,39 +305,32 @@ function App() {
       const updatedBuildings = buildings.map(b =>
         b.name === buildingName ? { ...b, level: b.level + 1 } : b
       );
-      // Важно: пересчитываем ставку ДО сохранения, чтобы она была актуальной
       const newTotalRate = calculateTotalIncomeRate(updatedBuildings, currentCar, hiredStaff);
 
       setGameCoins(newCoins);
       setBuildings(updatedBuildings);
-      setIncomeRatePerHour(newTotalRate); // Обновляем состояние ставки дохода
-      console.log(`Здание ${buildingName} улучшено. Новая ставка: ${newTotalRate}/час.`);
+      setIncomeRatePerHour(newTotalRate);
       
-      // Вызываем глобальную функцию сохранения с обновленными зданиями и ставкой
       saveGameState({
         game_coins: newCoins,
         buildings: updatedBuildings,
-        income_rate_per_hour: newTotalRate, // Отправляем новую ставку
+        income_rate_per_hour: newTotalRate,
       });
     }
   };
 
   const handleOpenTuning = () => {
-    console.log('Открытие экрана тюнинга');
     setIsTuningVisible(true);
   };
 
   const handleCloseTuning = () => setIsTuningVisible(false);
 
   const handleUpgradePart = (partId) => {
-    console.log('handleUpgradePart вызван с partId:', partId, 'Текущая машина:', currentCar);
     if (!currentCar?.parts?.[partId]) {
-      console.error('Неверная деталь или машина:', partId, currentCar);
       return;
     }
     const part = currentCar.parts[partId];
     const cost = calculateUpgradeCost(partId, part.level);
-    console.log('Стоимость улучшения:', cost, 'Игровые монеты:', gameCoins);
     if (gameCoins >= cost && cost !== Infinity) {
       const newCoins = gameCoins - cost;
       const updatedParts = { ...currentCar.parts, [partId]: { ...part, level: part.level + 1 } };
@@ -421,27 +341,20 @@ function App() {
       );
       
       const updatedCarForRate = updatedPlayerCars.find(c => c.id === selectedCarId);
-      let newTotalRate = incomeRatePerHour; // Сохраняем текущую ставку на случай, если машина не найдена
+      let newTotalRate = incomeRatePerHour;
       if (updatedCarForRate) {
         newTotalRate = calculateTotalIncomeRate(buildings, updatedCarForRate, hiredStaff);
         setIncomeRatePerHour(newTotalRate);
-        console.log('Новая ставка дохода после улучшения:', newTotalRate);
-      } else {
-        console.warn('Не удалось найти обновленную машину для пересчета ставки дохода.');
       }
       
       setGameCoins(newCoins);
       setPlayerCars(updatedPlayerCars);
-      console.log(`Деталь "${part.name}" улучшена. Новые монеты: ${newCoins}`);
       
-      // Вызываем глобальную функцию сохранения
       saveGameState({
         game_coins: newCoins,
         player_cars: updatedPlayerCars,
         income_rate_per_hour: newTotalRate,
       });
-    } else {
-      console.log('Недостаточно монет для улучшения или неверная стоимость:', cost);
     }
   };
 
@@ -452,7 +365,6 @@ function App() {
       setGameCoins(raceOutcome.newGameCoins);
       setCurrentXp(raceOutcome.newCurrentXp);
       
-      // Вызываем глобальную функцию сохранения
       saveGameState({
         game_coins: raceOutcome.newGameCoins,
         current_xp: raceOutcome.newCurrentXp,
@@ -477,9 +389,7 @@ function App() {
     const updatedPlayerCars = [...playerCars, newCar];
     setGameCoins(newCoins);
     setPlayerCars(updatedPlayerCars);
-    console.log(`Куплена машина ${carData.name}.`);
     
-    // Вызываем глобальную функцию сохранения
     saveGameState({
       game_coins: newCoins,
       player_cars: updatedPlayerCars,
@@ -487,34 +397,25 @@ function App() {
   };
 
   const handleHireOrUpgradeStaff = (staffId) => {
-    console.log('handleHireOrUpgradeStaff вызван с staffId:', staffId);
     const cost = calculateStaffCost(staffId, hiredStaff);
-    console.log('Стоимость персонала:', cost, 'Игровые монеты:', gameCoins);
     if (gameCoins >= cost && cost !== Infinity) {
       const newCoins = gameCoins - cost;
       const updatedHiredStaff = { ...hiredStaff, [staffId]: (hiredStaff[staffId] || 0) + 1 };
-      
-      // Важно: пересчитываем ставку ДО сохранения, чтобы она была актуальной
       const newTotalRate = calculateTotalIncomeRate(buildings, currentCar, updatedHiredStaff);
 
       setGameCoins(newCoins);
       setHiredStaff(updatedHiredStaff);
-      setIncomeRatePerHour(newTotalRate); // Обновляем состояние ставки дохода
-      console.log(`Нанят/улучшен персонал ${staffId}. Новая ставка: ${newTotalRate}/час`);
+      setIncomeRatePerHour(newTotalRate);
       
-      // Вызываем глобальную функцию сохранения
       saveGameState({
         game_coins: newCoins,
         hired_staff: updatedHiredStaff,
-        income_rate_per_hour: newTotalRate, // Отправляем новую ставку
+        income_rate_per_hour: newTotalRate,
       });
-    } else {
-      console.log('Недостаточно монет для найма/улучшения персонала:', cost);
     }
   };
 
   const handleNavClick = (screenId) => {
-    console.log('Навигация:', screenId);
     setIsTuningVisible(false);
     setIsCarSelectorVisible(false);
     setActiveScreen(screenId);
@@ -533,7 +434,6 @@ function App() {
         setIncomeRatePerHour(newTotalRate);
       }
       
-      // Вызываем глобальную функцию сохранения
       saveGameState({
         selected_car_id: carId,
         income_rate_per_hour: newTotalRate,
@@ -544,7 +444,6 @@ function App() {
 
   const xpPercentage = xpToNextLevel > 0 ? Math.min((currentXp / xpToNextLevel) * 100, 100) : 0;
   
-  // Функции для туториала
   const handleTutorialNext = () => {
     setTutorialStep(prev => prev + 1);
   };
@@ -553,18 +452,15 @@ function App() {
     setIsTutorialActive(false);
     setHasCompletedTutorial(true);
     
-    // При завершении туториала сохраняем все текущее состояние
     saveGameState({
       has_completed_tutorial: true,
-      // Остальные поля уже будут включены в saveGameState
     });
   };
   
   const handleTutorialAction = (action) => {
     if (action === 'expand-buildings') {
-      // Больше не нужно, так как здания всегда видимы
+      // Больше не нужно
     } else if (action === 'close-tuning') {
-      // Закрываем тюнинг если он открыт
       setIsTuningVisible(false);
     }
   };
@@ -667,7 +563,6 @@ function App() {
         onScreenChange={handleNavClick}
       />
       
-      {/* Компонент туториала */}
       <Tutorial
         isActive={isTutorialActive}
         currentStep={tutorialStep}
