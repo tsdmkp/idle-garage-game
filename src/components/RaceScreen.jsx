@@ -104,6 +104,11 @@ function RaceScreen({ playerCar, onStartRace }) {
     // Ждем анимацию гонки (2.5 секунды)
     await new Promise(resolve => setTimeout(resolve, 2500));
     
+    // КРИТИЧНО: СРАЗУ блокируем кнопку, как только гонка закончилась
+    setIsRacing(false);
+    setIsWaitingForReturn(true); // БЛОКИРУЕМ кнопку ПЕРВЫМ ДЕЛОМ
+    console.log('🏁 Race animation finished, button blocked for return...');
+    
     // Получаем результат гонки
     const resultData = await onStartRace(selectedDifficulty);
     console.log('🏁 Race result received:', resultData);
@@ -125,10 +130,7 @@ function RaceScreen({ playerCar, onStartRace }) {
       setWinStreak(0);
     }
     
-    // КРИТИЧНО: завершаем гонку, но блокируем кнопку до возврата
-    setIsRacing(false);
-    setIsWaitingForReturn(true); // БЛОКИРУЕМ кнопку
-    console.log('🏁 Race finished, waiting for return...');
+    console.log('🏁 Race results processed, still waiting for return...');
     
     // Показываем результат 2 секунды, затем возвращаем машины
     setTimeout(() => {
@@ -182,7 +184,7 @@ function RaceScreen({ playerCar, onStartRace }) {
           
           {/* ОТЛАДОЧНАЯ ИНФОРМАЦИЯ - можно удалить позже */}
           <div style={{ fontSize: '0.7rem', color: '#888', margin: '5px 0' }}>
-            Debug: Racing={isRacing.toString()}, Returning={isReturning.toString()}, Waiting={isWaitingForReturn.toString()}, Countdown={countdown}
+            Debug: R={isRacing.toString()}, Ret={isReturning.toString()}, Wait={isWaitingForReturn.toString()}, C={countdown} | Disabled={isButtonDisabled.toString()}
           </div>
           
           {winStreak > 1 && (
