@@ -8,7 +8,7 @@ html, body, #root {
 }
 
 body {
-  overflow-y: scroll; /* Всегда показываем полосу прокрутки */
+  overflow-y: scroll;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -26,7 +26,7 @@ body {
   position: relative;
 }
 
-/* Добавляем анимированные звездочки на фон */
+/* Анимированные звездочки на фон */
 .race-screen::before {
   content: '';
   position: fixed;
@@ -52,25 +52,30 @@ body {
   100% { opacity: 0.8; }
 }
 
-/* Контейнер для контента с отступами под хедер и навбар */
+/* Контейнер для контента */
 .race-screen__content {
   position: relative;
   z-index: 1;
-  padding: 15px;
-  padding-top: 85px;
+  padding: 10px 15px;
+  padding-top: 75px; /* Уменьшили отступ сверху */
   padding-bottom: 85px;
   box-sizing: border-box;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 15px; /* Уменьшили отступы между элементами */
 }
 
-/* Заголовок экрана */
-.race-screen h2 {
-  margin: 0;
-  font-size: 2rem;
+/* Заголовок и статистика */
+.race-header {
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+.race-header h2 {
+  margin: 0 0 5px 0;
+  font-size: 1.8rem; /* Уменьшили размер */
   font-weight: 800;
   background: linear-gradient(45deg, #ff6b6b, #ffd93d, #6bcf7f, #4d9de0);
   background-size: 300% 300%;
@@ -79,7 +84,20 @@ body {
   background-clip: text;
   animation: gradientShift 3s ease-in-out infinite;
   text-shadow: 0 0 30px rgba(255, 107, 107, 0.5);
-  margin-bottom: 10px;
+}
+
+.win-streak {
+  font-size: 0.9rem;
+  color: #ff6b6b;
+  font-weight: 600;
+  margin: 2px 0;
+  text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+}
+
+.race-stats {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin: 2px 0;
 }
 
 @keyframes gradientShift {
@@ -87,32 +105,56 @@ body {
   50% { background-position: 100% 50%; }
 }
 
-/* --- Информация о машине игрока --- */
-.player-car-info {
+/* Информация об участниках */
+.participants-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 350px;
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
-  padding: 20px;
-  width: 100%;
-  max-width: 350px;
+  border-radius: 15px;
+  padding: 15px 10px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
-.player-car-info h3 {
-  margin: 0 0 10px 0;
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #ffd93d;
-  text-shadow: 0 2px 10px rgba(255, 217, 61, 0.4);
+.participant {
+  flex: 1;
+  text-align: center;
 }
 
-.player-car-info p {
-  margin: 0;
-  font-size: 1rem;
-  color: #e0e0e0;
-  font-weight: 500;
-  letter-spacing: 1px;
+.participant-header {
+  font-size: 0.8rem;
+  color: #ffd93d;
+  font-weight: 600;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+.car-info {
+  font-size: 0.85rem;
+}
+
+.car-name {
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 3px;
+}
+
+.car-stats {
+  font-size: 0.75rem;
+  color: #ccc;
+  line-height: 1.2;
+}
+
+.vs-divider {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #ff6b6b;
+  margin: 0 10px;
+  text-shadow: 0 0 15px rgba(255, 107, 107, 0.6);
 }
 
 /* Блок выбора сложности */
@@ -122,10 +164,16 @@ body {
 }
 
 .difficulty-selector h4 {
-  margin: 0 0 15px 0;
+  margin: 0 0 10px 0;
   font-weight: 600;
   color: #ffffff;
-  font-size: 1.1rem;
+  font-size: 1rem;
+}
+
+.difficulty-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
 }
 
 .difficulty-selector button {
@@ -133,15 +181,26 @@ body {
   backdrop-filter: blur(10px);
   border: 2px solid rgba(255, 255, 255, 0.2);
   color: #ffffff;
-  padding: 12px 20px;
-  margin: 0 6px;
-  border-radius: 15px;
+  padding: 8px 12px;
+  border-radius: 12px;
   cursor: pointer;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  flex: 1;
+  text-align: center;
+}
+
+.difficulty-name {
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.difficulty-reward {
+  font-size: 0.7rem;
+  opacity: 0.8;
 }
 
 .difficulty-selector button::before {
@@ -183,7 +242,7 @@ body {
 /* Зона анимации гонки */
 .race-animation-area {
   width: 100%;
-  padding: 20px 0;
+  padding: 15px 0;
   display: flex;
   justify-content: center;
   box-sizing: border-box;
@@ -205,7 +264,7 @@ body {
     0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
-/* Добавляем дорожную разметку */
+/* Дорожная разметка */
 .race-track::before {
   content: '';
   position: absolute;
@@ -228,7 +287,66 @@ body {
   100% { transform: translateX(40px); }
 }
 
-/* Общие стили для машинок */
+/* Обратный отсчет */
+.countdown-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  z-index: 10;
+}
+
+.countdown-number {
+  font-size: 3rem;
+  font-weight: 900;
+  color: #ffd93d;
+  text-shadow: 0 0 30px rgba(255, 217, 61, 0.8);
+  animation: countdownPulse 0.8s ease-in-out;
+}
+
+@keyframes countdownPulse {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Эффекты скорости */
+.speed-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.speed-line {
+  position: absolute;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, #ffffff60, transparent);
+  animation: speedEffect 0.3s linear infinite;
+}
+
+.speed-line-1 { left: 20%; animation-delay: 0s; }
+.speed-line-2 { left: 40%; animation-delay: 0.1s; }
+.speed-line-3 { left: 60%; animation-delay: 0.2s; }
+.speed-line-4 { left: 80%; animation-delay: 0.3s; }
+.speed-line-5 { left: 90%; animation-delay: 0.4s; }
+
+@keyframes speedEffect {
+  0% { transform: translateX(0); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateX(-200px); opacity: 0; }
+}
+
+/* Машинки */
 .race-car {
   position: absolute;
   width: 70px;
@@ -246,7 +364,6 @@ body {
   border-radius: 8px;
 }
 
-/* Позиционирование машинок */
 .player-car {
   bottom: 8px;
   left: 3%;
@@ -259,9 +376,14 @@ body {
   z-index: 2;
 }
 
-/* Анимация движения машинок */
+/* Анимации движения */
 .race-car.animate {
   transform: translateX(calc(450% - 70px));
+}
+
+.race-car.returning {
+  transform: translateX(0);
+  transition: transform 2.5s cubic-bezier(0.55, 0.055, 0.675, 0.19);
 }
 
 /* Финишная линия */
@@ -287,26 +409,50 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 15px;
   width: 100%;
   max-width: 350px;
 }
 
 /* Кнопка "Начать Заезд!" */
 .start-race-button {
-  padding: 16px 40px;
-  font-size: 1.3rem;
+  padding: 14px 35px;
+  font-size: 1.2rem;
   font-weight: 700;
   color: #ffffff;
   background: linear-gradient(145deg, #4caf50, #66bb6a);
   border: none;
-  border-radius: 25px;
+  border-radius: 20px;
   cursor: pointer;
-  min-width: 200px;
+  min-width: 180px;
   position: relative;
   overflow: hidden;
   box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.start-race-button.countdown {
+  background: linear-gradient(145deg, #ff9800, #ffb74d);
+  box-shadow: 0 8px 25px rgba(255, 152, 0, 0.4);
+  font-size: 2rem;
+  animation: countdownButtonPulse 0.8s ease-in-out;
+}
+
+.start-race-button.racing {
+  background: linear-gradient(145deg, #2196f3, #42a5f5);
+  box-shadow: 0 8px 25px rgba(33, 150, 243, 0.4);
+  animation: racingButtonPulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes countdownButtonPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes racingButtonPulse {
+  0% { box-shadow: 0 8px 25px rgba(33, 150, 243, 0.4); }
+  100% { box-shadow: 0 8px 35px rgba(33, 150, 243, 0.8); }
 }
 
 .start-race-button::before {
@@ -345,8 +491,8 @@ body {
 /* Блок результата гонки */
 .race-result {
   padding: 20px;
-  border-radius: 20px;
-  background: linear-gradient(145deg, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4));
+  border-radius: 15px;
+  background: linear-gradient(145deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6));
   backdrop-filter: blur(15px);
   border: 2px solid;
   width: 100%;
@@ -372,8 +518,8 @@ body {
 
 .race-result.win h3 {
   color: #81c784;
-  margin: 0 0 15px 0;
-  font-size: 1.5rem;
+  margin: 0 0 10px 0;
+  font-size: 1.4rem;
   font-weight: 800;
   text-shadow: 0 0 20px rgba(129, 199, 132, 0.6);
 }
@@ -385,8 +531,8 @@ body {
 
 .race-result.lose h3 {
   color: #e57373;
-  margin: 0 0 15px 0;
-  font-size: 1.5rem;
+  margin: 0 0 10px 0;
+  font-size: 1.4rem;
   font-weight: 800;
   text-shadow: 0 0 20px rgba(229, 115, 115, 0.6);
 }
@@ -398,30 +544,70 @@ body {
 
 .race-result.error h3 {
   color: #ffb74d;
-  margin: 0 0 15px 0;
-  font-size: 1.5rem;
+  margin: 0 0 10px 0;
+  font-size: 1.4rem;
   font-weight: 800;
   text-shadow: 0 0 20px rgba(255, 183, 77, 0.6);
 }
 
 .race-result p {
-  margin: 0;
+  margin: 0 0 10px 0;
   color: #ffffff;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   line-height: 1.4;
 }
 
+.race-tip {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #ffd93d;
+  border-left: 3px solid #ffd93d;
+}
+
 /* --- Адаптация для маленьких экранов --- */
 @media (max-width: 480px) {
-  .race-screen h2 {
-    font-size: 1.6rem;
+  .race-screen__content {
+    padding: 10px;
+    padding-top: 70px;
+    padding-bottom: 80px;
+    gap: 12px;
+  }
+  
+  .race-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .participants-info {
+    padding: 12px 8px;
+  }
+  
+  .participant-header {
+    font-size: 0.75rem;
+  }
+  
+  .car-info {
+    font-size: 0.8rem;
+  }
+  
+  .car-stats {
+    font-size: 0.7rem;
   }
   
   .difficulty-selector button {
-    padding: 10px 16px;
-    margin: 0 4px;
-    font-size: 0.9rem;
+    padding: 6px 8px;
+    font-size: 0.75rem;
+  }
+  
+  .difficulty-name {
+    font-size: 0.75rem;
+  }
+  
+  .difficulty-reward {
+    font-size: 0.65rem;
   }
   
   .race-track {
@@ -434,34 +620,54 @@ body {
     height: 38px;
   }
   
+  .countdown-number {
+    font-size: 2.5rem;
+  }
+  
   .start-race-button {
-    padding: 14px 30px;
-    font-size: 1.1rem;
-    min-width: 180px;
+    padding: 12px 25px;
+    font-size: 1rem;
+    min-width: 160px;
+  }
+  
+  .start-race-button.countdown {
+    font-size: 1.5rem;
   }
   
   .race-result h3 {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
   }
   
   .race-result p {
-    font-size: 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .race-tip {
+    font-size: 0.8rem;
+    padding: 6px 10px;
   }
 }
 
 /* Дополнительные улучшения для очень маленьких экранов */
 @media (max-width: 320px) {
   .race-screen__content {
-    padding: 10px;
-    padding-top: 80px;
-    padding-bottom: 80px;
-    gap: 15px;
+    padding: 8px;
+    padding-top: 65px;
+    padding-bottom: 75px;
+    gap: 10px;
+  }
+  
+  .race-header h2 {
+    font-size: 1.3rem;
+  }
+  
+  .participants-info {
+    padding: 10px 6px;
   }
   
   .difficulty-selector button {
-    padding: 8px 12px;
-    margin: 0 2px;
-    font-size: 0.8rem;
+    padding: 5px 6px;
+    font-size: 0.7rem;
   }
   
   .race-track {
@@ -473,4 +679,33 @@ body {
     width: 50px;
     height: 32px;
   }
+  
+  .countdown-number {
+    font-size: 2rem;
+  }
+  
+  .start-race-button {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    min-width: 140px;
+  }
+  
+  .start-race-button.countdown {
+    font-size: 1.3rem;
+  }
+}
+
+/* Дополнительные анимации для машинок */
+.race-car:hover {
+  filter: drop-shadow(0 6px 20px rgba(255, 255, 255, 0.3));
+}
+
+/* Анимация победителя */
+.race-car.winner {
+  animation: winnerBounce 0.5s ease-in-out 3;
+}
+
+@keyframes winnerBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
