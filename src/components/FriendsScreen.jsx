@@ -12,6 +12,7 @@ const FriendsScreen = ({ tgUserData }) => {
   const generateReferralLink = () => {
     if (!tgUserData?.id) return '';
     
+
     // ИСПРАВЛЕНО: используем startapp для Mini App
     const botUsername = 'GarageGame01Bot'; // Замените на ваш реальный бот
     const appName = 'Garage'; // Замените на название вашего Mini App
