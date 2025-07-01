@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import AdsgramButton from './AdsgramButton'; // Импортируем компонент рекламы
 import './MainGameScreen.css';
 
 const MainGameScreen = ({ 
@@ -11,7 +12,8 @@ const MainGameScreen = ({
   onCollect, 
   onTuneClick, 
   onOpenCarSelector,
-  onBuildingClick 
+  onBuildingClick,
+  onAdReward // Новый пропс для обработки наград за рекламу
 }) => {
   const [showBuildings, setShowBuildings] = useState(true); // Теперь всегда открыты
   const [collectAnimation, setCollectAnimation] = useState(false);
@@ -139,6 +141,51 @@ const MainGameScreen = ({
               {canCollect ? `СОБРАТЬ ${formatNumber(accumulatedIncome)}` : 'НАКАПЛИВАЕТСЯ...'}
             </span>
           </button>
+        </div>
+
+        {/* 🆕 НОВАЯ СЕКЦИЯ - Реклама за награды */}
+        <div className="ad-rewards-section" style={{
+          margin: '15px 0',
+          padding: '15px',
+          background: 'linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(238, 90, 36, 0.1))',
+          borderRadius: '12px',
+          border: '1px solid rgba(255, 107, 107, 0.3)',
+          textAlign: 'center'
+        }}>
+          <h3 style={{ 
+            color: '#ff6b6b', 
+            marginBottom: '8px', 
+            fontSize: '16px',
+            fontWeight: 'bold'
+          }}>
+            🎁 Бесплатные награды
+          </h3>
+          <p style={{ 
+            color: '#ccc', 
+            fontSize: '12px', 
+            marginBottom: '12px',
+            lineHeight: '1.3'
+          }}>
+            Смотрите рекламу и получайте бонусные монеты!
+          </p>
+          
+          {/* Компонент рекламы Adsgram */}
+          {onAdReward && (
+            <AdsgramButton
+              onReward={onAdReward}
+              rewardAmount={100}
+              buttonText="📺 Получить 100 монет"
+              blockId="12355"
+            />
+          )}
+          
+          <div style={{
+            fontSize: '10px',
+            color: '#888',
+            marginTop: '8px'
+          }}>
+            Кулдаун: 5 минут между просмотрами
+          </div>
         </div>
         
         {/* Плавающие кнопки действий */}

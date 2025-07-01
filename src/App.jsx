@@ -585,7 +585,7 @@ function App() {
     }
   };
 
-  // 🎯 НОВАЯ ФУНКЦИЯ: Обновление баланса от рефералов
+  // 🎯 ФУНКЦИЯ: Обновление баланса от рефералов
   const handleReferralRewardUpdate = useCallback((coinsEarned) => {
     console.log('💰 Обновление баланса от рефералов:', coinsEarned);
     
@@ -603,6 +603,35 @@ function App() {
       saveGameState({
         game_coins: newTotalCoins,
       });
+    }
+  }, [gameCoins, saveGameState]);
+
+  // 🎯 НОВАЯ ФУНКЦИЯ: Обработка наград за рекламу Adsgram
+  const handleAdReward = useCallback((rewardAmount) => {
+    console.log('📺 Получена награда за рекламу Adsgram:', rewardAmount);
+    
+    if (rewardAmount > 0) {
+      const newTotalCoins = gameCoins + rewardAmount;
+      setGameCoins(newTotalCoins);
+      
+      console.log('✅ Баланс обновлен от рекламы:', {
+        старый: gameCoins,
+        добавлено: rewardAmount,
+        новый: newTotalCoins
+      });
+      
+      // Сохраняем новый баланс на сервер
+      saveGameState({
+        game_coins: newTotalCoins,
+      });
+      
+      // Показываем уведомление
+      alert(`🎉 Получено ${rewardAmount} монет за просмотр рекламы!`);
+      
+      // Тактильная обратная связь в Telegram
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      }
     }
   }, [gameCoins, saveGameState]);
 
@@ -642,6 +671,7 @@ function App() {
             onTuneClick={handleOpenTuning}
             onOpenCarSelector={handleOpenCarSelector}
             onBuildingClick={handleBuildingClick}
+            onAdReward={handleAdReward}
           />
         )}
         {activeScreen === 'race' && currentCar && (
