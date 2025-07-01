@@ -13,8 +13,8 @@ const FriendsScreen = ({ tgUserData }) => {
     if (!tgUserData?.id) return '';
     
     // ИСПРАВЛЕНО: правильный формат для Telegram Mini App
-    const botUsername = 'your_bot_username'; // Замените на имя вашего бота
-    const appName = 'your_app_name'; // Замените на короткое имя приложения
+    const botUsername = 'GarageGame01Bot'; // Замените на имя вашего бота
+    const appName = 'Garage'; // Замените на короткое имя приложения
     
     // Правильный формат для Mini App с startapp параметром
     return `https://t.me/${botUsername}/${appName}?startapp=ref_${tgUserData.id}`;
