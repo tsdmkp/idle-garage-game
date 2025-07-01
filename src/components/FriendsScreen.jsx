@@ -12,15 +12,13 @@ const FriendsScreen = ({ tgUserData }) => {
   const generateReferralLink = () => {
     if (!tgUserData?.id) return '';
     
-
-    // ИСПРАВЛЕНО: используем startapp для Mini App
-    const botUsername = 'GarageGame01Bot'; // Замените на ваш реальный бот
-    const appName = 'Garage'; // Замените на название вашего Mini App
+    const botUsername = 'GarageGame01Bot';
     
-    // Правильный формат для Mini App - ОБЯЗАТЕЛЬНО startapp!
-    const link = `https://t.me/${botUsername}/${appName}?startapp=ref_${tgUserData.id}`;
-    console.log('🔗 Generated referral link:', link);
-    return link;
+    // ✅ ПРАВИЛЬНАЯ ССЫЛКА (без названия приложения)
+    const correctLink = `https://t.me/${botUsername}?startapp=ref_${tgUserData.id}`;
+    
+    console.log('🔗 Correct referral link:', correctLink);
+    return correctLink;
   };
 
   // Загружаем данные о друзьях
@@ -66,6 +64,9 @@ const FriendsScreen = ({ tgUserData }) => {
 ${referralLink}
 
 Увидимся на трассе! 🏁`;
+
+    // ДОБАВЛЯЕМ: показываем ссылку для отладки
+    console.log('🔗 Sharing referral link:', referralLink);
 
     // Используем Telegram WebApp API для отправки
     if (window.Telegram?.WebApp) {
@@ -233,7 +234,10 @@ ${referralLink}
           
           <div className="invite-buttons">
             <button className="invite-btn primary" onClick={handleInviteFriend}>
-              📤 Пригласить друга
+              📤 Пригласить друга (Mini App)
+            </button>
+            <button className="invite-btn secondary" onClick={handleInviteFriendBot}>
+              🤖 Пригласить через бота
             </button>
             <button className="invite-btn secondary" onClick={handleCopyLink}>
               📋 Скопировать ссылку
