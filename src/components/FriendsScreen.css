@@ -1,5 +1,5 @@
 .friends-screen {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
   min-height: 100vh;
   padding: 0;
   color: #ffffff;
@@ -41,23 +41,25 @@
 
 /* Статус реферера */
 .referrer-status {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 15px;
-  padding: 20px;
+  background: linear-gradient(145deg, rgba(0, 150, 255, 0.2), rgba(0, 100, 200, 0.1));
+  backdrop-filter: blur(15px);
+  border-radius: 20px;
+  padding: 25px;
   text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(0, 150, 255, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .referrer-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 25px;
-  border: 2px solid;
-  background: rgba(255, 255, 255, 0.1);
-  margin-bottom: 15px;
+  gap: 10px;
+  padding: 12px 20px;
+  border-radius: 30px;
+  border: 3px solid;
+  background: linear-gradient(145deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.1));
+  margin-bottom: 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
 .referrer-icon {
@@ -82,9 +84,10 @@
 
 .stat-number {
   display: block;
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #ffd700;
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #00d4ff;
+  text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
 }
 
 .stat-label {
@@ -153,11 +156,12 @@
 
 /* Секция приглашений */
 .invite-section {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 15px;
-  padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(145deg, rgba(40, 200, 120, 0.2), rgba(20, 150, 80, 0.1));
+  backdrop-filter: blur(15px);
+  border-radius: 20px;
+  padding: 25px;
+  border: 2px solid rgba(40, 200, 120, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .invite-info {
@@ -170,10 +174,11 @@
 .invite-benefit {
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 12px;
-  border-radius: 10px;
+  gap: 15px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+  padding: 15px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .benefit-icon {
@@ -187,8 +192,9 @@
 }
 
 .benefit-text strong {
-  color: #ffd700;
-  font-weight: 700;
+  color: #00ff88;
+  font-weight: 800;
+  text-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
 }
 
 .invite-buttons {
@@ -235,11 +241,12 @@
 
 /* Таблица наград */
 .rewards-table {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 15px;
-  padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(145deg, rgba(120, 40, 200, 0.2), rgba(80, 20, 150, 0.1));
+  backdrop-filter: blur(15px);
+  border-radius: 20px;
+  padding: 25px;
+  border: 2px solid rgba(120, 40, 200, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .rewards-table h3 {
@@ -257,17 +264,19 @@
 .reward-milestone {
   display: flex;
   align-items: center;
-  gap: 15px;
-  padding: 15px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid transparent;
+  gap: 20px;
+  padding: 18px;
+  border-radius: 15px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  border: 2px solid rgba(255, 255, 255, 0.2);
   position: relative;
+  transition: all 0.3s ease;
 }
 
 .reward-milestone.unlocked {
-  background: rgba(76, 175, 80, 0.2);
-  border-color: #4caf50;
+  background: linear-gradient(145deg, rgba(0, 255, 136, 0.3), rgba(0, 200, 100, 0.2));
+  border-color: #00ff88;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
 }
 
 .reward-milestone.locked {
@@ -285,9 +294,10 @@
 }
 
 .milestone-target {
-  font-weight: 700;
-  color: #ffd700;
-  font-size: 0.9rem;
+  font-weight: 800;
+  color: #00d4ff;
+  font-size: 1rem;
+  text-shadow: 0 0 8px rgba(0, 212, 255, 0.4);
 }
 
 .milestone-reward {
@@ -302,11 +312,12 @@
 
 /* Список друзей */
 .friends-list {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 15px;
-  padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(145deg, rgba(255, 140, 0, 0.2), rgba(200, 100, 0, 0.1));
+  backdrop-filter: blur(15px);
+  border-radius: 20px;
+  padding: 25px;
+  border: 2px solid rgba(255, 140, 0, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .friends-list h3 {
@@ -325,9 +336,17 @@
   display: flex;
   align-items: center;
   gap: 15px;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
+  padding: 15px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.friend-card:hover {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.1));
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
 .friend-avatar {
@@ -358,9 +377,10 @@
 }
 
 .friend-reward {
-  color: #4caf50;
-  font-weight: 700;
-  font-size: 0.9rem;
+  color: #00ff88;
+  font-weight: 800;
+  font-size: 1rem;
+  text-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
 }
 
 /* Если друзей нет */
