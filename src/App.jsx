@@ -585,6 +585,27 @@ function App() {
     }
   };
 
+  // 🎯 НОВАЯ ФУНКЦИЯ: Обновление баланса от рефералов
+  const handleReferralRewardUpdate = useCallback((coinsEarned) => {
+    console.log('💰 Обновление баланса от рефералов:', coinsEarned);
+    
+    if (coinsEarned > 0) {
+      const newTotalCoins = gameCoins + coinsEarned;
+      setGameCoins(newTotalCoins);
+      
+      console.log('✅ Баланс обновлен:', {
+        старый: gameCoins,
+        добавлено: coinsEarned,
+        новый: newTotalCoins
+      });
+      
+      // Сохраняем новый баланс на сервер
+      saveGameState({
+        game_coins: newTotalCoins,
+      });
+    }
+  }, [gameCoins, saveGameState]);
+
   if (isLoading) {
     return <div className="loading-screen">Загрузка данных...</div>;
   }
@@ -654,6 +675,7 @@ function App() {
         {activeScreen === 'friends' && (
           <FriendsScreen
             tgUserData={tgUserData}
+            onBalanceUpdate={handleReferralRewardUpdate}
           />
         )}
         {activeScreen === 'p2e' && (

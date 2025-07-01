@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import apiClient from '../apiClient';
 import './FriendsScreen.css';
 
-const FriendsScreen = ({ tgUserData }) => {
+const FriendsScreen = ({ tgUserData, onBalanceUpdate }) => {
   const [friendsData, setFriendsData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -71,7 +71,7 @@ const FriendsScreen = ({ tgUserData }) => {
     const referralLink = generateReferralLink();
     const inviteText = `🏎️ Привет! Я играю в крутую игру "Garage Idle"! 
 
-🎮 Тюнингуй машины, участвуй в гонках, развивай свой автосервис!
+🎮 Тюнингуй машины, участвуй в гонках, развивая свой автосервис!
 
 🎁 Переходи по ссылке и получи +100 монет в подарок:
 ${referralLink}
@@ -108,7 +108,7 @@ ${referralLink}
     });
   };
 
-  // ИСПРАВЛЕНО: улучшенная функция сбора наград
+  // 🎯 ИСПРАВЛЕННАЯ ФУНКЦИЯ: Собираем награды за приглашения
   const handleClaimRewards = async () => {
     try {
       const userId = tgUserData?.id?.toString() || 'default';
@@ -116,7 +116,6 @@ ${referralLink}
       console.log('🎁 Attempting to claim rewards for user:', userId);
       console.log('📋 Current pending rewards:', inviteRewards);
       
-      // ИСПРАВЛЕНО: добавляем проверку перед отправкой запроса
       if (!inviteRewards || !Array.isArray(inviteRewards) || inviteRewards.length === 0) {
         console.log('⚠️ No pending rewards to claim');
         alert('ℹ️ Нет наград для получения');
@@ -129,7 +128,6 @@ ${referralLink}
       
       console.log('🎁 Server response:', response);
       
-      // ИСПРАВЛЕНО: более надежная проверка ответа
       if (response && typeof response === 'object') {
         const coinsEarned = response.total_coins || response.coins || 0;
         const message = response.message || '';
@@ -140,18 +138,26 @@ ${referralLink}
         if (coinsEarned > 0) {
           setInviteRewards(null);
           
-          // Обновляем данные
+          // Обновляем данные друзей
           const updatedData = await apiClient('/friends', 'GET', { 
             params: { userId } 
           });
           setFriendsData(updatedData);
           
-          alert(`🎉 Получено ${coinsEarned} монет за приглашения!`);
+          // 🎯 КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: Обновляем основной баланс игры!
+          if (typeof onBalanceUpdate === 'function') {
+            console.log('🔄 Вызываем onBalanceUpdate с суммой:', coinsEarned);
+            onBalanceUpdate(coinsEarned);
+          } else {
+            console.warn('⚠️ onBalanceUpdate функция не передана!');
+          }
+          
+          alert(`🎉 Получено ${coinsEarned} монет за приглашения!\n💰 Баланс игры обновлен!`);
+          
         } else {
           alert(`ℹ️ ${message || 'Нет новых наград для получения'}`);
           console.log('⚠️ No rewards to claim or already claimed');
           
-          // Все равно обновляем данные
           const updatedData = await apiClient('/friends', 'GET', { 
             params: { userId } 
           });
@@ -167,7 +173,6 @@ ${referralLink}
       console.error('❌ Error claiming rewards:', err);
       console.error('❌ Error details:', err.response?.data || err.message);
       
-      // ИСПРАВЛЕНО: более детальная обработка ошибок
       const errorMessage = err.response?.data?.message || 
                           err.response?.data?.error || 
                           err.message || 
