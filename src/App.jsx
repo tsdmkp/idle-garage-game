@@ -149,6 +149,10 @@ function App() {
         tg.expand();
         tg.BackButton.hide();
         tg.MainButton.hide();
+        
+        // ВАЖНО: Ждем немного чтобы initData точно был готов
+        await new Promise(resolve => setTimeout(resolve, 100));
+        console.log('📋 Final initData after ready():', tg.initData);
 
         // Теперь загружаем данные с правильным userId
         if (userData?.id) {
