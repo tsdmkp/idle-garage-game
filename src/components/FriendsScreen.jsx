@@ -10,16 +10,16 @@ const FriendsScreen = ({ tgUserData }) => {
 
   // Генерируем реферальную ссылку
   const generateReferralLink = () => {
-  if (!tgUserData?.id) return '';
-  
-  // ИСПРАВЛЕНО: правильный формат для Mini App без названия приложения
-  const botUsername = 'GarageGame01Bot'; // Замените на ваш реальный бот
-  
-  // Правильный формат: https://t.me/BotUsername?startapp=ref_userID
-  const link = `https://t.me/${botUsername}?startapp=ref_${tgUserData.id}`;
-  console.log('🔗 Generated referral link:', link);
-  return link;
-};
+    if (!tgUserData?.id) return '';
+    
+    // ИСПРАВЛЕНО: правильный формат для Mini App без названия приложения
+    const botUsername = 'GarageGame01Bot'; // Замените на ваш реальный бот
+    
+    // Правильный формат: https://t.me/BotUsername?startapp=ref_userID
+    const link = `https://t.me/${botUsername}?startapp=ref_${tgUserData.id}`;
+    console.log('🔗 Generated referral link:', link);
+    return link;
+  };
 
   // Загружаем данные о друзьях
   useEffect(() => {
@@ -28,21 +28,34 @@ const FriendsScreen = ({ tgUserData }) => {
         setLoading(true);
         const userId = tgUserData?.id?.toString() || 'default';
         
+        console.log('👥 Loading friends data for user:', userId);
+        
         const response = await apiClient('/friends', 'GET', { 
           params: { userId } 
         });
         
         console.log('👥 Friends data loaded:', response);
+        console.log('📊 Total invites:', response?.total_invites);
+        console.log('💰 Total earned:', response?.total_earned);
+        console.log('🎁 Pending rewards:', response?.pending_rewards);
+        
         setFriendsData(response);
         
-        // Проверяем новые награды
-        if (response.pending_rewards && response.pending_rewards.length > 0) {
+        // ИСПРАВЛЕНО: более строгая проверка pending_rewards
+        if (response?.pending_rewards && 
+            Array.isArray(response.pending_rewards) && 
+            response.pending_rewards.length > 0) {
+          console.log('🎉 Found pending rewards:', response.pending_rewards);
           setInviteRewards(response.pending_rewards);
+        } else {
+          console.log('ℹ️ No pending rewards found');
+          setInviteRewards(null);
         }
         
       } catch (err) {
         console.error('❌ Error loading friends data:', err);
-        setError('Не удалось загрузить данные о друзьях');
+        console.error('❌ Error details:', err.response?.data || err.message);
+        setError(`Не удалось загрузить данные о друзьях: ${err.message}`);
       } finally {
         setLoading(false);
       }
@@ -95,28 +108,72 @@ ${referralLink}
     });
   };
 
-  // Собираем награды за приглашения
+  // ИСПРАВЛЕНО: улучшенная функция сбора наград
   const handleClaimRewards = async () => {
     try {
       const userId = tgUserData?.id?.toString() || 'default';
+      
+      console.log('🎁 Attempting to claim rewards for user:', userId);
+      console.log('📋 Current pending rewards:', inviteRewards);
+      
+      // ИСПРАВЛЕНО: добавляем проверку перед отправкой запроса
+      if (!inviteRewards || !Array.isArray(inviteRewards) || inviteRewards.length === 0) {
+        console.log('⚠️ No pending rewards to claim');
+        alert('ℹ️ Нет наград для получения');
+        return;
+      }
+      
       const response = await apiClient('/friends/claim', 'POST', {
         body: { userId }
       });
       
-      console.log('🎁 Rewards claimed:', response);
-      setInviteRewards(null);
+      console.log('🎁 Server response:', response);
       
-      // Обновляем данные
-      const updatedData = await apiClient('/friends', 'GET', { 
-        params: { userId } 
-      });
-      setFriendsData(updatedData);
-      
-      alert(`Получено ${response.total_coins} монет за приглашения!`);
+      // ИСПРАВЛЕНО: более надежная проверка ответа
+      if (response && typeof response === 'object') {
+        const coinsEarned = response.total_coins || response.coins || 0;
+        const message = response.message || '';
+        
+        console.log('💰 Coins earned:', coinsEarned);
+        console.log('📢 Server message:', message);
+        
+        if (coinsEarned > 0) {
+          setInviteRewards(null);
+          
+          // Обновляем данные
+          const updatedData = await apiClient('/friends', 'GET', { 
+            params: { userId } 
+          });
+          setFriendsData(updatedData);
+          
+          alert(`🎉 Получено ${coinsEarned} монет за приглашения!`);
+        } else {
+          alert(`ℹ️ ${message || 'Нет новых наград для получения'}`);
+          console.log('⚠️ No rewards to claim or already claimed');
+          
+          // Все равно обновляем данные
+          const updatedData = await apiClient('/friends', 'GET', { 
+            params: { userId } 
+          });
+          setFriendsData(updatedData);
+          setInviteRewards(null);
+        }
+      } else {
+        console.error('❌ Invalid response format:', response);
+        alert('❌ Ошибка: неверный формат ответа сервера');
+      }
       
     } catch (err) {
       console.error('❌ Error claiming rewards:', err);
-      alert('Ошибка при получении наград');
+      console.error('❌ Error details:', err.response?.data || err.message);
+      
+      // ИСПРАВЛЕНО: более детальная обработка ошибок
+      const errorMessage = err.response?.data?.message || 
+                          err.response?.data?.error || 
+                          err.message || 
+                          'Неизвестная ошибка';
+      
+      alert(`❌ Ошибка при получении наград: ${errorMessage}`);
     }
   };
 
@@ -194,20 +251,20 @@ ${referralLink}
           )}
         </div>
 
-        {/* Награды за ожидающие */}
-        {inviteRewards && inviteRewards.length > 0 && (
+        {/* ИСПРАВЛЕНО: более строгая проверка для отображения кнопки наград */}
+        {inviteRewards && Array.isArray(inviteRewards) && inviteRewards.length > 0 && (
           <div className="pending-rewards">
             <h3>🎁 Новые награды!</h3>
             <div className="rewards-list">
               {inviteRewards.map((reward, index) => (
                 <div key={index} className="reward-item">
-                  <span>👤 {reward.friend_name}</span>
-                  <span>💰 +{reward.coins} GC</span>
+                  <span>👤 {reward.friend_name || 'Друг'}</span>
+                  <span>💰 +{reward.coins || reward.reward_coins || 200} GC</span>
                 </div>
               ))}
             </div>
             <button className="claim-rewards-btn" onClick={handleClaimRewards}>
-              Получить {inviteRewards.reduce((sum, r) => sum + r.coins, 0)} монет
+              Получить {inviteRewards.reduce((sum, r) => sum + (r.coins || r.reward_coins || 200), 0)} монет
             </button>
           </div>
         )}
