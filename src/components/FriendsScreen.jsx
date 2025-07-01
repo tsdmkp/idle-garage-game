@@ -12,12 +12,14 @@ const FriendsScreen = ({ tgUserData }) => {
   const generateReferralLink = () => {
     if (!tgUserData?.id) return '';
     
-    // ИСПРАВЛЕНО: правильный формат для Telegram Mini App
-    const botUsername = 'GarageGame01Bot'; // Замените на имя вашего бота
-    const appName = 'Garage'; // Замените на короткое имя приложения
+    // ИСПРАВЛЕНО: используем startapp для Mini App
+    const botUsername = 'GarageGame01Bot'; // Замените на ваш реальный бот
+    const appName = 'Garage'; // Замените на название вашего Mini App
     
-    // Правильный формат для Mini App с startapp параметром
-    return `https://t.me/${botUsername}/${appName}?startapp=ref_${tgUserData.id}`;
+    // Правильный формат для Mini App - ОБЯЗАТЕЛЬНО startapp!
+    const link = `https://t.me/${botUsername}/${appName}?startapp=ref_${tgUserData.id}`;
+    console.log('🔗 Generated referral link:', link);
+    return link;
   };
 
   // Загружаем данные о друзьях
