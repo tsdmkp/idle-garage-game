@@ -128,6 +128,10 @@ function App() {
       const tg = window.Telegram?.WebApp;
       if (tg) {
         console.log('✅ Telegram WebApp найден');
+        console.log('📋 Telegram WebApp initData:', tg.initData);
+        console.log('📋 Telegram WebApp initDataUnsafe:', tg.initDataUnsafe);
+        console.log('🔗 Start param:', tg.initDataUnsafe?.start_param);
+        
         setIsTgApp(true);
         const userData = tg.initDataUnsafe?.user || null;
         console.log('👤 Telegram user data:', JSON.stringify(userData, null, 2));
