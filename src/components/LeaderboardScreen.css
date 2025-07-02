@@ -1,10 +1,28 @@
 .leaderboard-screen {
-    background: url('/static/background-leaderboard.jpg') no-repeat center center fixed;
+    /* ИСПРАВЛЕННЫЙ ПУТЬ К ФОНУ */
+    background: url('/background-leaderboard.jpg') no-repeat center center fixed;
     background-size: cover;
     padding: 20px;
     color: #ecf0f1;
     min-height: 100vh;
     font-family: 'Arial', sans-serif;
+    position: relative;
+    
+    /* Затемнение для читаемости */
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+            rgba(15, 15, 35, 0.6) 0%,
+            rgba(26, 26, 62, 0.5) 50%,
+            rgba(15, 15, 35, 0.6) 100%
+        );
+        z-index: -1;
+    }
 }
 
 .leaderboard-screen h2 {
@@ -12,7 +30,9 @@
     font-size: 1.8em;
     margin-bottom: 20px;
     text-transform: uppercase;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    position: relative;
+    z-index: 1;
 }
 
 .leaderboard-table {
@@ -20,10 +40,14 @@
     max-width: 600px;
     margin: 0 auto;
     border-collapse: collapse;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.85);
     border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    z-index: 1;
 }
 
 .leaderboard-table th,
@@ -35,7 +59,7 @@
 }
 
 .leaderboard-table th {
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.95);
     color: #e74c3c;
     text-transform: uppercase;
     font-weight: bold;
@@ -47,12 +71,12 @@
 }
 
 .leaderboard-table tbody tr:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.1);
     transition: background 0.2s ease;
 }
 
 .current-player-row {
-    background: rgba(52, 152, 219, 0.2) !important;
+    background: rgba(52, 152, 219, 0.3) !important;
     border-left: 3px solid #3498db;
 }
 
@@ -60,12 +84,15 @@
     max-width: 600px;
     margin: 20px auto;
     padding: 15px;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.85);
     border-radius: 10px;
     text-align: center;
     font-size: 1em;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(52, 152, 219, 0.3);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(52, 152, 219, 0.4);
+    backdrop-filter: blur(10px);
+    position: relative;
+    z-index: 1;
 }
 
 .leaderboard-error,
@@ -74,11 +101,14 @@
     text-align: center;
     font-size: 1.1em;
     padding: 30px 20px;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.85);
     border-radius: 10px;
     max-width: 600px;
     margin: 20px auto;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    position: relative;
+    z-index: 1;
 }
 
 .leaderboard-error {
