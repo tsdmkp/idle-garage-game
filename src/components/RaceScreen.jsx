@@ -48,16 +48,80 @@ const RaceScreen = ({ playerCar, onStartRace, onAdReward }) => {
         // Даем время браузеру обработать скрипт
         setTimeout(() => {
           try {
-            if (window.Adsgram && typeof window.Adsgram.init === 'function') {
-              console.log('🚀 Инициализируем Adsgram...');
+            console.log('🔍 Диагностика Adsgram API...');
+            console.log('window.Adsgram:', window.Adsgram);
+            
+            if (window.Adsgram) {
+              console.log('🔍 Доступные методы Adsgram:', Object.keys(window.Adsgram));
+              console.log('🔍 Тип объекта:', typeof window.Adsgram);
               
-              window.Adsgram.init({
-                blockId: "12355", // ✅ Ваш блок ID
-                debug: true, // Включаем отладку
-              });
-              
-              setAdsgramReady(true);
-              console.log('✅ Adsgram успешно инициализирован');
+              if (typeof window.Adsgram.init === 'function') {
+                console.log('🚀 Инициализируем Adsgram...');
+                
+                // Определяем режим отладки
+                const isProduction = window.location.hostname !== 'localhost' && 
+                                   !window.location.hostname.includes('vercel.app') &&
+                                   !window.location.hostname.includes('netlify.app');
+                
+                const debugMode = !isProduction; // debug только в разработке
+                console.log('🔧 Режим работы:', isProduction ? 'ПРОДАКШЕН' : 'РАЗРАБОТКА');
+                console.log('🐛 Debug режим:', debugMode);
+                
+                const adsgramController = window.Adsgram.init({
+                  blockId: "12355", // ✅ Ваш блок ID
+                  debug: debugMode, // В продакшене debug = false
+                  debugBannerType: "RewardedVideo" // Тип тестовой рекламы
+                });
+                
+                console.log('🔍 Результат инициализации:', adsgramController);
+                console.log('🔍 Методы контроллера:', adsgramController ? Object.keys(adsgramController) : 'null');
+                
+                // Сохраняем контроллер для использования
+                window.adsgramController = adsgramController;
+                
+                // Добавляем обработчики событий для лучшего контроля
+                if (adsgramController && typeof adsgramController.addEventListener === 'function') {
+                  console.log('🎧 Добавляем обработчики событий...');
+                  
+                  adsgramController.addEventListener('onReward', () => {
+                    console.log('🎁 Событие onReward: пользователь досмотрел рекламу');
+                  });
+                  
+                  adsgramController.addEventListener('onError', (error) => {
+                    console.log('❌ Событие onError:', error);
+                  });
+                  
+                  adsgramController.addEventListener('onBannerNotFound', () => {
+                    console.log('🚫 Событие onBannerNotFound: нет рекламы для показа');
+                  });
+                  
+                  adsgramController.addEventListener('onSkip', () => {
+                    console.log('⏭️ Событие onSkip: пользователь пропустил рекламу');
+                  });
+                  
+                  adsgramController.addEventListener('onStart', () => {
+                    console.log('🎬 Событие onStart: реклама начала показываться');
+                  });
+                  
+                  adsgramController.addEventListener('onComplete', () => {
+                    console.log('✅ Событие onComplete: реклама завершена');
+                  });
+                  
+                  adsgramController.addEventListener('onNonStopShow', () => {
+                    console.log('⚠️ Событие onNonStopShow: слишком частые показы');
+                  });
+                  
+                  adsgramController.addEventListener('onTooLongSession', () => {
+                    console.log('⏰ Событие onTooLongSession: слишком долгая сессия');
+                  });
+                }
+                
+                setAdsgramReady(true);
+                console.log('✅ Adsgram успешно инициализирован');
+              } else {
+                console.error('❌ Метод Adsgram.init не найден');
+                setAdsgramReady(false);
+              }
             } else {
               console.error('❌ Adsgram объект не найден после загрузки');
               setAdsgramReady(false);
@@ -102,48 +166,57 @@ const RaceScreen = ({ playerCar, onStartRace, onAdReward }) => {
   const showRealAd = async () => {
     console.log('📺 Попытка показать Adsgram рекламу...');
     
-    if (!adsgramReady || !window.Adsgram) {
-      console.warn('⚠️ Adsgram не готов, показываем моковую рекламу');
-      showMockAd();
-      return;
-    }
-
     setIsAdLoading(true);
 
     try {
-      console.log('🎬 Вызываем Adsgram.show()...');
+      console.log('🔍 Проверяем AdController...');
       
-      // Показываем рекламу
-      const result = await window.Adsgram.show();
-      
-      console.log('📊 Результат Adsgram:', result);
-      
-      if (result && result.done) {
-        console.log('✅ Реклама успешно просмотрена');
-        
-        // Даем награду игроку
-        onAdReward(100);
-        
-        // Тактильная обратная связь
-        if (window.Telegram?.WebApp?.HapticFeedback) {
-          window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-        }
-        
-        // Показываем уведомление
-        alert('🎉 Спасибо за просмотр рекламы!\n+100 монет добавлено!');
-        
-      } else if (result && result.error) {
-        console.error('❌ Ошибка показа рекламы:', result.error);
-        alert('😔 К сожалению, реклама недоступна.\nПопробуйте позже!');
-      } else {
-        console.log('⏭️ Реклама была пропущена пользователем');
+      if (!window.adsgramController) {
+        console.error('❌ AdController не найден');
+        showMockAd();
+        return;
       }
       
-    } catch (error) {
-      console.error('❌ Исключение при показе рекламы:', error);
+      console.log('🔍 AdController доступен:', window.adsgramController);
+      console.log('🔍 Методы AdController:', Object.keys(window.adsgramController));
       
-      // Fallback на моковую рекламу при ошибке
-      showMockAd();
+      if (typeof window.adsgramController.show !== 'function') {
+        console.error('❌ Метод show() не найден у AdController');
+        showMockAd();
+        return;
+      }
+      
+      console.log('🎬 Вызываем AdController.show()...');
+      
+      // Правильный способ: вызываем show() у AdController
+      const result = await window.adsgramController.show();
+      
+      console.log('📊 Результат показа рекламы:', result);
+      
+      // Согласно документации: Promise resolved = реклама просмотрена до конца
+      console.log('✅ Реклама успешно просмотрена до конца!');
+      
+      // Даем награду игроку
+      onAdReward(100);
+      
+      // Тактильная обратная связь
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      }
+      
+      // Показываем уведомление
+      alert('🎉 Спасибо за просмотр рекламы!\n+100 монет добавлено!');
+      
+    } catch (error) {
+      console.log('⏭️ Реклама была пропущена или произошла ошибка:', error);
+      
+      // Согласно документации: Promise rejected = реклама пропущена или ошибка
+      // Можем не давать награду в этом случае
+      console.log('🔍 Детали ошибки:', error);
+      
+      // Показываем информацию пользователю
+      alert('📺 Реклама была пропущена или недоступна');
+      
     } finally {
       setIsAdLoading(false);
     }
@@ -334,10 +407,19 @@ const RaceScreen = ({ playerCar, onStartRace, onAdReward }) => {
           
           {/* Индикатор статуса Adsgram */}
           <div className="adsgram-status">
-            {adsgramReady ? 
-              <span style={{color: 'green'}}>📺 Реклама готова</span> : 
+            {adsgramReady ? (
+              <div>
+                <span style={{color: 'green'}}>📺 Реклама готова</span>
+                <br />
+                <small style={{opacity: 0.7}}>
+                  {window.location.hostname === 'localhost' || 
+                   window.location.hostname.includes('vercel.app') ? 
+                   '🧪 Тест режим' : '🚀 Продакшен'}
+                </small>
+              </div>
+            ) : (
               <span style={{color: 'orange'}}>⏳ Загрузка рекламы...</span>
-            }
+            )}
           </div>
           
           {winStreak > 1 && (
