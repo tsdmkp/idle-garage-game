@@ -1,186 +1,140 @@
-/* MainGameScreen.css - Красивый дизайн главного экрана */
+/* MainGameScreen.css - Современный минималистичный дизайн */
 
 .main-game-screen {
-  position: relative;
-  min-height: 100vh;
-  overflow-y: auto;
-  padding-bottom: 100px;
-}
-
-/* Фоновый градиент */
-.game-background {
-  position: fixed;
-  top: 0;
-  left: 0;
   width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, 
-    #1a1a2e 0%, 
-    #16213e 25%, 
-    #0f3460 50%, 
-    #1a1a2e 75%, 
-    #16213e 100%);
-  z-index: -1;
-}
-
-.game-content {
-  position: relative;
-  z-index: 1;
-  padding: 20px 15px;
-  max-width: 400px;
+  max-width: 500px;
   margin: 0 auto;
+  padding: 0;
+  animation: fadeIn 0.6s ease-out;
 }
 
-/* ========== СЕКЦИЯ МАШИНЫ ========== */
-.car-section {
-  margin-bottom: 25px;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.car-showcase {
-  background: linear-gradient(135deg, rgba(74, 158, 255, 0.1), rgba(138, 43, 226, 0.1));
+/* === ОСНОВНАЯ ИГРОВАЯ ЗОНА === */
+.game-area {
+  background: linear-gradient(135deg, 
+    rgba(30, 35, 50, 0.95) 0%, 
+    rgba(45, 50, 70, 0.9) 100%
+  );
   border-radius: 20px;
   padding: 20px;
-  border: 1px solid rgba(74, 158, 255, 0.3);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px);
+  margin-bottom: 15px;
   position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* === ОТОБРАЖЕНИЕ МАШИНЫ === */
+.car-showcase {
+  text-align: center;
+  margin-bottom: 20px;
 }
 
 .car-name-plate {
-  text-align: center;
   margin-bottom: 15px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
 }
 
 .car-name-plate h2 {
-  color: #4a9eff;
-  font-size: 22px;
-  font-weight: bold;
+  color: #f8fafc;
+  font-size: 1.4em;
+  font-weight: 600;
   margin: 0;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.car-income-badge {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  background: linear-gradient(135deg, #4caf50, #45a049);
-  padding: 6px 12px;
-  border-radius: 15px;
-  font-size: 14px;
-  font-weight: bold;
-  color: white;
-  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 .car-image-container {
   position: relative;
-  text-align: center;
-  margin: 20px 0;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto 15px;
 }
 
 .car-main-image {
-  width: 200px;
-  height: 120px;
+  width: 100%;
+  height: auto;
+  max-height: 200px;
   object-fit: contain;
-  border-radius: 12px;
+  filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.5));
   transition: all 0.3s ease;
-  filter: drop-shadow(0 4px 12px rgba(74, 158, 255, 0.3));
 }
 
+/* Анимация машины когда есть доход */
 .car-main-image.car-earning {
-  animation: carPulse 2s ease-in-out infinite;
+  animation: carBounce 3s ease-in-out infinite;
 }
 
-@keyframes carPulse {
-  0%, 100% { transform: scale(1); filter: drop-shadow(0 4px 12px rgba(74, 158, 255, 0.3)); }
-  50% { transform: scale(1.05); filter: drop-shadow(0 6px 16px rgba(76, 175, 80, 0.5)); }
+@keyframes carBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
 }
 
-/* Плавающие кнопки действий */
-.floating-action-button {
+/* Индикатор дохода */
+.income-indicator {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  z-index: 2;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: incomePulse 2s ease-in-out infinite;
 }
 
-.floating-action-button.left {
-  left: -25px;
-  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+@keyframes incomePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
-.floating-action-button.right {
-  right: -25px;
-  background: linear-gradient(135deg, #4caf50, #45a049);
+.income-icon {
+  font-size: 1.2em;
 }
 
-.floating-action-button:hover {
-  transform: translateY(-50%) scale(1.1);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+.income-text {
+  color: #fbbf24;
+  font-weight: 600;
+  font-size: 0.9em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
-.floating-action-button:active {
-  transform: translateY(-50%) scale(0.95);
-}
-
-/* Статы машины */
+/* Компактные статы */
 .car-stats-compact {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  margin-top: 15px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
 }
 
 .stat-item {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  padding: 10px;
-  text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.3s ease;
-}
-
-.stat-item:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateY(-2px);
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .stat-icon {
-  font-size: 16px;
-  display: block;
-  margin-bottom: 4px;
+  font-size: 1.1em;
+  opacity: 0.8;
 }
 
 .stat-value {
-  display: block;
-  font-size: 18px;
-  font-weight: bold;
-  color: #4a9eff;
-  margin-bottom: 2px;
+  color: #f1f5f9;
+  font-weight: 600;
+  font-size: 0.95em;
 }
 
-.stat-label {
-  font-size: 10px;
-  color: #bbb;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* ========== СЕКЦИЯ ДОХОДА ========== */
-.income-section {
-  margin-bottom: 25px;
+/* === СЕКЦИЯ ПРОГРЕССА И СБОРА === */
+.income-progress-section {
+  margin-top: 25px;
 }
 
 .progress-container {
@@ -188,22 +142,21 @@
 }
 
 .progress-bar {
-  position: relative;
-  width: 100%;
-  height: 30px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 15px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 20px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .progress-fill {
-  position: relative;
   height: 100%;
-  background: linear-gradient(90deg, #4caf50, #45a049);
-  border-radius: 15px;
-  transition: width 0.5s ease;
-  overflow: hidden;
+  background: linear-gradient(90deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
 }
 
 .progress-shine {
@@ -212,13 +165,18 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  animation: progressShine 2s ease-in-out infinite;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.3) 50%, 
+    transparent 100%
+  );
+  animation: progressShine 3s ease-in-out infinite;
 }
 
 @keyframes progressShine {
   0% { left: -100%; }
-  100% { left: 100%; }
+  50% { left: 100%; }
+  100% { left: -100%; }
 }
 
 .progress-text {
@@ -226,300 +184,338 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 12px;
-  font-weight: bold;
   color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+  font-weight: 600;
+  font-size: 0.95em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
   z-index: 2;
 }
 
-/* Кнопка сбора */
+/* === БОЛЬШАЯ КНОПКА СБОРА === */
 .collect-button-main {
   width: 100%;
   height: 60px;
+  font-size: 1.2em;
+  font-weight: 700;
   border: none;
-  border-radius: 15px;
-  font-size: 18px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  border-radius: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  
+  /* Дефолтное состояние (неактивно) */
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: #9ca3af;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.collect-button-main:disabled {
-  background: linear-gradient(135deg, #666, #555);
-  color: #999;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
+/* Активное состояние */
 .collect-button-main.can-collect {
-  background: linear-gradient(135deg, #4caf50, #45a049);
-  color: white;
-  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
-  animation: collectPulse 1.5s ease-in-out infinite;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+  color: #1f2937;
+  box-shadow: 
+    0 8px 24px rgba(245, 158, 11, 0.4),
+    0 4px 12px rgba(0, 0, 0, 0.2);
+  animation: collectPulse 2s ease-in-out infinite;
 }
 
 @keyframes collectPulse {
-  0%, 100% { transform: scale(1); box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4); }
-  50% { transform: scale(1.02); box-shadow: 0 8px 25px rgba(76, 175, 80, 0.6); }
+  0%, 100% {
+    box-shadow: 
+      0 8px 24px rgba(245, 158, 11, 0.4),
+      0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 12px 32px rgba(245, 158, 11, 0.6),
+      0 6px 20px rgba(0, 0, 0, 0.3),
+      0 0 40px rgba(245, 158, 11, 0.3);
+  }
+}
+
+.collect-button-main:not(:disabled):hover {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.collect-button-main:not(:disabled):active {
+  transform: translateY(0) scale(1);
 }
 
 .collect-button-main.collecting {
-  animation: collectAnimation 0.3s ease-out;
+  animation: collectShake 0.5s ease;
 }
 
-@keyframes collectAnimation {
-  0% { transform: scale(1); }
-  50% { transform: scale(0.95); }
-  100% { transform: scale(1); }
+@keyframes collectShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
 }
 
 .button-icon {
-  font-size: 24px;
+  font-size: 1.4em;
 }
 
 .button-text {
-  font-size: 16px;
-  letter-spacing: 0.5px;
+  font-size: 1em;
 }
 
-/* ========== СЕКЦИЯ ЗДАНИЙ ========== */
-.buildings-section {
-  margin-bottom: 30px;
-}
-
-.buildings-header {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.buildings-header h3 {
-  color: #4a9eff;
-  font-size: 20px;
-  margin: 0 0 5px 0;
-}
-
-.buildings-subtitle {
-  color: #bbb;
-  font-size: 14px;
-  margin: 0;
-}
-
-.buildings-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-}
-
-.building-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-  border-radius: 15px;
-  padding: 15px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.building-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-}
-
-.building-card.affordable {
-  border-color: #4caf50;
-  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
-}
-
-.building-card.expensive {
-  border-color: #ff6b6b;
-  opacity: 0.7;
-}
-
-.building-card.locked {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.building-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.building-icon {
-  font-size: 24px;
-}
-
-.building-level-badge {
-  background: linear-gradient(135deg, #4a9eff, #357abd);
-  color: white;
-  font-size: 12px;
-  font-weight: bold;
-  padding: 4px 8px;
-  border-radius: 10px;
-  min-width: 20px;
-  text-align: center;
-}
-
-.building-info {
-  text-align: left;
-}
-
-.building-name {
-  font-size: 14px;
-  font-weight: bold;
-  color: white;
-  margin-bottom: 4px;
-}
-
-.building-description {
-  font-size: 11px;
-  color: #bbb;
-  margin-bottom: 8px;
-}
-
-.building-income {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-bottom: 8px;
-}
-
-.income-current {
-  font-size: 12px;
-  color: #4caf50;
-  font-weight: bold;
-}
-
-.income-increase {
-  font-size: 10px;
-  color: #81c784;
-  background: rgba(76, 175, 80, 0.2);
-  padding: 2px 5px;
-  border-radius: 5px;
-}
-
-.building-cost {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-bottom: 10px;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.building-cost.affordable {
-  color: #4caf50;
-}
-
-.building-cost.expensive {
-  color: #ff6b6b;
-}
-
-.cost-icon {
-  font-size: 12px;
-}
-
-.building-upgrade-btn {
-  width: 100%;
-  padding: 8px;
+/* === ПЛАВАЮЩИЕ КНОПКИ === */
+.floating-action-button {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
   border: none;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: bold;
+  font-size: 1.5em;
   cursor: pointer;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  bottom: 20px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.building-upgrade-btn.can-upgrade {
-  background: linear-gradient(135deg, #4caf50, #45a049);
-  color: white;
+.floating-action-button.left {
+  left: 20px;
 }
 
-.building-upgrade-btn.cant-upgrade {
-  background: linear-gradient(135deg, #666, #555);
-  color: #999;
+.floating-action-button.right {
+  right: 20px;
+}
+
+.floating-action-button:hover {
+  transform: translateY(-2px) scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+}
+
+.floating-action-button:active {
+  transform: translateY(0) scale(1.05);
+}
+
+/* === ЗОНА ПОСТРОЕК (интегрированная) === */
+.buildings-integrated {
+  margin-top: 20px;
+  padding: 0 10px;
+}
+
+.buildings-grid-minimal {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.building-item-minimal {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  animation: fadeIn 0.6s ease-out backwards;
+}
+
+.building-item-minimal:nth-child(1) { animation-delay: 0.4s; }
+.building-item-minimal:nth-child(2) { animation-delay: 0.5s; }
+.building-item-minimal:nth-child(3) { animation-delay: 0.6s; }
+.building-item-minimal:nth-child(4) { animation-delay: 0.7s; }
+
+.building-item-minimal:hover:not(.locked) {
+  transform: translateY(-3px) scale(1.05);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.building-item-minimal:active:not(.locked) {
+  transform: translateY(0) scale(1);
+}
+
+.building-item-minimal.locked {
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
-.building-locked-text {
-  text-align: center;
-  color: #999;
-  font-size: 12px;
-  font-style: italic;
-  margin-top: 10px;
+.building-item-minimal.active {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.4);
 }
 
-/* ========== АНИМАЦИЯ МОНЕТ ========== */
+.building-item-minimal .building-icon {
+  font-size: 2.2em;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  transition: transform 0.2s ease;
+}
+
+.building-item-minimal:hover:not(.locked) .building-icon {
+  transform: scale(1.1);
+}
+
+/* Бейдж уровня */
+.building-level-badge {
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.8em;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4);
+  border: 2px solid rgba(30, 35, 50, 0.9);
+}
+
+.building-item-minimal.locked .building-level-badge {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  font-size: 0.7em;
+}
+
+.building-item-minimal:not(.active):not(.locked) .building-level-badge {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+  animation: plusPulse 2s ease-in-out infinite;
+}
+
+@keyframes plusPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* === АНИМАЦИЯ МОНЕТ === */
 .coins-animation-container {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  right: 0;
+  bottom: 0;
   pointer-events: none;
   z-index: 1000;
 }
 
 .flying-coin {
   position: absolute;
-  top: 60%;
-  font-size: 24px;
-  animation: flyUp 2s ease-out forwards;
-  pointer-events: none;
+  bottom: 50%;
+  font-size: 2em;
+  animation: coinFly 2s ease-out forwards;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
 }
 
-@keyframes flyUp {
+@keyframes coinFly {
   0% {
-    transform: translateY(0) scale(1);
+    transform: translateY(0) scale(1) rotate(0deg);
     opacity: 1;
   }
-  50% {
-    transform: translateY(-100px) scale(1.2);
-    opacity: 0.8;
-  }
   100% {
-    transform: translateY(-200px) scale(0.8);
+    transform: translateY(-300px) scale(0.5) rotate(360deg);
     opacity: 0;
   }
 }
 
-/* ========== АДАПТИВНОСТЬ ========== */
-@media (max-width: 360px) {
-  .game-content {
-    padding: 15px 10px;
+/* === АДАПТИВНОСТЬ === */
+@media (max-width: 480px) {
+  .game-area {
+    padding: 16px;
+    margin-bottom: 12px;
   }
   
-  .buildings-grid {
-    grid-template-columns: 1fr;
+  .car-main-image {
+    max-height: 160px;
   }
   
-  .car-stats-compact {
-    grid-template-columns: repeat(4, 1fr);
+  .collect-button-main {
+    height: 54px;
+    font-size: 1.1em;
   }
   
   .floating-action-button {
-    width: 45px;
-    height: 45px;
-    font-size: 18px;
+    width: 48px;
+    height: 48px;
+    font-size: 1.3em;
+  }
+  
+  .floating-action-button.left {
+    left: 12px;
+  }
+  
+  .floating-action-button.right {
+    right: 12px;
+  }
+  
+  .buildings-grid-minimal {
+    gap: 12px;
+  }
+  
+  .building-item-minimal {
+    width: 65px;
+    height: 65px;
+  }
+  
+  .building-item-minimal .building-icon {
+    font-size: 2em;
   }
 }
 
-@media (min-width: 400px) {
-  .game-content {
-    max-width: 450px;
+@media (max-width: 350px) {
+  .game-area {
+    padding: 12px;
   }
   
-  .buildings-grid {
-    grid-template-columns: repeat(3, 1fr);
+  .car-name-plate h2 {
+    font-size: 1.2em;
+  }
+  
+  .collect-button-main {
+    height: 48px;
+    font-size: 1em;
+  }
+  
+  .stat-item {
+    gap: 2px;
+  }
+  
+  .car-stats-compact {
+    gap: 15px;
+  }
+  
+  .buildings-grid-minimal {
+    gap: 10px;
+  }
+  
+  .building-item-minimal {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .building-item-minimal .building-icon {
+    font-size: 1.8em;
+  }
+  
+  .building-level-badge {
+    width: 20px;
+    height: 20px;
+    font-size: 0.7em;
   }
 }
