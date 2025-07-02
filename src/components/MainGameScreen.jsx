@@ -177,4 +177,33 @@ const MainGameScreen = ({
               onClick={() => onBuildingClick(building.name)}
               title={`${getBuildingShortName(building.name)} - Уровень ${building.level}`}
             >
-              <div className="building-icon"
+              <div className="building-icon">{building.icon}</div>
+              <div className="building-name">{getBuildingShortName(building.name)}</div>
+              <div className="building-level-badge">
+                {building.level > 0 ? building.level : '+'}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Анимация монет */}
+      <div className="coins-animation-container">
+        {coins.map(coin => (
+          <div 
+            key={coin.id} 
+            className="flying-coin"
+            style={{ 
+              left: `${coin.left}%`,
+              animationDelay: `${coin.delay}s`
+            }}
+          >
+            💰
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default MainGameScreen;
