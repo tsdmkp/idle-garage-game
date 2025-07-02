@@ -1,476 +1,640 @@
-.friends-screen {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-  min-height: 100vh;
-  padding: 0;
-  color: #ffffff;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
+/* MainGameScreen.css - Улучшенный дизайн с фоном гаража */
 
-.friends-content {
-  padding: 15px;
-  padding-top: 85px;
-  padding-bottom: 85px;
+.main-game-screen {
+  width: 100%;
   max-width: 500px;
   margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* Заголовок */
-.friends-header {
-  text-align: center;
-  margin-bottom: 10px;
-}
-
-.friends-header h2 {
-  margin: 0 0 8px 0;
-  font-size: 1.8rem;
-  font-weight: 800;
-  background: linear-gradient(45deg, #ffd700, #ffeb3b, #ff9800);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.friends-header p {
-  margin: 0;
-  opacity: 0.9;
-  font-size: 0.95rem;
-}
-
-/* Статус реферера */
-.referrer-status {
-  background: linear-gradient(145deg, rgba(0, 150, 255, 0.2), rgba(0, 100, 200, 0.1));
-  backdrop-filter: blur(15px);
-  border-radius: 20px;
-  padding: 25px;
-  text-align: center;
-  border: 2px solid rgba(0, 150, 255, 0.3);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
-.referrer-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 20px;
-  border-radius: 30px;
-  border: 3px solid;
-  background: linear-gradient(145deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.1));
-  margin-bottom: 20px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-}
-
-.referrer-icon {
-  font-size: 1.2rem;
-}
-
-.referrer-name {
-  font-weight: 700;
-  font-size: 1rem;
-}
-
-.referrer-stats {
-  display: flex;
-  justify-content: center;
-  gap: 30px;
-  margin-bottom: 10px;
-}
-
-.stat {
-  text-align: center;
-}
-
-.stat-number {
-  display: block;
-  font-size: 1.8rem;
-  font-weight: 900;
-  color: #00d4ff;
-  text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
-}
-
-.stat-label {
-  font-size: 0.8rem;
-  opacity: 0.8;
-}
-
-.next-level {
-  font-size: 0.85rem;
-  opacity: 0.7;
-  margin-top: 8px;
-}
-
-/* Награды в ожидании */
-.pending-rewards {
-  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
-  border-radius: 15px;
-  padding: 20px;
-  text-align: center;
-  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
-  animation: rewardPulse 2s ease-in-out infinite alternate;
-}
-
-@keyframes rewardPulse {
-  0% { box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3); }
-  100% { box-shadow: 0 12px 35px rgba(255, 107, 107, 0.5); }
-}
-
-.pending-rewards h3 {
-  margin: 0 0 15px 0;
-  font-size: 1.3rem;
-}
-
-.rewards-list {
-  margin-bottom: 15px;
-}
-
-.reward-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.reward-item:last-child {
-  border-bottom: none;
-}
-
-.claim-rewards-btn {
-  background: linear-gradient(135deg, #4caf50, #66bb6a);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 25px;
-  font-weight: 700;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
-}
-
-.claim-rewards-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
-}
-
-/* Секция приглашений */
-.invite-section {
-  background: linear-gradient(145deg, rgba(40, 200, 120, 0.2), rgba(20, 150, 80, 0.1));
-  backdrop-filter: blur(15px);
-  border-radius: 20px;
-  padding: 25px;
-  border: 2px solid rgba(40, 200, 120, 0.3);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
-.invite-info {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.invite-benefit {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
-  padding: 15px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.benefit-icon {
-  font-size: 1.3rem;
-  width: 40px;
-  text-align: center;
-}
-
-.benefit-text {
-  flex: 1;
-}
-
-.benefit-text strong {
-  color: #00ff88;
-  font-weight: 800;
-  text-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
-}
-
-.invite-buttons {
-  display: flex;
-  gap: 10px;
-}
-
-.invite-btn {
-  flex: 1;
-  padding: 14px 20px;
-  border: none;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.invite-btn.primary {
-  background: linear-gradient(135deg, #2196f3, #42a5f5);
-  color: white;
-  box-shadow: 0 6px 20px rgba(33, 150, 243, 0.3);
-}
-
-.invite-btn.primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(33, 150, 243, 0.4);
-}
-
-.invite-btn.secondary {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.invite-btn.secondary:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-2px);
-}
-
-/* Таблица наград */
-.rewards-table {
-  background: linear-gradient(145deg, rgba(120, 40, 200, 0.2), rgba(80, 20, 150, 0.1));
-  backdrop-filter: blur(15px);
-  border-radius: 20px;
-  padding: 25px;
-  border: 2px solid rgba(120, 40, 200, 0.3);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
-.rewards-table h3 {
-  margin: 0 0 15px 0;
-  text-align: center;
-  font-size: 1.2rem;
-}
-
-.rewards-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.reward-milestone {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 18px;
-  border-radius: 15px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  padding: 0;
+  animation: fadeIn 0.6s ease-out;
+  min-height: 100vh;
   position: relative;
-  transition: all 0.3s ease;
+  
+  /* Фон гаража */
+  background-image: url('/garage-background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  
+  /* Затемнение для читаемости */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      rgba(15, 20, 35, 0.8) 0%,
+      rgba(30, 35, 50, 0.7) 50%,
+      rgba(15, 20, 35, 0.8) 100%
+    );
+    z-index: -1;
+  }
 }
 
-.reward-milestone.unlocked {
-  background: linear-gradient(145deg, rgba(0, 255, 136, 0.3), rgba(0, 200, 100, 0.2));
-  border-color: #00ff88;
-  box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.reward-milestone.locked {
-  opacity: 0.6;
-}
-
-.milestone-icon {
-  font-size: 1.5rem;
-  width: 40px;
-  text-align: center;
-}
-
-.milestone-text {
-  flex: 1;
-}
-
-.milestone-target {
-  font-weight: 800;
-  color: #00d4ff;
-  font-size: 1rem;
-  text-shadow: 0 0 8px rgba(0, 212, 255, 0.4);
-}
-
-.milestone-reward {
-  font-size: 0.85rem;
-  opacity: 0.9;
-}
-
-.milestone-check {
-  font-size: 1.2rem;
-  color: #4caf50;
-}
-
-/* Список друзей */
-.friends-list {
-  background: linear-gradient(145deg, rgba(255, 140, 0, 0.2), rgba(200, 100, 0, 0.1));
-  backdrop-filter: blur(15px);
+/* === ОСНОВНАЯ ИГРОВАЯ ЗОНА === */
+.game-area {
+  background: linear-gradient(135deg, 
+    rgba(30, 35, 50, 0.45) 0%, 
+    rgba(45, 50, 70, 0.35) 100%
+  );
   border-radius: 20px;
-  padding: 25px;
-  border: 2px solid rgba(255, 140, 0, 0.3);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
-.friends-list h3 {
-  margin: 0 0 15px 0;
-  text-align: center;
-  font-size: 1.2rem;
-}
-
-.friends-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.friend-card {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 15px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
-  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 15px;
+  position: relative;
+  overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.3s ease;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    0 0 50px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(8px);
 }
 
-.friend-card:hover {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.1));
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-}
-
-.friend-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #ff6b6b, #ffd93d);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: white;
-}
-
-.friend-info {
-  flex: 1;
-}
-
-.friend-name {
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-
-.friend-date {
-  font-size: 0.8rem;
-  opacity: 0.7;
-}
-
-.friend-reward {
-  color: #00ff88;
-  font-weight: 800;
-  font-size: 1rem;
-  text-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
-}
-
-/* Если друзей нет */
-.no-friends {
+/* === ОТОБРАЖЕНИЕ МАШИНЫ === */
+.car-showcase {
   text-align: center;
-  padding: 40px 20px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 15px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin-bottom: 20px;
 }
 
-.no-friends-icon {
-  font-size: 3rem;
+.car-name-plate {
   margin-bottom: 15px;
 }
 
-.no-friends-text h3 {
-  margin: 0 0 8px 0;
-  font-size: 1.2rem;
-}
-
-.no-friends-text p {
+.car-name-plate h2 {
+  color: #f8fafc;
+  font-size: 1.4em;
+  font-weight: 600;
   margin: 0;
-  opacity: 0.8;
-  font-size: 0.9rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-/* Состояния загрузки и ошибки */
-.friends-loading,
-.friends-error {
+.car-image-container {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto 15px;
+}
+
+.car-main-image {
+  width: 100%;
+  height: auto;
+  max-height: 200px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.5));
+  transition: all 0.3s ease;
+}
+
+/* Анимация машины когда есть доход */
+.car-main-image.car-earning {
+  animation: carBounce 3s ease-in-out infinite;
+}
+
+@keyframes carBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* Индикатор дохода */
+.income-indicator {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  border-radius: 20px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  animation: incomePulse 2s ease-in-out infinite;
+}
+
+@keyframes incomePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.income-icon {
+  font-size: 1.2em;
+}
+
+.income-text {
+  color: #fbbf24;
+  font-weight: 600;
+  font-size: 0.9em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Компактные статы */
+.car-stats-compact {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-icon {
+  font-size: 1.1em;
+  opacity: 0.8;
+}
+
+.stat-value {
+  color: #f1f5f9;
+  font-weight: 600;
+  font-size: 0.95em;
+}
+
+/* === СЕКЦИЯ ПРОГРЕССА И СБОРА === */
+.income-progress-section {
+  margin-top: 25px;
+}
+
+.progress-container {
+  margin-bottom: 15px;
+}
+
+.progress-bar {
+  height: 40px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+}
+
+.progress-shine {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.3) 50%, 
+    transparent 100%
+  );
+  animation: progressShine 3s ease-in-out infinite;
+}
+
+@keyframes progressShine {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: -100%; }
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-weight: 600;
+  font-size: 0.95em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  z-index: 2;
+}
+
+/* === БОЛЬШАЯ КНОПКА СБОРА === */
+.collect-button-main {
+  width: 100%;
+  height: 60px;
+  font-size: 1.2em;
+  font-weight: 700;
+  border: none;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  
+  /* Дефолтное состояние (неактивно) */
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: #9ca3af;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Активное состояние */
+.collect-button-main.can-collect {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+  color: #1f2937;
+  box-shadow: 
+    0 8px 24px rgba(245, 158, 11, 0.4),
+    0 4px 12px rgba(0, 0, 0, 0.2);
+  animation: collectPulse 2s ease-in-out infinite;
+}
+
+@keyframes collectPulse {
+  0%, 100% {
+    box-shadow: 
+      0 8px 24px rgba(245, 158, 11, 0.4),
+      0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    box-shadow: 
+      0 12px 32px rgba(245, 158, 11, 0.6),
+      0 6px 20px rgba(0, 0, 0, 0.3),
+      0 0 40px rgba(245, 158, 11, 0.3);
+  }
+}
+
+.collect-button-main:not(:disabled):hover {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.collect-button-main:not(:disabled):active {
+  transform: translateY(0) scale(1);
+}
+
+.collect-button-main.collecting {
+  animation: collectShake 0.5s ease;
+}
+
+@keyframes collectShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.button-icon {
+  font-size: 1.4em;
+}
+
+.button-text {
+  font-size: 1em;
+}
+
+/* === ПЛАВАЮЩИЕ КНОПКИ === */
+.floating-action-button {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  bottom: 20px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.floating-action-button.left {
+  left: 20px;
+}
+
+.floating-action-button.right {
+  right: 20px;
+}
+
+.floating-action-button:hover {
+  transform: translateY(-2px) scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.09) 100%);
+}
+
+.floating-action-button:active {
+  transform: translateY(0) scale(1.05);
+}
+
+/* === ЗОНА ПОСТРОЕК (максимально прозрачная) === */
+.buildings-integrated {
+  margin-top: 20px;
+  padding: 20px;
+  background: linear-gradient(135deg, 
+    rgba(30, 35, 50, 0.35) 0%, 
+    rgba(45, 50, 70, 0.25) 100%
+  );
+  border-radius: 20px;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.15),
+    0 0 50px rgba(0, 0, 0, 0.05);
+}
+
+.buildings-section-title {
+  text-align: center;
+  color: #f8fafc;
+  font-size: 1.2em;
+  font-weight: 600;
+  margin-bottom: 15px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.buildings-grid-minimal {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
+  gap: 15px;
+  justify-items: center;
+}
+
+.building-item-minimal {
+  position: relative;
+  width: 85px;
+  height: 85px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 50vh;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.03) 0%, 
+    rgba(255, 255, 255, 0.01) 100%
+  );
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: fadeIn 0.6s ease-out backwards;
+  backdrop-filter: blur(4px);
+}
+
+.building-item-minimal:nth-child(1) { animation-delay: 0.4s; }
+.building-item-minimal:nth-child(2) { animation-delay: 0.5s; }
+.building-item-minimal:nth-child(3) { animation-delay: 0.6s; }
+.building-item-minimal:nth-child(4) { animation-delay: 0.7s; }
+
+.building-item-minimal:hover {
+  transform: translateY(-5px) scale(1.05);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.12) 0%, 
+    rgba(255, 255, 255, 0.06) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 
+    0 8px 25px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(255, 255, 255, 0.1);
+}
+
+.building-item-minimal:active {
+  transform: translateY(-2px) scale(1.02);
+}
+
+/* Активное здание */
+.building-item-minimal.active {
+  background: linear-gradient(135deg, 
+    rgba(34, 197, 94, 0.15) 0%, 
+    rgba(34, 197, 94, 0.08) 100%
+  );
+  border-color: rgba(34, 197, 94, 0.4);
+  box-shadow: 
+    0 0 20px rgba(34, 197, 94, 0.3),
+    0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.building-item-minimal.active:hover {
+  border-color: rgba(34, 197, 94, 0.6);
+  box-shadow: 
+    0 0 30px rgba(34, 197, 94, 0.4),
+    0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+/* Иконка здания */
+.building-item-minimal .building-icon {
+  font-size: 2.5em;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+  transition: all 0.3s ease;
+  margin-bottom: 5px;
+}
+
+.building-item-minimal:hover .building-icon {
+  transform: scale(1.1);
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+}
+
+/* Название здания */
+.building-name {
+  font-size: 0.7em;
+  color: rgba(255, 255, 255, 0.8);
   text-align: center;
-  gap: 15px;
+  font-weight: 500;
+  margin-top: 2px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
-.loading-icon {
-  font-size: 3rem;
-  animation: bounce 1s ease-in-out infinite alternate;
+.building-item-minimal.active .building-name {
+  color: rgba(34, 197, 94, 0.9);
+  font-weight: 600;
 }
 
-@keyframes bounce {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-10px); }
+/* Бейдж уровня */
+.building-level-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.85em;
+  font-weight: 700;
+  box-shadow: 
+    0 3px 10px rgba(34, 197, 94, 0.4),
+    0 0 15px rgba(34, 197, 94, 0.2);
+  border: 3px solid rgba(30, 35, 50, 0.9);
 }
 
-.friends-error div:first-child {
-  font-size: 3rem;
+/* Доступное для улучшения */
+.building-item-minimal:not(.active) .building-level-badge {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 
+    0 3px 10px rgba(245, 158, 11, 0.4),
+    0 0 15px rgba(245, 158, 11, 0.2);
+  animation: plusPulse 2s ease-in-out infinite;
 }
 
-/* Адаптивность */
+@keyframes plusPulse {
+  0%, 100% { 
+    transform: scale(1); 
+    box-shadow: 
+      0 3px 10px rgba(245, 158, 11, 0.4),
+      0 0 15px rgba(245, 158, 11, 0.2);
+  }
+  50% { 
+    transform: scale(1.1); 
+    box-shadow: 
+      0 5px 15px rgba(245, 158, 11, 0.6),
+      0 0 25px rgba(245, 158, 11, 0.4);
+  }
+}
+
+/* === АНИМАЦИЯ МОНЕТ === */
+.coins-animation-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.flying-coin {
+  position: absolute;
+  bottom: 50%;
+  font-size: 2em;
+  animation: coinFly 2s ease-out forwards;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+}
+
+@keyframes coinFly {
+  0% {
+    transform: translateY(0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-300px) scale(0.5) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* === АДАПТИВНОСТЬ === */
 @media (max-width: 480px) {
-  .friends-content {
+  .main-game-screen {
     padding: 10px;
-    padding-top: 80px;
-    padding-bottom: 80px;
-    gap: 15px;
   }
-
-  .referrer-stats {
-    gap: 20px;
+  
+  .game-area {
+    padding: 16px;
+    margin-bottom: 12px;
   }
-
-  .stat-number {
-    font-size: 1.3rem;
+  
+  .car-main-image {
+    max-height: 160px;
   }
-
-  .invite-buttons {
-    flex-direction: column;
+  
+  .collect-button-main {
+    height: 54px;
+    font-size: 1.1em;
   }
-
-  .invite-btn {
-    padding: 12px 16px;
-    font-size: 0.9rem;
+  
+  .floating-action-button {
+    width: 48px;
+    height: 48px;
+    font-size: 1.3em;
   }
-
-  .rewards-grid {
-    gap: 8px;
+  
+  .floating-action-button.left {
+    left: 12px;
   }
+  
+  .floating-action-button.right {
+    right: 12px;
+  }
+  
+  .buildings-integrated {
+    padding: 16px;
+  }
+  
+  .buildings-grid-minimal {
+    grid-template-columns: repeat(auto-fit, minmax(75px, 1fr));
+    gap: 12px;
+  }
+  
+  .building-item-minimal {
+    width: 75px;
+    height: 75px;
+  }
+  
+  .building-item-minimal .building-icon {
+    font-size: 2.2em;
+  }
+  
+  .building-level-badge {
+    width: 24px;
+    height: 24px;
+    font-size: 0.75em;
+  }
+}
 
-  .reward-milestone {
+@media (max-width: 350px) {
+  .game-area {
     padding: 12px;
   }
-
-  .milestone-icon {
-    font-size: 1.3rem;
-    width: 35px;
+  
+  .car-name-plate h2 {
+    font-size: 1.2em;
+  }
+  
+  .collect-button-main {
+    height: 48px;
+    font-size: 1em;
+  }
+  
+  .stat-item {
+    gap: 2px;
+  }
+  
+  .car-stats-compact {
+    gap: 15px;
+  }
+  
+  .buildings-integrated {
+    padding: 12px;
+  }
+  
+  .buildings-grid-minimal {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  
+  .building-item-minimal {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .building-item-minimal .building-icon {
+    font-size: 2em;
+  }
+  
+  .building-level-badge {
+    width: 22px;
+    height: 22px;
+    font-size: 0.7em;
+  }
+  
+  .building-name {
+    font-size: 0.65em;
   }
 }
