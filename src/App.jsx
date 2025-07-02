@@ -1,497 +1,776 @@
-/* StaffScreen.css - Компактная версия с фоном персонала */
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import Header from './components/Header';
+import MainGameScreen from './components/MainGameScreen';
+import Tutorial from './components/Tutorial';
+import NavBar from './components/NavBar';
+import TuningScreen from './components/TuningScreen';
+import RaceScreen from './components/RaceScreen';
+import ShopScreen from './components/ShopScreen';
+import StaffScreen from './components/StaffScreen';
+import CarSelector from './components/CarSelector';
+import LeaderboardScreen from './components/LeaderboardScreen';
+import FriendsScreen from './components/FriendsScreen';
+import {
+  calculateUpgradeCost,
+  calculateBuildingCost,
+  recalculateStatsAndIncomeBonus,
+  calculateTotalIncomeRate,
+  simulateRace,
+  calculateStaffCost,
+  getInitialPlayerCar,
+  BASE_CAR_STATS,
+  CAR_CATALOG,
+  STAFF_CATALOG,
+  INITIAL_BUILDINGS,
+  MAX_OFFLINE_HOURS,
+  UPDATE_INTERVAL,
+  STARTING_COINS
+} from './utils';
+import apiClient from './apiClient';
+import './App.css';
 
-.staff-screen {
-  padding: 15px;
-  max-width: 800px;
-  margin: 0 auto;
-  min-height: 100vh;
-  
-  /* ФОНОВОЕ ИЗОБРАЖЕНИЕ ПЕРСОНАЛА */
-  background-image: url('/staff-background.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  
-  color: #ffffff;
-  position: relative;
-}
+const INITIAL_CAR = getInitialPlayerCar();
+const INITIAL_HIRED_STAFF = (() => {
+  const init = {};
+  for (const id in STAFF_CATALOG) {
+    init[id] = 0;
+  }
+  return init;
+})();
 
-/* Затемнение для читаемости */
-.staff-screen::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    rgba(26, 26, 46, 0.7) 0%,
-    rgba(22, 33, 62, 0.6) 50%,
-    rgba(15, 52, 96, 0.7) 100%
+function App() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasLoadedData, setHasLoadedData] = useState(false);
+  const [error, setError] = useState(null);
+  const [tgUserData, setTgUserData] = useState(null);
+  const [isTgApp, setIsTgApp] = useState(false);
+  const [playerLevel, setPlayerLevel] = useState(1);
+  const [playerName, setPlayerName] = useState('Игрок');
+  const [gameCoins, setGameCoins] = useState(STARTING_COINS);
+  const [jetCoins, setJetCoins] = useState(0);
+  const [currentXp, setCurrentXp] = useState(10);
+  const [xpToNextLevel, setXpToNextLevel] = useState(100);
+  const [incomeRatePerHour, setIncomeRatePerHour] = useState(0);
+  const lastCollectedTimeRef = useRef(Date.now());
+  const [accumulatedIncome, setAccumulatedIncome] = useState(0);
+  const [buildings, setBuildings] = useState(INITIAL_BUILDINGS);
+  const [playerCars, setPlayerCars] = useState(() => [INITIAL_CAR]);
+  const [selectedCarId, setSelectedCarId] = useState(INITIAL_CAR.id);
+  const [hiredStaff, setHiredStaff] = useState(INITIAL_HIRED_STAFF);
+  const [activeScreen, setActiveScreen] = useState('garage');
+  const [isTuningVisible, setIsTuningVisible] = useState(false);
+  const [isCarSelectorVisible, setIsCarSelectorVisible] = useState(false);
+  
+  const [isTutorialActive, setIsTutorialActive] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
+  const [hasCompletedTutorial, setHasCompletedTutorial] = useState(false);
+
+  const currentCar = playerCars.find(car => car.id === selectedCarId) || playerCars[0] || null;
+
+  // Определяем userId правильно
+  const getUserId = useCallback(() => {
+    if (isTgApp && tgUserData?.id) {
+      const userId = tgUserData.id.toString();
+      console.log('🆔 getUserId (Telegram):', userId);
+      return userId;
+    } else if (!isTgApp) {
+      console.log('🆔 getUserId (Standalone): default');
+      return 'default';
+    }
+    console.log('🆔 getUserId: null (не готов)');
+    return null;
+  }, [isTgApp, tgUserData?.id]);
+
+  const saveGameState = useCallback(async (updates = {}) => {
+    const userId = getUserId();
+    if (!userId) {
+      console.warn('⚠️ Отмена сохранения: userId не готов');
+      return;
+    }
+
+    const stateToSave = {
+      userId: userId,
+      player_level: playerLevel,
+      first_name: playerName,
+      game_coins: gameCoins,
+      jet_coins: jetCoins,
+      current_xp: currentXp,
+      xp_to_next_level: xpToNextLevel,
+      income_rate_per_hour: incomeRatePerHour,
+      last_collected_time: new Date(lastCollectedTimeRef.current).toISOString(),
+      buildings: buildings,
+      player_cars: playerCars,
+      selected_car_id: selectedCarId,
+      hired_staff: hiredStaff,
+      has_completed_tutorial: hasCompletedTutorial,
+      last_exit_time: new Date().toISOString(),
+      ...updates
+    };
+
+    try {
+      console.log('📤 Сохранение состояния для userId:', userId, stateToSave);
+      await apiClient('/game_state', 'POST', { body: stateToSave });
+      console.log('✅ Состояние успешно сохранено');
+    } catch (err) {
+      console.error('❌ Ошибка сохранения:', err.message);
+    }
+  }, [
+    getUserId, playerLevel, playerName, gameCoins, jetCoins, currentXp, xpToNextLevel,
+    incomeRatePerHour, buildings, playerCars, selectedCarId, hiredStaff, hasCompletedTutorial
+  ]);
+
+  // Инициализация Telegram WebApp И загрузка данных
+  useEffect(() => {
+    const initializeApp = async () => {
+      console.log('🚀 Инициализация приложения...');
+      
+      // Сначала инициализируем Telegram
+      const tg = window.Telegram?.WebApp;
+      if (tg) {
+        console.log('✅ Telegram WebApp найден');
+        console.log('📋 Telegram WebApp initData:', tg.initData);
+        console.log('📋 Telegram WebApp initDataUnsafe:', tg.initDataUnsafe);
+        console.log('🔗 Start param:', tg.initDataUnsafe?.start_param);
+        
+        setIsTgApp(true);
+        const userData = tg.initDataUnsafe?.user || null;
+        console.log('👤 Telegram user data:', JSON.stringify(userData, null, 2));
+        setTgUserData(userData);
+        
+        if (userData && typeof userData === 'object') {
+          const firstName = userData.first_name || userData.firstName || userData.username || 'Игрок';
+          setPlayerName(firstName);
+          console.log('📝 Player name установлен:', firstName);
+        } else {
+          console.warn('⚠️ Нет валидных данных пользователя в userData:', userData);
+        }
+        
+        tg.ready();
+        tg.expand();
+        tg.BackButton.hide();
+        tg.MainButton.hide();
+        
+        // ВАЖНО: Ждем немного чтобы initData точно был готов
+        await new Promise(resolve => setTimeout(resolve, 100));
+        console.log('📋 Final initData after ready():', tg.initData);
+
+        // Теперь загружаем данные с правильным userId
+        if (userData?.id) {
+          await loadGameData(userData.id.toString());
+        } else {
+          console.error('❌ Нет userId в Telegram данных');
+          setError('Ошибка получения данных пользователя Telegram');
+          setIsLoading(false);
+        }
+      } else {
+        console.log('⚠️ Telegram WebApp не найден, режим standalone');
+        setIsTgApp(false);
+        // Загружаем данные для standalone режима
+        await loadGameData('default');
+      }
+    };
+
+    const loadGameData = async (userId) => {
+      if (hasLoadedData) {
+        console.log('⏭️ Данные уже загружены, пропускаем...');
+        return;
+      }
+
+      console.log('📥 Начинаем загрузку данных для userId:', userId);
+      setHasLoadedData(true);
+      
+      try {
+        const initialState = await apiClient('/game_state', 'GET', { params: { userId } });
+        console.log('📦 Получено состояние с бэкенда:', initialState);
+
+        if (initialState && typeof initialState === 'object') {
+          // Обновляем состояние из бэкенда
+          setPlayerLevel(initialState.player_level ?? playerLevel);
+          if (initialState.first_name && initialState.first_name !== 'Игрок') {
+            setPlayerName(initialState.first_name);
+            console.log('📝 Имя обновлено с бэкенда:', initialState.first_name);
+          }
+          
+          let coinsToSet = initialState.game_coins;
+          if (typeof coinsToSet === 'string') {
+            coinsToSet = parseInt(coinsToSet) || STARTING_COINS;
+          }
+          setGameCoins(coinsToSet || STARTING_COINS);
+          console.log('💰 Монеты установлены:', coinsToSet || STARTING_COINS);
+          
+          setJetCoins(parseInt(initialState.jet_coins) || 0);
+          setCurrentXp(initialState.current_xp ?? currentXp);
+          setXpToNextLevel(initialState.xp_to_next_level ?? xpToNextLevel);
+          
+          const savedTutorial = initialState.has_completed_tutorial;
+          setHasCompletedTutorial(savedTutorial || false);
+          console.log('🎓 Туториал завершен:', savedTutorial);
+          
+          // Запускаем туториал только если не завершен И это новый игрок
+          if (!savedTutorial && (initialState.player_level === 1 || !initialState.player_level)) {
+            console.log('🎯 Запускаем туториал для нового игрока');
+            setTimeout(() => {
+              setIsTutorialActive(true);
+              setTutorialStep(0);
+              // Даем новому игроку стартовый доход для туториала
+              setAccumulatedIncome(25); // Достаточно для сбора в туториале
+            }, 1000);
+          } else {
+            console.log('⏭️ Туториал пропущен:', { 
+              tutorialCompleted: savedTutorial, 
+              playerLevel: initialState.player_level 
+            });
+          }
+
+          const loadedLastCollectedTime = initialState.last_collected_time ? new Date(initialState.last_collected_time).getTime() : Date.now();
+          const loadedLastExitTime = initialState.last_exit_time ? new Date(initialState.last_exit_time).getTime() : loadedLastCollectedTime;
+          lastCollectedTimeRef.current = isFinite(loadedLastCollectedTime) ? loadedLastCollectedTime : Date.now();
+          console.log('⏰ Время последнего сбора:', new Date(lastCollectedTimeRef.current).toISOString());
+
+          const now = Date.now();
+          const offlineTimeMs = Math.max(0, now - loadedLastExitTime);
+          console.log('⏱️ Оффлайн время (мс):', offlineTimeMs);
+
+          let loadedBuildings = INITIAL_BUILDINGS;
+          if (initialState?.buildings && Array.isArray(initialState.buildings) && initialState.buildings.length > 0) {
+            const validBuildings = initialState.buildings.every(building => 
+              building && 
+              typeof building.id === 'string' && 
+              typeof building.name === 'string' && 
+              typeof building.icon === 'string' &&
+              typeof building.level === 'number' &&
+              typeof building.isLocked === 'boolean'
+            );
+            
+            if (validBuildings) {
+              loadedBuildings = initialState.buildings;
+              console.log('🏢 Загружены здания с бэкенда:', loadedBuildings);
+            } else {
+              console.warn('⚠️ Невалидные здания, используем дефолтные');
+            }
+          } else {
+            console.log('🏢 Используем дефолтные здания');
+          }
+          setBuildings(loadedBuildings);
+
+          const loadedHiredStaff = initialState.hired_staff ?? INITIAL_HIRED_STAFF;
+          setHiredStaff(loadedHiredStaff);
+          console.log('👥 Загружен персонал:', loadedHiredStaff);
+
+          const loadedPlayerCarsRaw = Array.isArray(initialState.player_cars) ? initialState.player_cars : [INITIAL_CAR];
+          const loadedPlayerCars = loadedPlayerCarsRaw.map(sc =>
+            sc && sc.id && sc.parts ? { ...sc, stats: recalculateStatsAndIncomeBonus(sc.id, sc.parts).stats } : null
+          ).filter(Boolean);
+          const actualPlayerCars = loadedPlayerCars.length > 0 ? loadedPlayerCars : [INITIAL_CAR];
+          setPlayerCars(actualPlayerCars);
+          console.log('🚗 Загружены машины:', actualPlayerCars);
+
+          const loadedSelectedCarId = initialState.selected_car_id;
+          const finalSelectedCarId = loadedSelectedCarId && actualPlayerCars.some(c => c.id === loadedSelectedCarId)
+            ? loadedSelectedCarId
+            : actualPlayerCars[0]?.id || INITIAL_CAR.id;
+          setSelectedCarId(finalSelectedCarId);
+          console.log('🎯 Выбранная машина:', finalSelectedCarId);
+
+          const carToCalculateFrom = actualPlayerCars.find(c => c.id === finalSelectedCarId) || actualPlayerCars[0] || INITIAL_CAR;
+          const initialTotalRate = calculateTotalIncomeRate(loadedBuildings, carToCalculateFrom, loadedHiredStaff);
+          setIncomeRatePerHour(initialTotalRate);
+          console.log('💸 Рассчитана скорость дохода:', initialTotalRate);
+          
+          let offlineIncome = 0;
+          if (offlineTimeMs > 0 && initialTotalRate > 0) {
+            offlineIncome = (initialTotalRate / 3600) * Math.min(offlineTimeMs / 1000, MAX_OFFLINE_HOURS * 3600);
+            console.log('💰 Рассчитан оффлайн доход:', offlineIncome);
+          }
+          setAccumulatedIncome(offlineIncome);
+        } else {
+          console.error('❌ Бэкенд вернул невалидные данные');
+          setError('Не удалось получить данные игрока');
+          setBuildings(INITIAL_BUILDINGS);
+          setPlayerCars([INITIAL_CAR]);
+          setSelectedCarId(INITIAL_CAR.id);
+          setHiredStaff(INITIAL_HIRED_STAFF);
+          setIncomeRatePerHour(calculateTotalIncomeRate(INITIAL_BUILDINGS, INITIAL_CAR, INITIAL_HIRED_STAFF));
+        }
+      } catch (err) {
+        console.error('❌ Ошибка загрузки данных:', err.message);
+        setError(`Ошибка загрузки: ${err.message}`);
+      } finally {
+        setIsLoading(false);
+        console.log('✅ Загрузка завершена, isLoading = false');
+      }
+    };
+
+    // Запускаем инициализацию только один раз
+    if (!hasLoadedData) {
+      initializeApp();
+    }
+
+    return () => {
+      // Сохраняем время выхода при размонтировании
+      const userId = getUserId();
+      if (userId) {
+        apiClient('/game_state', 'POST', {
+          body: {
+            userId: userId,
+            last_exit_time: new Date().toISOString(),
+          }
+        }).catch(err => console.error('Failed to save last exit time:', err));
+      }
+    };
+  }, []); // Пустой массив - запускаем только один раз
+
+  // Таймер дохода
+  useEffect(() => {
+    if (incomeRatePerHour <= 0 || isLoading) {
+      console.log('⏸️ Таймер дохода не запущен:', { incomeRatePerHour, isLoading });
+      return;
+    }
+    
+    console.log('▶️ Таймер дохода запущен со скоростью:', incomeRatePerHour);
+    const incomePerSecond = incomeRatePerHour / 3600;
+    const maxAccumulationCap = incomeRatePerHour * MAX_OFFLINE_HOURS;
+    
+    const intervalId = setInterval(() => {
+      const now = Date.now();
+      const timePassedTotalSeconds = (now - lastCollectedTimeRef.current) / 1000;
+      if (!isFinite(timePassedTotalSeconds) || !isFinite(incomePerSecond) || timePassedTotalSeconds < 0) {
+        console.error('❌ Ошибка в таймере дохода:', { timePassedTotalSeconds, incomePerSecond });
+        return;
+      }
+      const potentialTotalIncome = timePassedTotalSeconds * incomePerSecond;
+      const newAccumulated = Math.min(potentialTotalIncome, maxAccumulationCap);
+      setAccumulatedIncome(isFinite(newAccumulated) && newAccumulated >= 0 ? newAccumulated : 0);
+    }, UPDATE_INTERVAL);
+    
+    return () => {
+      console.log('⏹️ Таймер дохода остановлен');
+      clearInterval(intervalId);
+    };
+  }, [incomeRatePerHour, isLoading]);
+
+  const handleCollect = () => {
+    const incomeToAdd = Math.floor(accumulatedIncome);
+    console.log('💰 Сбор дохода:', incomeToAdd);
+    if (incomeToAdd > 0) {
+      const newTotalCoins = gameCoins + incomeToAdd;
+      setGameCoins(newTotalCoins);
+      setAccumulatedIncome(0);
+      const collectionTime = Date.now();
+      lastCollectedTimeRef.current = collectionTime;
+      
+      if (isTutorialActive && tutorialStep === 3) {
+        console.log('🎓 Шаг туториала 3 завершен, переход к 4');
+        setTimeout(() => {
+          setTutorialStep(4);
+        }, 500);
+      }
+      
+      saveGameState({
+        game_coins: newTotalCoins,
+        last_collected_time: new Date(collectionTime).toISOString(),
+      });
+    }
+  };
+
+  const handleBuildingClick = (buildingName) => {
+  console.log('🏢 Клик по зданию:', buildingName);
+  const targetBuilding = buildings.find(b => b.name === buildingName);
+  
+  if (!targetBuilding) {
+    console.log('❌ Здание не найдено:', buildingName);
+    return;
+  }
+
+  const cost = calculateBuildingCost(targetBuilding.id, targetBuilding.level);
+  console.log('💸 Стоимость улучшения здания:', cost);
+  
+  if (gameCoins >= cost) {
+    const newCoins = gameCoins - cost;
+    const updatedBuildings = buildings.map(b =>
+      b.name === buildingName ? { ...b, level: b.level + 1 } : b
+    );
+    const newTotalRate = calculateTotalIncomeRate(updatedBuildings, currentCar, hiredStaff);
+
+    setGameCoins(newCoins);
+    setBuildings(updatedBuildings);
+    setIncomeRatePerHour(newTotalRate);
+    console.log('✅ Здание улучшено, новая скорость дохода:', newTotalRate);
+    
+    // Тактильная обратная связь в Telegram
+    if (window.Telegram?.WebApp?.HapticFeedback) {
+      window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+    }
+    
+    saveGameState({
+      game_coins: newCoins,
+      buildings: updatedBuildings,
+      income_rate_per_hour: newTotalRate,
+    });
+  } else {
+    console.log('❌ Недостаточно монет для улучшения здания. Нужно:', cost, 'Есть:', gameCoins);
+    
+    // Уведомление пользователю
+    alert(`💰 Недостаточно монет! Нужно: ${cost.toLocaleString()}, у вас: ${gameCoins.toLocaleString()}`);
+    
+    // Тактильная обратная связь об ошибке
+    if (window.Telegram?.WebApp?.HapticFeedback) {
+      window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+    }
+  }
+};
+
+  const handleOpenTuning = () => {
+    console.log('🔧 Открытие тюнинга');
+    setIsTuningVisible(true);
+  };
+
+  const handleCloseTuning = () => {
+    console.log('❌ Закрытие тюнинга');
+    setIsTuningVisible(false);
+  };
+
+  const handleUpgradePart = (partId) => {
+    console.log('🔧 Улучшение детали:', partId);
+    if (!currentCar?.parts?.[partId]) {
+      console.log('❌ Деталь не найдена');
+      return;
+    }
+    const part = currentCar.parts[partId];
+    const cost = calculateUpgradeCost(partId, part.level, hiredStaff);
+    console.log('💸 Стоимость улучшения детали:', cost);
+    if (gameCoins >= cost && cost !== Infinity) {
+      const newCoins = gameCoins - cost;
+      const updatedParts = { ...currentCar.parts, [partId]: { ...part, level: part.level + 1 } };
+      const { stats: newStats } = recalculateStatsAndIncomeBonus(currentCar.id, updatedParts);
+      
+      const updatedPlayerCars = playerCars.map(car =>
+        car.id === selectedCarId ? { ...car, parts: updatedParts, stats: newStats } : car
+      );
+      
+      const updatedCarForRate = updatedPlayerCars.find(c => c.id === selectedCarId);
+      let newTotalRate = incomeRatePerHour;
+      if (updatedCarForRate) {
+        newTotalRate = calculateTotalIncomeRate(buildings, updatedCarForRate, hiredStaff);
+        setIncomeRatePerHour(newTotalRate);
+      }
+      
+      setGameCoins(newCoins);
+      setPlayerCars(updatedPlayerCars);
+      console.log('✅ Деталь улучшена, новая скорость дохода:', newTotalRate);
+      
+      saveGameState({
+        game_coins: newCoins,
+        player_cars: updatedPlayerCars,
+        income_rate_per_hour: newTotalRate,
+      });
+    } else {
+      console.log('❌ Недостаточно монет для улучшения детали');
+    }
+  };
+
+  const handleStartRace = async (difficulty) => {
+    console.log('🏎️ Старт гонки, сложность:', difficulty);
+    if (!currentCar) return { result: 'error', reward: null };
+   const raceOutcome = await simulateRace(currentCar, difficulty, gameCoins, currentXp, hiredStaff);
+    if (raceOutcome) {
+      setGameCoins(raceOutcome.newGameCoins);
+      setCurrentXp(raceOutcome.newCurrentXp);
+      console.log('🏁 Результат гонки:', raceOutcome);
+      
+      saveGameState({
+        game_coins: raceOutcome.newGameCoins,
+        current_xp: raceOutcome.newCurrentXp,
+      });
+      return { result: raceOutcome.result, reward: raceOutcome.reward };
+    } else {
+      return { result: 'error', reward: null };
+    }
+  };
+
+  const handleBuyCar = (carIdToBuy) => {
+    console.log('🛒 Покупка машины:', carIdToBuy);
+    const carData = CAR_CATALOG.find(c => c.id === carIdToBuy);
+    if (!carData || gameCoins < carData.price || playerCars.some(c => c.id === carIdToBuy)) {
+      console.log('❌ Невозможно купить машину');
+      return;
+    }
+    const newCoins = gameCoins - carData.price;
+    const newCar = {
+      id: carData.id,
+      name: carData.name,
+      imageUrl: carData.imageUrl,
+      parts: { ...carData.initialParts },
+      stats: recalculateStatsAndIncomeBonus(carData.id, carData.initialParts).stats
+    };
+    const updatedPlayerCars = [...playerCars, newCar];
+    setGameCoins(newCoins);
+    setPlayerCars(updatedPlayerCars);
+    console.log('✅ Машина куплена:', carData.name);
+    
+    saveGameState({
+      game_coins: newCoins,
+      player_cars: updatedPlayerCars,
+    });
+  };
+
+  const handleHireOrUpgradeStaff = (staffId) => {
+    console.log('👥 Найм/улучшение персонала:', staffId);
+    const cost = calculateStaffCost(staffId, hiredStaff);
+    console.log('💸 Стоимость персонала:', cost);
+    if (gameCoins >= cost && cost !== Infinity) {
+      const newCoins = gameCoins - cost;
+      const updatedHiredStaff = { ...hiredStaff, [staffId]: (hiredStaff[staffId] || 0) + 1 };
+      const newTotalRate = calculateTotalIncomeRate(buildings, currentCar, updatedHiredStaff);
+
+      setGameCoins(newCoins);
+      setHiredStaff(updatedHiredStaff);
+      setIncomeRatePerHour(newTotalRate);
+      console.log('✅ Персонал нанят, новая скорость дохода:', newTotalRate);
+      
+      saveGameState({
+        game_coins: newCoins,
+        hired_staff: updatedHiredStaff,
+        income_rate_per_hour: newTotalRate,
+      });
+    } else {
+      console.log('❌ Недостаточно монет для найма персонала');
+    }
+  };
+
+  const handleNavClick = (screenId) => {
+    console.log('🧭 Навигация:', screenId);
+    setIsTuningVisible(false);
+    setIsCarSelectorVisible(false);
+    setActiveScreen(screenId);
+  };
+
+  const handleOpenCarSelector = () => {
+    console.log('🚗 Открытие выбора машины');
+    setIsCarSelectorVisible(true);
+  };
+  
+  const handleCloseCarSelector = () => {
+    console.log('❌ Закрытие выбора машины');
+    setIsCarSelectorVisible(false);
+  };
+
+  const handleSelectCar = (carId) => {
+    console.log('🎯 Выбор машины:', carId);
+    if (carId !== selectedCarId) {
+      setSelectedCarId(carId);
+      const newSelectedCar = playerCars.find(c => c.id === carId);
+      let newTotalRate = incomeRatePerHour;
+      if (newSelectedCar) {
+        newTotalRate = calculateTotalIncomeRate(buildings, newSelectedCar, hiredStaff);
+        setIncomeRatePerHour(newTotalRate);
+      }
+      console.log('✅ Машина выбрана, новая скорость дохода:', newTotalRate);
+      
+      saveGameState({
+        selected_car_id: carId,
+        income_rate_per_hour: newTotalRate,
+      });
+    }
+    setIsCarSelectorVisible(false);
+  };
+
+  const xpPercentage = xpToNextLevel > 0 ? Math.min((currentXp / xpToNextLevel) * 100, 100) : 0;
+  
+  const handleTutorialNext = () => {
+    console.log('➡️ Туториал: следующий шаг');
+    setTutorialStep(prev => prev + 1);
+  };
+  
+  const handleTutorialComplete = () => {
+    console.log('🎓 Туториал завершен');
+    setIsTutorialActive(false);
+    setHasCompletedTutorial(true);
+    
+    saveGameState({
+      has_completed_tutorial: true,
+    });
+  };
+  
+  const handleTutorialAction = (action) => {
+    console.log('🎯 Действие туториала:', action);
+    if (action === 'expand-buildings') {
+      // Больше не нужно
+    } else if (action === 'close-tuning') {
+      setIsTuningVisible(false);
+    }
+  };
+
+  // 🎯 ФУНКЦИЯ: Обновление баланса от рефералов
+  const handleReferralRewardUpdate = useCallback((coinsEarned) => {
+    console.log('💰 Обновление баланса от рефералов:', coinsEarned);
+    
+    if (coinsEarned > 0) {
+      const newTotalCoins = gameCoins + coinsEarned;
+      setGameCoins(newTotalCoins);
+      
+      console.log('✅ Баланс обновлен:', {
+        старый: gameCoins,
+        добавлено: coinsEarned,
+        новый: newTotalCoins
+      });
+      
+      // Сохраняем новый баланс на сервер
+      saveGameState({
+        game_coins: newTotalCoins,
+      });
+    }
+  }, [gameCoins, saveGameState]);
+
+  // 🎯 НОВАЯ ФУНКЦИЯ: Обработка наград за рекламу Adsgram
+  const handleAdReward = useCallback((rewardAmount) => {
+    console.log('📺 Получена награда за рекламу Adsgram:', rewardAmount);
+    
+    if (rewardAmount > 0) {
+      const newTotalCoins = gameCoins + rewardAmount;
+      setGameCoins(newTotalCoins);
+      
+      console.log('✅ Баланс обновлен от рекламы:', {
+        старый: gameCoins,
+        добавлено: rewardAmount,
+        новый: newTotalCoins
+      });
+      
+      // Сохраняем новый баланс на сервер
+      saveGameState({
+        game_coins: newTotalCoins,
+      });
+      
+      // Показываем уведомление
+      alert(`🎉 Получено ${rewardAmount} монет за просмотр рекламы!`);
+      
+      // Тактильная обратная связь в Telegram
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      }
+    }
+  }, [gameCoins, saveGameState]);
+
+  if (isLoading) {
+    return <div className="loading-screen">Загрузка данных...</div>;
+  }
+  if (error) {
+    return <div className="error-screen">Ошибка: {error}</div>;
+  }
+
+  return (
+    <div className="App">
+      <div className="header-container">
+        <Header
+          level={playerLevel}
+          playerName={playerName}
+          gameCoins={gameCoins}
+          jetCoins={jetCoins}
+          xpPercentage={xpPercentage}
+          onShowTutorial={() => {
+            console.log('🎓 Ручной запуск туториала');
+            setIsTutorialActive(true);
+            setTutorialStep(0);
+          }}
+        />
+      </div>
+      <main className="main-content">
+        {activeScreen === 'garage' && currentCar && (
+          <MainGameScreen
+            car={currentCar}
+            incomeRate={incomeRatePerHour}
+            accumulatedIncome={accumulatedIncome}
+            maxAccumulation={incomeRatePerHour * MAX_OFFLINE_HOURS}
+            gameCoins={gameCoins}
+            buildings={buildings}
+            onCollect={handleCollect}
+            onTuneClick={handleOpenTuning}
+            onOpenCarSelector={handleOpenCarSelector}
+            onBuildingClick={handleBuildingClick}
+                      />
+        )}
+        {activeScreen === 'race' && currentCar && (
+          <RaceScreen
+            playerCar={currentCar}
+            onStartRace={handleStartRace}
+            onAdReward={handleAdReward}
+          />
+        )}
+        {activeScreen === 'shop' && (
+          <ShopScreen
+            catalog={CAR_CATALOG}
+            playerCars={playerCars}
+            gameCoins={gameCoins}
+            onBuyCar={handleBuyCar}
+          />
+        )}
+        {activeScreen === 'staff' && (
+          <StaffScreen
+            staffCatalog={STAFF_CATALOG}
+            hiredStaff={hiredStaff}
+            gameCoins={gameCoins}
+            onHireOrUpgrade={handleHireOrUpgradeStaff}
+            calculateCost={(staffId) => calculateStaffCost(staffId, hiredStaff)}
+          />
+        )}
+        {activeScreen === 'leaderboard' && (
+          <LeaderboardScreen
+            tgUserData={tgUserData}
+          />
+        )}
+        {activeScreen === 'friends' && (
+          <FriendsScreen
+            tgUserData={tgUserData}
+            onBalanceUpdate={handleReferralRewardUpdate}
+          />
+        )}
+        {activeScreen === 'p2e' && (
+          <div className="placeholder-screen">
+            <div>
+              <div style={{ fontSize: '3em', marginBottom: '10px' }}>🎮</div>
+              <div>Play to Earn</div>
+              <div style={{ fontSize: '0.8em', opacity: 0.6, marginTop: '10px' }}>
+                Скоро здесь появятся новые возможности!
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+      {isTuningVisible && (
+        <TuningScreen
+          car={currentCar}
+          gameCoins={gameCoins}
+          onClose={handleCloseTuning}
+          onUpgrade={handleUpgradePart}
+        />
+      )}
+      {isCarSelectorVisible && (
+        <CarSelector
+          playerCars={playerCars}
+          selectedCarId={selectedCarId}
+          onSelectCar={handleSelectCar}
+          onClose={handleCloseCarSelector}
+        />
+      )}
+      <NavBar
+        activeScreen={activeScreen}
+        onScreenChange={handleNavClick}
+      />
+      
+      <Tutorial
+        isActive={isTutorialActive}
+        currentStep={tutorialStep}
+        onNext={handleTutorialNext}
+        onComplete={handleTutorialComplete}
+        onAction={handleTutorialAction}
+        gameState={{
+          gameCoins,
+          incomeRate: incomeRatePerHour,
+          accumulatedIncome
+        }}
+      />
+    </div>
   );
-  z-index: 0;
 }
 
-/* === ЗАГОЛОВОК И СВОДКА (компактнее) === */
-.staff-header {
-  text-align: center;
-  margin-bottom: 20px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
-  backdrop-filter: blur(15px);
-  border-radius: 15px;
-  padding: 15px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  position: relative;
-  z-index: 1;
-}
-
-.staff-header h2 {
-  margin: 0 0 10px 0;
-  font-size: 1.6rem;
-  font-weight: 700;
-  background: linear-gradient(45deg, #4CAF50, #81C784, #66BB6A);
-  background-size: 200% 200%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: gradientShift 3s ease-in-out infinite;
-}
-
-@keyframes gradientShift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-.staff-summary {
-  display: flex;
-  justify-content: center;
-}
-
-.total-staff-count {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.25) 0%, rgba(76, 175, 80, 0.15) 100%);
-  padding: 8px 16px;
-  border-radius: 20px;
-  border: 1px solid rgba(76, 175, 80, 0.4);
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.count-icon {
-  font-size: 1.1em;
-}
-
-.count-text {
-  color: #81C784;
-}
-
-/* === СПИСОК ПЕРСОНАЛА (компактная сетка) === */
-.staff-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 15px;
-  margin-top: 15px;
-  position: relative;
-  z-index: 1;
-}
-
-/* === КАРТОЧКА СОТРУДНИКА (компактнее) === */
-.staff-item {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
-  backdrop-filter: blur(15px);
-  border: 2px solid rgba(255, 255, 255, 0.15);
-  border-radius: 15px;
-  padding: 15px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.staff-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  transition: left 0.6s;
-}
-
-.staff-item:hover::before {
-  left: 100%;
-}
-
-.staff-item:hover {
-  transform: translateY(-3px);
-  border-color: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-}
-
-/* Нанятый персонал */
-.staff-item.hired {
-  border-color: rgba(76, 175, 80, 0.6);
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.18) 0%, rgba(76, 175, 80, 0.1) 100%);
-}
-
-.staff-item.hired:hover {
-  border-color: rgba(76, 175, 80, 0.8);
-  box-shadow: 0 10px 25px rgba(76, 175, 80, 0.3);
-}
-
-/* Максимальный уровень */
-.staff-item.max-level {
-  border-color: rgba(255, 193, 7, 0.7);
-  background: linear-gradient(135deg, rgba(255, 193, 7, 0.22) 0%, rgba(255, 193, 7, 0.12) 100%);
-}
-
-/* === ИКОНКА С БЕЙДЖЕМ (компактнее) === */
-.staff-icon-container {
-  position: relative;
-  flex-shrink: 0;
-}
-
-.staff-icon {
-  width: 55px;
-  height: 55px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2rem;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  transition: all 0.3s ease;
-}
-
-.staff-item:hover .staff-icon {
-  transform: scale(1.08);
-  border-color: rgba(255, 255, 255, 0.5);
-}
-
-.staff-count-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 24px;
-  height: 24px;
-  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
-  animation: badgePulse 2s ease-in-out infinite;
-}
-
-@keyframes badgePulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-/* === ДЕТАЛИ СОТРУДНИКА (компактнее) === */
-.staff-details {
-  flex: 1;
-  min-width: 0;
-}
-
-.staff-name-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 6px;
-}
-
-.staff-details h3 {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #ffffff;
-}
-
-.staff-quantity {
-  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
-  color: white;
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
-}
-
-.staff-description {
-  margin: 0 0 8px 0;
-  font-size: 0.85rem;
-  color: #cccccc;
-  line-height: 1.3;
-}
-
-.staff-progress {
-  margin-bottom: 8px;
-}
-
-.staff-level {
-  font-size: 0.8rem;
-  color: #ffffff;
-  margin-bottom: 4px;
-  font-weight: 500;
-}
-
-.level-progress-bar {
-  height: 5px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
-  overflow: hidden;
-  position: relative;
-}
-
-.level-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #4CAF50 0%, #66BB6A 100%);
-  border-radius: 3px;
-  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-}
-
-.level-progress-fill::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  animation: progressShine 2s ease-in-out infinite;
-}
-
-@keyframes progressShine {
-  0% { left: -100%; }
-  100% { left: 100%; }
-}
-
-.staff-bonus {
-  margin: 4px 0 0 0;
-  font-size: 0.8rem;
-  color: #81C784;
-  font-weight: 600;
-  background: rgba(76, 175, 80, 0.12);
-  padding: 4px 8px;
-  border-radius: 8px;
-  border-left: 3px solid #4CAF50;
-}
-
-/* === БЛОК ДЕЙСТВИЙ (компактнее) === */
-.staff-action {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: center;
-  min-width: 100px;
-}
-
-.staff-cost {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 10px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.staff-cost.insufficient {
-  background: rgba(244, 67, 54, 0.25);
-  border-color: rgba(244, 67, 54, 0.5);
-  color: #ffcdd2;
-}
-
-.cost-icon {
-  font-size: 0.9rem;
-}
-
-.cost-amount {
-  font-size: 0.8rem;
-}
-
-.hire-upgrade-button {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
-  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.85rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 3px 12px rgba(76, 175, 80, 0.4);
-  position: relative;
-  overflow: hidden;
-}
-
-.hire-upgrade-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
-}
-
-.hire-upgrade-button:hover:not(:disabled)::before {
-  left: 100%;
-}
-
-.hire-upgrade-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #66BB6A 0%, #81C784 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
-}
-
-.hire-upgrade-button:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.hire-upgrade-button:disabled {
-  background: linear-gradient(135deg, #666666 0%, #888888 100%);
-  color: #cccccc;
-  cursor: not-allowed;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  transform: none;
-}
-
-.button-icon {
-  font-size: 0.9rem;
-}
-
-.button-text {
-  font-size: 0.8rem;
-}
-
-.max-level-indicator {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 12px;
-  background: linear-gradient(135deg, rgba(255, 193, 7, 0.25) 0%, rgba(255, 193, 7, 0.15) 100%);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 193, 7, 0.5);
-}
-
-.max-level-icon {
-  font-size: 1.3rem;
-  animation: starTwinkle 2s ease-in-out infinite;
-}
-
-@keyframes starTwinkle {
-  0%, 100% { transform: scale(1) rotate(0deg); }
-  50% { transform: scale(1.15) rotate(180deg); }
-}
-
-.max-level-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #FFC107;
-  text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* === СОСТОЯНИЯ ОШИБКИ === */
-.staff-screen.error {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #d32f2f 0%, #f44336 100%);
-  color: white;
-  font-size: 1.2rem;
-  font-weight: 600;
-}
-
-/* === АДАПТИВНОСТЬ === */
-@media (max-width: 768px) {
-  .staff-screen {
-    padding: 12px;
-  }
-  
-  .staff-list {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  
-  .staff-item {
-    padding: 12px;
-  }
-  
-  .staff-icon {
-    width: 50px;
-    height: 50px;
-    font-size: 1.8rem;
-  }
-  
-  .staff-count-badge {
-    width: 22px;
-    height: 22px;
-    font-size: 0.75rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .staff-screen {
-    padding: 10px;
-  }
-  
-  .staff-header {
-    padding: 12px;
-  }
-  
-  .staff-header h2 {
-    font-size: 1.4rem;
-  }
-  
-  .total-staff-count {
-    padding: 6px 12px;
-    font-size: 0.85rem;
-  }
-  
-  .staff-item {
-    padding: 10px;
-    flex-direction: column;
-    text-align: center;
-    gap: 10px;
-  }
-  
-  .staff-name-row {
-    flex-direction: column;
-    gap: 6px;
-    align-items: center;
-  }
-  
-  .staff-action {
-    min-width: auto;
-    width: 100%;
-  }
-  
-  .hire-upgrade-button {
-    width: 100%;
-    justify-content: center;
-  }
-}
+export default App;
