@@ -13,7 +13,6 @@ const MainGameScreen = ({
   onOpenCarSelector,
   onBuildingClick 
 }) => {
-  const [showBuildings, setShowBuildings] = useState(true); // Теперь всегда открыты
   const [collectAnimation, setCollectAnimation] = useState(false);
   const [coins, setCoins] = useState([]);
   
@@ -60,8 +59,16 @@ const MainGameScreen = ({
     return Math.floor(num).toString();
   };
   
-  // Активные постройки
-  const activeBuildings = buildings.filter(b => b.level > 0 && !b.isLocked);
+  // Функция получения короткого названия здания
+  const getBuildingShortName = (name) => {
+    const nameMap = {
+      'car_wash': 'Мойка',
+      'service_station': 'Сервис', 
+      'tire_shop': 'Шины',
+      'drift_school': 'Дрифт'
+    };
+    return nameMap[name] || name;
+  };
   
   return (
     <div className="main-game-screen">
@@ -159,42 +166,15 @@ const MainGameScreen = ({
         </button>
       </div>
       
-      {/* Зона построек - интегрированная */}
+      {/* Зона построек - улучшенная */}
       <div className="buildings-integrated">
+        <h3 className="buildings-section-title">🏢 Постройки Гаража</h3>
         <div className="buildings-grid-minimal">
           {buildings.map((building) => (
             <div 
               key={building.id}
-              className={`building-item-minimal ${building.isLocked ? 'locked' : ''} ${building.level > 0 ? 'active' : ''}`}
-              onClick={() => !building.isLocked && onBuildingClick(building.name)}
-              title={building.name}
+              className={`building-item-minimal ${building.level > 0 ? 'active' : ''}`}
+              onClick={() => onBuildingClick(building.name)}
+              title={`${getBuildingShortName(building.name)} - Уровень ${building.level}`}
             >
-              <div className="building-icon">{building.icon}</div>
-              <div className="building-level-badge">
-                {building.isLocked ? '🔒' : building.level > 0 ? building.level : '+'}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      {/* Анимация монет */}
-      <div className="coins-animation-container">
-        {coins.map(coin => (
-          <div 
-            key={coin.id} 
-            className="flying-coin"
-            style={{ 
-              left: `${coin.left}%`,
-              animationDelay: `${coin.delay}s`
-            }}
-          >
-            💰
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-export default MainGameScreen;
+              <div className="building-icon"
