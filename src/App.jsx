@@ -671,8 +671,7 @@ function App() {
             onTuneClick={handleOpenTuning}
             onOpenCarSelector={handleOpenCarSelector}
             onBuildingClick={handleBuildingClick}
-            onAdReward={handleAdReward}
-          />
+                      />
         )}
         {activeScreen === 'race' && currentCar && (
           <RaceScreen
