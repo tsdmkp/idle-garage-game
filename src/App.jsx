@@ -437,7 +437,7 @@ function App() {
       return;
     }
     const part = currentCar.parts[partId];
-    const cost = calculateUpgradeCost(partId, part.level);
+    const cost = calculateUpgradeCost(partId, part.level, hiredStaff);
     console.log('💸 Стоимость улучшения детали:', cost);
     if (gameCoins >= cost && cost !== Infinity) {
       const newCoins = gameCoins - cost;
@@ -472,7 +472,7 @@ function App() {
   const handleStartRace = async (difficulty) => {
     console.log('🏎️ Старт гонки, сложность:', difficulty);
     if (!currentCar) return { result: 'error', reward: null };
-    const raceOutcome = await simulateRace(currentCar, difficulty, gameCoins, currentXp);
+   const raceOutcome = await simulateRace(currentCar, difficulty, gameCoins, currentXp, hiredStaff);
     if (raceOutcome) {
       setGameCoins(raceOutcome.newGameCoins);
       setCurrentXp(raceOutcome.newCurrentXp);

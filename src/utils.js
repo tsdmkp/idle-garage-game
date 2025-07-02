@@ -132,14 +132,14 @@ export const BOT_STATS = {
   hard:   { power: 90, speed: 120, reliability: 35 },
 };
 
-// --- Описание Персонала (НОВЫЕ ЦЕНЫ) ---
+// --- Описание Персонала (РАСШИРЕННЫЙ КАТАЛОГ - 6 СПЕЦИАЛИСТОВ) ---
 export const STAFF_CATALOG = {
     mechanic: { 
         id: 'mechanic', 
         name: 'Механик', 
         icon: '👨‍🔧', 
-        description: 'Ускоряет тюнинг.', 
-        baseHireCost: 1000, // ✅ Доступен на ранней стадии
+        description: 'Ускоряет тюнинг и ремонт машин.', 
+        baseHireCost: 1000, 
         costMultiplier: 1.5, 
         maxLevel: 10, 
         getBonus: (level) => ({ speedBoostPercent: level * 5 }) 
@@ -148,16 +148,56 @@ export const STAFF_CATALOG = {
         id: 'manager', 
         name: 'Менеджер', 
         icon: '💼', 
-        description: 'Увеличивает доход.', 
-        baseHireCost: 2500, // ✅ Средняя стадия игры
+        description: 'Увеличивает общий доход гаража.', 
+        baseHireCost: 2500, 
         costMultiplier: 1.8, 
         maxLevel: 5, 
-        getBonus: (level) => ({ incomeBoostPercent: level * 10 }) // ✅ +10% дохода за уровень
+        getBonus: (level) => ({ incomeBoostPercent: level * 10 }) 
+    },
+    cleaner: {
+        id: 'cleaner',
+        name: 'Мойщик',
+        icon: '🧽',
+        description: 'Повышает эффективность автомойки.',
+        baseHireCost: 800,
+        costMultiplier: 1.4,
+        maxLevel: 8,
+        getBonus: (level) => ({ washBoostPercent: level * 15 }) // +15% к доходу автомойки
+    },
+    security: {
+        id: 'security',
+        name: 'Охранник',
+        icon: '🛡️',
+        description: 'Защищает от потерь и увеличивает безопасность.',
+        baseHireCost: 1500,
+        costMultiplier: 1.6,
+        maxLevel: 6,
+        getBonus: (level) => ({ lossProtectionPercent: level * 8 }) // Уменьшает штрафы в гонках
+    },
+    marketer: {
+        id: 'marketer',
+        name: 'Маркетолог',
+        icon: '📢',
+        description: 'Привлекает больше клиентов.',
+        baseHireCost: 3000,
+        costMultiplier: 2.0,
+        maxLevel: 4,
+        getBonus: (level) => ({ customerBoostPercent: level * 20 }) // +20% к общему доходу
+    },
+    accountant: {
+        id: 'accountant',
+        name: 'Бухгалтер',
+        icon: '📊',
+        description: 'Оптимизирует расходы и увеличивает прибыль.',
+        baseHireCost: 2000,
+        costMultiplier: 1.7,
+        maxLevel: 7,
+        getBonus: (level) => ({ costReductionPercent: level * 5 }) // Снижает стоимость апгрейдов
     }
 };
 
-// --- Функция расчета СТОИМОСТИ апгрейда детали (НОВЫЙ БАЛАНС) ---
-export const calculateUpgradeCost = (partType, currentLevel) => {
+// --- Функция расчета СТОИМОСТИ апгрейда детали (С УЧЕТОМ БУХГАЛТЕРА) ---
+export const calculateUpgradeCost = (partType, currentLevel, staffState = {}) => {
   const partCostSettings = { 
     engine: { base: 50, multiplier: 1.5 },         // ✅ 50, 75, 112, 168...
     tires: { base: 30, multiplier: 1.4 },          // ✅ 30, 42, 58, 81...
@@ -167,16 +207,33 @@ export const calculateUpgradeCost = (partType, currentLevel) => {
   };
   const settings = partCostSettings[partType] || partCostSettings.default;
   const level = typeof currentLevel === 'number' && !isNaN(currentLevel) ? currentLevel : 0;
-  const cost = Math.round(settings.base * Math.pow(settings.multiplier, level));
+  let cost = Math.round(settings.base * Math.pow(settings.multiplier, level));
+  
+  // Применяем скидку от бухгалтера
+  const accountantLevel = staffState?.accountant || 0;
+  if (accountantLevel > 0 && STAFF_CATALOG.accountant?.getBonus) {
+    try {
+      const bonus = STAFF_CATALOG.accountant.getBonus(accountantLevel);
+      const reductionPercent = bonus?.costReductionPercent || 0;
+      if (reductionPercent > 0) {
+        const discount = cost * (reductionPercent / 100);
+        cost = Math.round(cost - discount);
+        console.log(`📊 Бухгалтер: скидка ${reductionPercent}% (-${discount} монет)`);
+      }
+    } catch (e) {
+      console.error('Ошибка бонуса бухгалтера:', e);
+    }
+  }
+  
   return Math.max(cost, 10);
 };
 
-// --- Функция расчета ОБЩЕЙ ставки дохода в час (ИСПРАВЛЕННЫЕ ID) ---
+// --- Функция расчета ОБЩЕЙ ставки дохода в час (ИСПРАВЛЕННЫЕ ID + НОВЫЕ БОНУСЫ) ---
 export const calculateTotalIncomeRate = (buildingsState, carState, currentStaffState = {}) => {
     if (!carState || !carState.id || !carState.parts) { return 0; }
     
     // ✅ НОВЫЙ БАЛАНС дохода от зданий с правильными ID
-    const incomeFromBuildings = buildingsState.reduce((sum, b) => { 
+    let incomeFromBuildings = buildingsState.reduce((sum, b) => { 
         if (b.level > 0 && !b.isLocked) { 
             switch (b.id) { 
                 case 'wash': return sum + b.level * 5;      // ✅ +5 монет/час за уровень
@@ -191,6 +248,19 @@ export const calculateTotalIncomeRate = (buildingsState, carState, currentStaffS
         return sum; 
     }, 0);
     
+    // Применяем бонус мойщика к доходу автомойки
+    const cleanerLevel = currentStaffState?.cleaner || 0;
+    if (cleanerLevel > 0 && STAFF_CATALOG.cleaner?.getBonus) {
+        const washBuilding = buildingsState.find(b => b.id === 'wash');
+        if (washBuilding && washBuilding.level > 0) {
+            const bonus = STAFF_CATALOG.cleaner.getBonus(cleanerLevel);
+            const washIncome = washBuilding.level * 5;
+            const washBonus = washIncome * (bonus.washBoostPercent / 100);
+            incomeFromBuildings += washBonus;
+            console.log(`🧽 Бонус мойщика: +${bonus.washBoostPercent}% к автомойке (+${washBonus} монет/час)`);
+        }
+    }
+    
     const baseStats = BASE_CAR_STATS[carState.id] || { baseIncome: 0 };
     const { carIncomeBonus } = recalculateStatsAndIncomeBonus(carState.id, carState.parts);
     const validCarIncomeBonus = typeof carIncomeBonus === 'number' && !isNaN(carIncomeBonus) ? carIncomeBonus : 0;
@@ -203,18 +273,35 @@ export const calculateTotalIncomeRate = (buildingsState, carState, currentStaffS
         итого: totalRate
     });
     
-    // Применяем бонус от менеджера
+    // Применяем бонус менеджера (общий доход)
     const managerLevel = currentStaffState?.manager || 0;
     if (managerLevel > 0 && STAFF_CATALOG.manager?.getBonus) {
         try { 
             const bonus = STAFF_CATALOG.manager.getBonus(managerLevel); 
             const percent = bonus?.incomeBoostPercent; 
             if(typeof percent === 'number' && !isNaN(percent)) { 
-                totalRate *= (1 + (percent / 100)); 
-                console.log(`💼 Бонус менеджера: +${percent}%, итого: ${totalRate}`);
+                const managerBonus = totalRate * (percent / 100);
+                totalRate += managerBonus;
+                console.log(`💼 Бонус менеджера: +${percent}% общего дохода (+${managerBonus} монет/час)`);
             } 
         } catch (e) { 
             console.error(e); 
+        }
+    }
+    
+    // Применяем бонус маркетолога (привлечение клиентов)
+    const marketerLevel = currentStaffState?.marketer || 0;
+    if (marketerLevel > 0 && STAFF_CATALOG.marketer?.getBonus) {
+        try {
+            const bonus = STAFF_CATALOG.marketer.getBonus(marketerLevel);
+            const percent = bonus?.customerBoostPercent;
+            if (typeof percent === 'number' && !isNaN(percent)) {
+                const marketerBonus = totalRate * (percent / 100);
+                totalRate += marketerBonus;
+                console.log(`📢 Бонус маркетолога: +${percent}% от клиентов (+${marketerBonus} монет/час)`);
+            }
+        } catch (e) {
+            console.error(e);
         }
     }
     
@@ -235,8 +322,8 @@ export const calculateStaffCost = (staffId, hiredStaff) => {
     return isNaN(cost) ? Infinity : cost;
 };
 
-// --- Функция Симуляции Гонки (УЛУЧШЕННЫЕ НАГРАДЫ) ---
-export const simulateRace = async (playerCar, difficulty, currentCoins, currentXp) => {
+// --- Функция Симуляции Гонки (С УЧЕТОМ ОХРАННИКА) ---
+export const simulateRace = async (playerCar, difficulty, currentCoins, currentXp, staffState = {}) => {
   if (!playerCar?.stats) { 
     console.error("SimulateRace: Player car/stats missing."); 
     return null; 
@@ -277,11 +364,31 @@ export const simulateRace = async (playerCar, difficulty, currentCoins, currentX
   };
   
   // ✅ Штрафы теперь процентные (не уходим в минус)
-  const coinPenaltyPercent = { 
+  let coinPenaltyPercent = { 
     easy: 5,    // -5% от текущих монет
     medium: 10, // -10% от текущих монет
     hard: 15    // -15% от текущих монет
   };
+
+  // Применяем бонус охранника (уменьшение штрафов)
+  const securityLevel = staffState?.security || 0;
+  if (securityLevel > 0 && STAFF_CATALOG.security?.getBonus) {
+    try {
+      const bonus = STAFF_CATALOG.security.getBonus(securityLevel);
+      const protectionPercent = bonus?.lossProtectionPercent || 0;
+      if (protectionPercent > 0) {
+        // Уменьшаем штрафы на процент защиты
+        Object.keys(coinPenaltyPercent).forEach(diff => {
+          const originalPenalty = coinPenaltyPercent[diff];
+          const reduction = originalPenalty * (protectionPercent / 100);
+          coinPenaltyPercent[diff] = Math.max(1, originalPenalty - reduction);
+        });
+        console.log(`🛡️ Охранник: защита ${protectionPercent}%, штрафы уменьшены`);
+      }
+    } catch (e) {
+      console.error('Ошибка бонуса охранника:', e);
+    }
+  }
 
   // ✅ XP награды остаются прежними
   const xpRewards = { easy: 5, medium: 15, hard: 30 };
@@ -298,7 +405,7 @@ export const simulateRace = async (playerCar, difficulty, currentCoins, currentX
     coinsChange = -Math.floor(currentCoins * penaltyPercent / 100);
     xpChange = 0;
     reward = { coins: coinsChange, xp: xpChange };
-    console.log(`SimulateRace: Lose. Penalty: ${coinsChange} GC (${penaltyPercent}%).`);
+    console.log(`SimulateRace: Lose. Penalty: ${coinsChange} GC (${penaltyPercent.toFixed(1)}%).`);
   }
 
   // Рассчитываем НОВЫЙ итоговый баланс монет (не уходим в минус)

@@ -16,12 +16,24 @@ function StaffScreen({ staffCatalog, hiredStaff, gameCoins, onHireOrUpgrade, cal
     return <div className="staff-screen error">Ошибка загрузки данных персонала!</div>;
   }
 
+  // Рассчитываем общее количество нанятого персонала
+  const totalStaffCount = Object.values(hiredStaff).reduce((sum, level) => sum + level, 0);
+
   // Лог при каждом рендере для отладки
   // console.log("StaffScreen rendering with hiredStaff:", hiredStaff, "gameCoins:", gameCoins);
 
   return (
     <div className="staff-screen">
-      <h2>Персонал</h2>
+      <div className="staff-header">
+        <h2>👥 Персонал</h2>
+        <div className="staff-summary">
+          <div className="total-staff-count">
+            <span className="count-icon">👨‍💼</span>
+            <span className="count-text">Всего нанято: {totalStaffCount}</span>
+          </div>
+        </div>
+      </div>
+      
       <div className="staff-list">
         {/* Преобразуем объект каталога в массив его значений и итерируем */}
         {/* Используем Object.entries, чтобы получить и ID (ключ) и данные (значение) */}
@@ -71,23 +83,43 @@ function StaffScreen({ staffCatalog, hiredStaff, gameCoins, onHireOrUpgrade, cal
               key={staffId} // Используем ID как ключ
               className={`staff-item ${currentLevel > 0 ? 'hired' : ''} ${isMaxLevel ? 'max-level' : ''}`}
             >
-              {/* Иконка сотрудника */}
-              <div className="staff-icon">{staffInfo.icon || '?'}</div>
+              {/* Иконка сотрудника с бейджем количества */}
+              <div className="staff-icon-container">
+                <div className="staff-icon">{staffInfo.icon || '?'}</div>
+                {currentLevel > 0 && (
+                  <div className="staff-count-badge">
+                    <span className="count-number">{currentLevel}</span>
+                  </div>
+                )}
+              </div>
 
               {/* Блок с детальной информацией */}
               <div className="staff-details">
-                <h3>{staffInfo.name || 'Неизвестный'}</h3>
+                <div className="staff-name-row">
+                  <h3>{staffInfo.name || 'Неизвестный'}</h3>
+                  {currentLevel > 0 && (
+                    <span className="staff-quantity">×{currentLevel}</span>
+                  )}
+                </div>
                 <p className="staff-description">{staffInfo.description || 'Нет описания'}</p>
-                <p className="staff-level">Уровень: {currentLevel} / {staffInfo.maxLevel}</p>
+                <div className="staff-progress">
+                  <span className="staff-level">Уровень: {currentLevel} / {staffInfo.maxLevel}</span>
+                  <div className="level-progress-bar">
+                    <div 
+                      className="level-progress-fill" 
+                      style={{ width: `${(currentLevel / staffInfo.maxLevel) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
                 {/* Отображаем текущий бонус, если сотрудник нанят и функция бонуса есть */}
                 {currentLevel > 0 && typeof staffInfo.getBonus === 'function' && (
                     <p className="staff-bonus">
                         {/* Пытаемся отобразить бонус */}
-                        Бонус: +
+                        💪 Бонус: +
                         {staffInfo.getBonus(currentLevel).incomeBoostPercent !== undefined
-                            ? `${staffInfo.getBonus(currentLevel).incomeBoostPercent}% Доход`
+                            ? `${staffInfo.getBonus(currentLevel).incomeBoostPercent}% к доходу`
                             : staffInfo.getBonus(currentLevel).speedBoostPercent !== undefined
-                            ? `${staffInfo.getBonus(currentLevel).speedBoostPercent}% Скорость`
+                            ? `${staffInfo.getBonus(currentLevel).speedBoostPercent}% к скорости`
                             : 'Неизвестный бонус' // Fallback
                         }
                     </p>
@@ -100,15 +132,17 @@ function StaffScreen({ staffCatalog, hiredStaff, gameCoins, onHireOrUpgrade, cal
                 {!isMaxLevel ? (
                   <>
                     {/* Отображаем стоимость */}
-                    <span className={`staff-cost ${!canAfford ? 'insufficient' : ''}`}>
-                      💰{' '}
-                      {/* --- ПРОВЕРКА перед toLocaleString --- */}
-                      {(typeof cost !== 'number' || cost === Infinity)
-                          ? 'N/A' // Показываем N/A если стоимость не число или бесконечность
-                          : cost.toLocaleString() // Иначе форматируем число
-                      }
-                      {/* ------------------------------------ */}
-                    </span>
+                    <div className={`staff-cost ${!canAfford ? 'insufficient' : ''}`}>
+                      <span className="cost-icon">💰</span>
+                      <span className="cost-amount">
+                        {/* --- ПРОВЕРКА перед toLocaleString --- */}
+                        {(typeof cost !== 'number' || cost === Infinity)
+                            ? 'N/A' // Показываем N/A если стоимость не число или бесконечность
+                            : cost.toLocaleString() // Иначе форматируем число
+                        }
+                        {/* ------------------------------------ */}
+                      </span>
+                    </div>
                     {/* Кнопка Нанять/Улучшить */}
                     <button
                       onClick={() => onHireOrUpgrade(staffId)}
@@ -116,13 +150,21 @@ function StaffScreen({ staffCatalog, hiredStaff, gameCoins, onHireOrUpgrade, cal
                       disabled={!canAfford}
                       className="hire-upgrade-button"
                     >
-                      {/* Текст кнопки зависит от текущего уровня */}
-                      {currentLevel === 0 ? 'Нанять' : 'Улучшить'}
+                      <span className="button-icon">
+                        {currentLevel === 0 ? '👋' : '⬆️'}
+                      </span>
+                      <span className="button-text">
+                        {/* Текст кнопки зависит от текущего уровня */}
+                        {currentLevel === 0 ? 'Нанять' : 'Улучшить'}
+                      </span>
                     </button>
                   </>
                 ) : (
                   // Показываем метку, если достигнут максимальный уровень
-                  <span className="max-level-label">МАКС. УРОВЕНЬ</span>
+                  <div className="max-level-indicator">
+                    <span className="max-level-icon">⭐</span>
+                    <span className="max-level-label">МАКС. УРОВЕНЬ</span>
+                  </div>
                 )}
               </div>
             </div> // Закрываем .staff-item
