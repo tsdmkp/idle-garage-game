@@ -12,44 +12,115 @@ const AdsgramButton = ({
   const [cooldownTime, setCooldownTime] = useState(0);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState(null);
+  const [sdkStatus, setSdkStatus] = useState('loading'); // loading, loaded, failed
 
   useEffect(() => {
     let retryCount = 0;
-    const maxRetries = 10;
+    const maxRetries = 15; // Увеличиваем количество попыток
+    let timeoutId;
 
-    const initAdsgram = () => {
-      if (window.Adsgram && blockId) {
-        try {
-          console.log('📺 Инициализируем Adsgram с Block ID:', blockId);
-          const adsgramInstance = window.Adsgram.init({ 
-            blockId: blockId,
-            debug: false // Поставить true для тестирования
-          });
-          setAdsgram(adsgramInstance);
-          setIsReady(true);
-          setError(null);
-          console.log('✅ Adsgram успешно инициализирован');
-        } catch (error) {
-          console.error('❌ Ошибка инициализации Adsgram:', error);
-          setError('Ошибка инициализации');
-        }
-      } else if (!window.Adsgram && retryCount < maxRetries) {
-        retryCount++;
-        console.warn(`⚠️ Adsgram SDK не загружен, попытка ${retryCount}/${maxRetries}...`);
-        setTimeout(initAdsgram, 1000);
-      } else if (retryCount >= maxRetries) {
+    const checkSDK = () => {
+      console.log(`🔍 Проверка Adsgram SDK, попытка ${retryCount + 1}/${maxRetries}`);
+      
+      // Проверяем наличие window.Adsgram
+      if (window.Adsgram) {
+        console.log('✅ Adsgram SDK найден!');
+        initAdsgram();
+        return;
+      }
+      
+      // Проверяем есть ли скрипт в DOM
+      const script = document.querySelector('script[src*="adsgram"]');
+      if (script) {
+        console.log('📜 Adsgram скрипт найден в DOM, ждем загрузки...');
+      } else {
+        console.warn('⚠️ Adsgram скрипт НЕ найден в DOM!');
+      }
+      
+      retryCount++;
+      
+      if (retryCount < maxRetries) {
+        // Увеличиваем интервал с каждой попыткой
+        const delay = Math.min(1000 + (retryCount * 500), 5000);
+        timeoutId = setTimeout(checkSDK, delay);
+      } else {
         console.error('❌ Adsgram SDK не загрузился после всех попыток');
+        setSdkStatus('failed');
         setError('SDK не загружен');
+        
+        // Попробуем загрузить SDK принудительно
+        loadSDKManually();
       }
     };
 
-    // Инициализируем сразу или ждем загрузки
-    if (document.readyState === 'complete') {
-      initAdsgram();
-    } else {
-      window.addEventListener('load', initAdsgram);
-      return () => window.removeEventListener('load', initAdsgram);
-    }
+    const initAdsgram = () => {
+      try {
+        if (!blockId) {
+          throw new Error('Block ID не указан');
+        }
+        
+        console.log('🚀 Инициализируем Adsgram с Block ID:', blockId);
+        const adsgramInstance = window.Adsgram.init({ 
+          blockId: blockId,
+          debug: true // Включаем debug для диагностики
+        });
+        
+        setAdsgram(adsgramInstance);
+        setIsReady(true);
+        setSdkStatus('loaded');
+        setError(null);
+        console.log('✅ Adsgram успешно инициализирован');
+        
+      } catch (error) {
+        console.error('❌ Ошибка инициализации Adsgram:', error);
+        setError('Ошибка инициализации');
+        setSdkStatus('failed');
+      }
+    };
+
+    const loadSDKManually = () => {
+      console.log('🔧 Попытка принудительной загрузки Adsgram SDK...');
+      
+      // Удаляем старый скрипт если есть
+      const existingScript = document.querySelector('script[src*="adsgram"]');
+      if (existingScript) {
+        existingScript.remove();
+      }
+      
+      // Создаем новый скрипт
+      const script = document.createElement('script');
+      script.src = 'https://sad.adsgram.ai/js/adsgram.min.js';
+      script.async = true;
+      
+      script.onload = () => {
+        console.log('✅ Adsgram SDK загружен принудительно');
+        setSdkStatus('loaded');
+        // Небольшая задержка для инициализации
+        setTimeout(() => {
+          if (window.Adsgram) {
+            initAdsgram();
+          }
+        }, 100);
+      };
+      
+      script.onerror = () => {
+        console.error('❌ Не удалось загрузить Adsgram SDK принудительно');
+        setSdkStatus('failed');
+        setError('Не удалось загрузить SDK');
+      };
+      
+      document.head.appendChild(script);
+    };
+
+    // Начинаем проверку
+    setSdkStatus('loading');
+    checkSDK();
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [blockId]);
 
   // Кулдаун таймер
@@ -69,7 +140,8 @@ const AdsgramButton = ({
         isLoading,
         disabled,
         cooldownTime,
-        isReady
+        isReady,
+        sdkStatus
       });
       return;
     }
@@ -94,10 +166,12 @@ const AdsgramButton = ({
         switch (result?.error) {
           case 'AdBlock':
             setError('Отключите AdBlock');
+            alert('⚠️ Отключите блокировщик рекламы для получения награды');
             break;
           case 'TimeLimit':
             setError('Слишком часто');
             setCooldownTime(60);
+            alert('⏰ Слишком частые показы. Попробуйте через минуту.');
             break;
           case 'NotReady':
             setError('Загружается...');
@@ -126,7 +200,18 @@ const AdsgramButton = ({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const isButtonDisabled = disabled || isLoading || cooldownTime > 0 || !isReady || !adsgram;
+  const getButtonContent = () => {
+    if (isLoading) return '🔄 Загрузка...';
+    if (cooldownTime > 0) return `⏰ ${formatTime(cooldownTime)}`;
+    if (error) return `⚠️ ${error}`;
+    if (sdkStatus === 'loading') return '⏳ Загрузка SDK...';
+    if (sdkStatus === 'failed') return '❌ SDK недоступен';
+    if (!isReady || !adsgram) return '⏳ Подготовка...';
+    return `${buttonText} (+${rewardAmount} 💰)`;
+  };
+
+  const isButtonDisabled = disabled || isLoading || cooldownTime > 0 || 
+                          !isReady || !adsgram || sdkStatus !== 'loaded';
 
   return (
     <div style={{ textAlign: 'center' }}>
@@ -153,28 +238,46 @@ const AdsgramButton = ({
           transform: isLoading ? 'scale(0.95)' : 'scale(1)'
         }}
       >
-        {isLoading ? (
-          '🔄 Загрузка...'
-        ) : cooldownTime > 0 ? (
-          `⏰ ${formatTime(cooldownTime)}`
-        ) : error ? (
-          `⚠️ ${error}`
-        ) : !isReady || !adsgram ? (
-          '⏳ Подготовка...'
-        ) : (
-          `${buttonText} (+${rewardAmount} 💰)`
-        )}
+        {getButtonContent()}
       </button>
       
       {/* Статус под кнопкой */}
-      {(error || !isReady) && (
-        <div style={{
-          fontSize: '11px',
-          color: error ? '#ff6b6b' : '#999',
-          marginTop: '5px'
-        }}>
-          {error ? `Ошибка: ${error}` : 'Инициализация...'}
-        </div>
+      <div style={{
+        fontSize: '11px',
+        color: '#999',
+        marginTop: '5px'
+      }}>
+        {sdkStatus === 'loading' && 'Загрузка Adsgram SDK...'}
+        {sdkStatus === 'failed' && 'Ошибка загрузки SDK'}
+        {sdkStatus === 'loaded' && isReady && 'Готов к показу рекламы'}
+        {error && `Ошибка: ${error}`}
+      </div>
+
+      {/* Кнопка диагностики (только для debug) */}
+      {process.env.NODE_ENV === 'development' && (
+        <button 
+          onClick={() => {
+            console.log('🔍 Диагностика Adsgram:', {
+              windowAdsgram: !!window.Adsgram,
+              adsgramInstance: !!adsgram,
+              isReady,
+              sdkStatus,
+              error,
+              blockId
+            });
+          }}
+          style={{
+            marginTop: '5px',
+            padding: '5px 10px',
+            fontSize: '10px',
+            background: '#333',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px'
+          }}
+        >
+          🔍 Диагностика
+        </button>
       )}
     </div>
   );
