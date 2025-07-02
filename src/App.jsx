@@ -374,35 +374,51 @@ function App() {
   };
 
   const handleBuildingClick = (buildingName) => {
-    console.log('🏢 Клик по зданию:', buildingName);
-    const targetBuilding = buildings.find(b => b.name === buildingName);
-    if (!targetBuilding || targetBuilding.isLocked) {
-      console.log('❌ Здание заблокировано или не найдено');
-      return;
-    }
-    const cost = calculateBuildingCost(targetBuilding.id, targetBuilding.level);
-    console.log('💸 Стоимость улучшения здания:', cost);
-    if (gameCoins >= cost) {
-      const newCoins = gameCoins - cost;
-      const updatedBuildings = buildings.map(b =>
-        b.name === buildingName ? { ...b, level: b.level + 1 } : b
-      );
-      const newTotalRate = calculateTotalIncomeRate(updatedBuildings, currentCar, hiredStaff);
+  console.log('🏢 Клик по зданию:', buildingName);
+  const targetBuilding = buildings.find(b => b.name === buildingName);
+  
+  if (!targetBuilding) {
+    console.log('❌ Здание не найдено:', buildingName);
+    return;
+  }
 
-      setGameCoins(newCoins);
-      setBuildings(updatedBuildings);
-      setIncomeRatePerHour(newTotalRate);
-      console.log('✅ Здание улучшено, новая скорость дохода:', newTotalRate);
-      
-      saveGameState({
-        game_coins: newCoins,
-        buildings: updatedBuildings,
-        income_rate_per_hour: newTotalRate,
-      });
-    } else {
-      console.log('❌ Недостаточно монет для улучшения здания');
+  const cost = calculateBuildingCost(targetBuilding.id, targetBuilding.level);
+  console.log('💸 Стоимость улучшения здания:', cost);
+  
+  if (gameCoins >= cost) {
+    const newCoins = gameCoins - cost;
+    const updatedBuildings = buildings.map(b =>
+      b.name === buildingName ? { ...b, level: b.level + 1 } : b
+    );
+    const newTotalRate = calculateTotalIncomeRate(updatedBuildings, currentCar, hiredStaff);
+
+    setGameCoins(newCoins);
+    setBuildings(updatedBuildings);
+    setIncomeRatePerHour(newTotalRate);
+    console.log('✅ Здание улучшено, новая скорость дохода:', newTotalRate);
+    
+    // Тактильная обратная связь в Telegram
+    if (window.Telegram?.WebApp?.HapticFeedback) {
+      window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
     }
-  };
+    
+    saveGameState({
+      game_coins: newCoins,
+      buildings: updatedBuildings,
+      income_rate_per_hour: newTotalRate,
+    });
+  } else {
+    console.log('❌ Недостаточно монет для улучшения здания. Нужно:', cost, 'Есть:', gameCoins);
+    
+    // Уведомление пользователю
+    alert(`💰 Недостаточно монет! Нужно: ${cost.toLocaleString()}, у вас: ${gameCoins.toLocaleString()}`);
+    
+    // Тактильная обратная связь об ошибке
+    if (window.Telegram?.WebApp?.HapticFeedback) {
+      window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+    }
+  }
+};
 
   const handleOpenTuning = () => {
     console.log('🔧 Открытие тюнинга');

@@ -1,4 +1,4 @@
-// src/utils.js - НОВЫЙ БАЛАНС ДЛЯ ЛУЧШЕГО ГЕЙМПЛЕЯ
+// src/utils.js - ИСПРАВЛЕННЫЙ БАЛАНС ДЛЯ ЛУЧШЕГО ГЕЙМПЛЕЯ + РАЗБЛОКИРОВАННЫЕ ЗДАНИЯ
 
 console.log("--- utils.js loading ---");
 
@@ -7,12 +7,12 @@ export const MAX_OFFLINE_HOURS = 2;
 export const UPDATE_INTERVAL = 1000;
 export const STARTING_COINS = 500; // ✅ НОВЫЙ БАЛАНС: достаточно для 2-3 первых апгрейдов
 
-// --- Начальное состояние зданий ---
+// --- ИСПРАВЛЕННОЕ начальное состояние зданий - ВСЕ РАЗБЛОКИРОВАНЫ ---
 export const INITIAL_BUILDINGS = [
-    { id: 'wash', name: 'Автомойка', level: 1, icon: '🧼', isLocked: false },
-    { id: 'service', name: 'Сервис', level: 0, icon: '🔧', isLocked: false },
-    { id: 'tires', name: 'Шиномонтаж', level: 0, icon: '🔘', isLocked: true },
-    { id: 'drift', name: 'Шк. Дрифта', level: 0, icon: '🏫', isLocked: true },
+    { id: 'wash', name: 'car_wash', level: 1, icon: '🧼', isLocked: false },
+    { id: 'service', name: 'service_station', level: 0, icon: '🔧', isLocked: false },
+    { id: 'tires', name: 'tire_shop', level: 0, icon: '🛞', isLocked: false },
+    { id: 'drift', name: 'drift_school', level: 0, icon: '🏁', isLocked: false },
 ];
 
 // --- Базовые статы для разных машин (НОВЫЙ БАЛАНС ДОХОДА) ---
@@ -171,11 +171,11 @@ export const calculateUpgradeCost = (partType, currentLevel) => {
   return Math.max(cost, 10);
 };
 
-// --- Функция расчета ОБЩЕЙ ставки дохода в час (НОВЫЙ БАЛАНС) ---
+// --- Функция расчета ОБЩЕЙ ставки дохода в час (ИСПРАВЛЕННЫЕ ID) ---
 export const calculateTotalIncomeRate = (buildingsState, carState, currentStaffState = {}) => {
     if (!carState || !carState.id || !carState.parts) { return 0; }
     
-    // ✅ НОВЫЙ БАЛАНС дохода от зданий
+    // ✅ НОВЫЙ БАЛАНС дохода от зданий с правильными ID
     const incomeFromBuildings = buildingsState.reduce((sum, b) => { 
         if (b.level > 0 && !b.isLocked) { 
             switch (b.id) { 
@@ -183,7 +183,9 @@ export const calculateTotalIncomeRate = (buildingsState, carState, currentStaffS
                 case 'service': return sum + b.level * 10;  // ✅ +10 монет/час за уровень
                 case 'tires': return sum + b.level * 15;    // ✅ +15 монет/час за уровень
                 case 'drift': return sum + b.level * 25;    // ✅ +25 монет/час за уровень
-                default: return sum; 
+                default: 
+                    console.log('🏢 Неизвестное здание:', b.id, b.name);
+                    return sum; 
             }
         } 
         return sum; 
@@ -195,6 +197,12 @@ export const calculateTotalIncomeRate = (buildingsState, carState, currentStaffS
     const totalCarIncome = (baseStats.baseIncome || 0) + validCarIncomeBonus;
     let totalRate = totalCarIncome + incomeFromBuildings;
     
+    console.log('💰 Расчет дохода:', {
+        машина: totalCarIncome,
+        здания: incomeFromBuildings,
+        итого: totalRate
+    });
+    
     // Применяем бонус от менеджера
     const managerLevel = currentStaffState?.manager || 0;
     if (managerLevel > 0 && STAFF_CATALOG.manager?.getBonus) {
@@ -203,6 +211,7 @@ export const calculateTotalIncomeRate = (buildingsState, carState, currentStaffS
             const percent = bonus?.incomeBoostPercent; 
             if(typeof percent === 'number' && !isNaN(percent)) { 
                 totalRate *= (1 + (percent / 100)); 
+                console.log(`💼 Бонус менеджера: +${percent}%, итого: ${totalRate}`);
             } 
         } catch (e) { 
             console.error(e); 
