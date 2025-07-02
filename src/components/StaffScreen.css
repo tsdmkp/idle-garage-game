@@ -1,28 +1,45 @@
-/* StaffScreen.css - Стили с отображением количества персонала */
+/* StaffScreen.css - Компактная версия с фоном */
 
 .staff-screen {
-  padding: 20px;
+  padding: 15px;
   max-width: 800px;
   margin: 0 auto;
   min-height: 100vh;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  background-image: url('/staff-background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: #ffffff;
+  position: relative;
 }
 
-/* === ЗАГОЛОВОК И СВОДКА === */
+.staff-screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(rgba(26, 26, 46, 0.7) 0%, rgba(22, 33, 62, 0.6) 50%, rgba(15, 52, 96, 0.7) 100%);
+  z-index: 0;
+}
+
 .staff-header {
   text-align: center;
-  margin-bottom: 25px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  padding: 20px;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
+  backdrop-filter: blur(15px);
+  border-radius: 15px;
+  padding: 15px;
   border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  z-index: 1;
 }
 
 .staff-header h2 {
-  margin: 0 0 15px 0;
-  font-size: 2rem;
+  margin: 0 0 10px 0;
+  font-size: 1.6rem;
   font-weight: 700;
   background: linear-gradient(45deg, #4CAF50, #81C784, #66BB6A);
   background-size: 200% 200%;
@@ -33,55 +50,57 @@
 }
 
 @keyframes gradientShift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%, 100% { 
+    background-position: 0% 50%; 
+  }
+  50% { 
+    background-position: 100% 50%; 
+  }
 }
 
 .staff-summary {
   display: flex;
   justify-content: center;
-  gap: 20px;
-  flex-wrap: wrap;
 }
 
 .total-staff-count {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.2) 0%, rgba(76, 175, 80, 0.1) 100%);
-  padding: 10px 20px;
-  border-radius: 25px;
-  border: 1px solid rgba(76, 175, 80, 0.3);
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.25) 0%, rgba(76, 175, 80, 0.15) 100%);
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(76, 175, 80, 0.4);
   font-weight: 600;
+  font-size: 0.9rem;
 }
 
 .count-icon {
-  font-size: 1.2em;
+  font-size: 1.1em;
 }
 
 .count-text {
-  font-size: 1rem;
   color: #81C784;
 }
 
-/* === СПИСОК ПЕРСОНАЛА === */
 .staff-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+  position: relative;
+  z-index: 1;
 }
 
-/* === КАРТОЧКА СОТРУДНИКА === */
 .staff-item {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
   backdrop-filter: blur(15px);
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  padding: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 15px;
+  padding: 15px;
   display: flex;
-  align-items: flex-start;
-  gap: 15px;
+  align-items: center;
+  gap: 12px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
@@ -103,77 +122,77 @@
 }
 
 .staff-item:hover {
-  transform: translateY(-5px);
+  transform: translateY(-3px);
   border-color: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
 }
 
-/* Нанятый персонал */
 .staff-item.hired {
-  border-color: rgba(76, 175, 80, 0.5);
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(76, 175, 80, 0.08) 100%);
+  border-color: rgba(76, 175, 80, 0.6);
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.18) 0%, rgba(76, 175, 80, 0.1) 100%);
 }
 
 .staff-item.hired:hover {
-  border-color: rgba(76, 175, 80, 0.7);
-  box-shadow: 0 15px 35px rgba(76, 175, 80, 0.2);
+  border-color: rgba(76, 175, 80, 0.8);
+  box-shadow: 0 10px 25px rgba(76, 175, 80, 0.3);
 }
 
-/* Максимальный уровень */
 .staff-item.max-level {
-  border-color: rgba(255, 193, 7, 0.6);
-  background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 193, 7, 0.1) 100%);
+  border-color: rgba(255, 193, 7, 0.7);
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.22) 0%, rgba(255, 193, 7, 0.12) 100%);
 }
 
-/* === ИКОНКА С БЕЙДЖЕМ === */
 .staff-icon-container {
   position: relative;
   flex-shrink: 0;
 }
 
 .staff-icon {
-  width: 70px;
-  height: 70px;
+  width: 55px;
+  height: 55px;
   border-radius: 50%;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.5rem;
+  font-size: 2rem;
   border: 2px solid rgba(255, 255, 255, 0.3);
   transition: all 0.3s ease;
 }
 
 .staff-item:hover .staff-icon {
-  transform: scale(1.1);
+  transform: scale(1.08);
   border-color: rgba(255, 255, 255, 0.5);
 }
 
 .staff-count-badge {
   position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 28px;
-  height: 28px;
+  top: -6px;
+  right: -6px;
+  width: 24px;
+  height: 24px;
   background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: white;
   border: 2px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 3px 10px rgba(255, 107, 107, 0.4);
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
   animation: badgePulse 2s ease-in-out infinite;
 }
 
 @keyframes badgePulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  0%, 100% { 
+    transform: scale(1); 
+  }
+  50% { 
+    transform: scale(1.05); 
+  }
 }
 
-/* === ДЕТАЛИ СОТРУДНИКА === */
 .staff-details {
   flex: 1;
   min-width: 0;
@@ -183,12 +202,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .staff-details h3 {
   margin: 0;
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #ffffff;
 }
@@ -196,33 +215,33 @@
 .staff-quantity {
   background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
   color: white;
-  padding: 4px 12px;
-  border-radius: 15px;
-  font-size: 0.9rem;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
 }
 
 .staff-description {
-  margin: 0 0 10px 0;
-  font-size: 0.9rem;
+  margin: 0 0 8px 0;
+  font-size: 0.85rem;
   color: #cccccc;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 .staff-progress {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .staff-level {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #ffffff;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
   font-weight: 500;
 }
 
 .level-progress-bar {
-  height: 6px;
+  height: 5px;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 3px;
   overflow: hidden;
@@ -249,71 +268,74 @@
 }
 
 @keyframes progressShine {
-  0% { left: -100%; }
-  100% { left: 100%; }
+  0% { 
+    left: -100%; 
+  }
+  100% { 
+    left: 100%; 
+  }
 }
 
 .staff-bonus {
-  margin: 5px 0 0 0;
-  font-size: 0.85rem;
+  margin: 4px 0 0 0;
+  font-size: 0.8rem;
   color: #81C784;
   font-weight: 600;
-  background: rgba(76, 175, 80, 0.1);
-  padding: 5px 10px;
-  border-radius: 10px;
+  background: rgba(76, 175, 80, 0.12);
+  padding: 4px 8px;
+  border-radius: 8px;
   border-left: 3px solid #4CAF50;
 }
 
-/* === БЛОК ДЕЙСТВИЙ === */
 .staff-action {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
-  min-width: 120px;
+  min-width: 100px;
 }
 
 .staff-cost {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  font-size: 0.9rem;
+  gap: 4px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  font-size: 0.85rem;
   font-weight: 600;
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .staff-cost.insufficient {
-  background: rgba(244, 67, 54, 0.2);
-  border-color: rgba(244, 67, 54, 0.4);
+  background: rgba(244, 67, 54, 0.25);
+  border-color: rgba(244, 67, 54, 0.5);
   color: #ffcdd2;
 }
 
 .cost-icon {
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 .cost-amount {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .hire-upgrade-button {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
+  gap: 6px;
+  padding: 10px 16px;
   background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
   color: white;
   border: none;
-  border-radius: 15px;
+  border-radius: 12px;
   cursor: pointer;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 3px 12px rgba(76, 175, 80, 0.4);
   position: relative;
   overflow: hidden;
 }
@@ -336,7 +358,7 @@
 .hire-upgrade-button:hover:not(:disabled) {
   background: linear-gradient(135deg, #66BB6A 0%, #81C784 100%);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
 }
 
 .hire-upgrade-button:active:not(:disabled) {
@@ -347,41 +369,45 @@
   background: linear-gradient(135deg, #666666 0%, #888888 100%);
   color: #cccccc;
   cursor: not-allowed;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   transform: none;
 }
 
 .button-icon {
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 .button-text {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .max-level-indicator {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 5px;
-  padding: 15px;
-  background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 193, 7, 0.1) 100%);
-  border-radius: 15px;
-  border: 1px solid rgba(255, 193, 7, 0.4);
+  gap: 4px;
+  padding: 12px;
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.25) 0%, rgba(255, 193, 7, 0.15) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 193, 7, 0.5);
 }
 
 .max-level-icon {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   animation: starTwinkle 2s ease-in-out infinite;
 }
 
 @keyframes starTwinkle {
-  0%, 100% { transform: scale(1) rotate(0deg); }
-  50% { transform: scale(1.2) rotate(180deg); }
+  0%, 100% { 
+    transform: scale(1) rotate(0deg); 
+  }
+  50% { 
+    transform: scale(1.15) rotate(180deg); 
+  }
 }
 
 .max-level-label {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #FFC107;
   text-align: center;
@@ -389,7 +415,6 @@
   letter-spacing: 0.5px;
 }
 
-/* === СОСТОЯНИЯ ОШИБКИ === */
 .staff-screen.error {
   display: flex;
   align-items: center;
@@ -400,31 +425,61 @@
   font-weight: 600;
 }
 
-/* === АДАПТИВНОСТЬ === */
 @media (max-width: 768px) {
   .staff-screen {
-    padding: 15px;
+    padding: 12px;
   }
   
   .staff-list {
     grid-template-columns: 1fr;
-    gap: 15px;
+    gap: 12px;
   }
   
   .staff-item {
-    padding: 15px;
-    flex-direction: column;
-    text-align: center;
-    gap: 15px;
+    padding: 12px;
   }
   
-  .staff-icon-container {
-    align-self: center;
+  .staff-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 1.8rem;
+  }
+  
+  .staff-count-badge {
+    width: 22px;
+    height: 22px;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .staff-screen {
+    padding: 10px;
+  }
+  
+  .staff-header {
+    padding: 12px;
+  }
+  
+  .staff-header h2 {
+    font-size: 1.4rem;
+  }
+  
+  .total-staff-count {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+  
+  .staff-item {
+    padding: 10px;
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
   }
   
   .staff-name-row {
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
   }
   
@@ -436,40 +491,5 @@
   .hire-upgrade-button {
     width: 100%;
     justify-content: center;
-  }
-}
-
-@media (max-width: 480px) {
-  .staff-header {
-    padding: 15px;
-  }
-  
-  .staff-header h2 {
-    font-size: 1.6rem;
-  }
-  
-  .staff-summary {
-    gap: 10px;
-  }
-  
-  .total-staff-count {
-    padding: 8px 15px;
-    font-size: 0.9rem;
-  }
-  
-  .staff-icon {
-    width: 60px;
-    height: 60px;
-    font-size: 2rem;
-  }
-  
-  .staff-count-badge {
-    width: 24px;
-    height: 24px;
-    font-size: 0.75rem;
-  }
-  
-  .staff-details h3 {
-    font-size: 1.1rem;
   }
 }

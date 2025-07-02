@@ -120,6 +120,14 @@ function StaffScreen({ staffCatalog, hiredStaff, gameCoins, onHireOrUpgrade, cal
                             ? `${staffInfo.getBonus(currentLevel).incomeBoostPercent}% к доходу`
                             : staffInfo.getBonus(currentLevel).speedBoostPercent !== undefined
                             ? `${staffInfo.getBonus(currentLevel).speedBoostPercent}% к скорости`
+                            : staffInfo.getBonus(currentLevel).washBoostPercent !== undefined
+                            ? `${staffInfo.getBonus(currentLevel).washBoostPercent}% к автомойке`
+                            : staffInfo.getBonus(currentLevel).lossProtectionPercent !== undefined
+                            ? `${staffInfo.getBonus(currentLevel).lossProtectionPercent}% защиты`
+                            : staffInfo.getBonus(currentLevel).customerBoostPercent !== undefined
+                            ? `${staffInfo.getBonus(currentLevel).customerBoostPercent}% клиентов`
+                            : staffInfo.getBonus(currentLevel).costReductionPercent !== undefined
+                            ? `${staffInfo.getBonus(currentLevel).costReductionPercent}% скидки`
                             : 'Неизвестный бонус' // Fallback
                         }
                     </p>
