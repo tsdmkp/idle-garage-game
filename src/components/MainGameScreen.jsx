@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import AdsgramButton from './AdsgramButton'; // Импортируем компонент рекламы
 import './MainGameScreen.css';
 
 const MainGameScreen = ({ 
@@ -13,9 +12,8 @@ const MainGameScreen = ({
   onTuneClick, 
   onOpenCarSelector,
   onBuildingClick,
-  onAdReward // Новый пропс для обработки наград за рекламу
+  onAdReward // Пока скрыт, включим позже
 }) => {
-  const [showBuildings, setShowBuildings] = useState(true); // Теперь всегда открыты
   const [collectAnimation, setCollectAnimation] = useState(false);
   const [coins, setCoins] = useState([]);
   
@@ -61,61 +59,91 @@ const MainGameScreen = ({
     if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
     return Math.floor(num).toString();
   };
-  
-  // Активные постройки
-  const activeBuildings = buildings.filter(b => b.level > 0 && !b.isLocked);
+
+  // Функция для расчета стоимости зданий
+  const calculateBuildingCost = (building) => {
+    if (building.level === 0) {
+      return building.baseCost || 1000;
+    }
+    return Math.floor((building.baseCost || 1000) * Math.pow(1.5, building.level));
+  };
   
   return (
     <div className="main-game-screen">
+      {/* Фоновый градиент */}
+      <div className="game-background"></div>
+      
       {/* Основная игровая зона */}
-      <div className="game-area">
-        {/* Отображение машины */}
-        <div className="car-showcase">
-          <div className="car-name-plate">
-            <h2>{car?.name || 'Загрузка...'}</h2>
-          </div>
-          
-          <div className="car-image-container">
-            <img 
-              src={car?.imageUrl || '/placeholder-car.png'} 
-              alt={car?.name}
-              className={`car-main-image ${canCollect ? 'car-earning' : ''}`}
-              onError={(e) => { 
-                e.target.onerror = null; 
-                e.target.src = '/placeholder-car.png'; 
-              }}
-            />
+      <div className="game-content">
+        
+        {/* Секция машины */}
+        <div className="car-section">
+          <div className="car-showcase">
+            <div className="car-name-plate">
+              <h2>{car?.name || 'Загрузка...'}</h2>
+              <div className="car-income-badge">
+                <span className="income-icon">💰</span>
+                <span className="income-text">{formatNumber(incomeRate)}/час</span>
+              </div>
+            </div>
             
-            {/* Индикатор дохода */}
-            <div className="income-indicator">
-              <span className="income-icon">💰</span>
-              <span className="income-text">+{formatNumber(incomeRate)}/час</span>
+            <div className="car-image-container">
+              <img 
+                src={car?.imageUrl || '/placeholder-car.png'} 
+                alt={car?.name}
+                className={`car-main-image ${canCollect ? 'car-earning' : ''}`}
+                onError={(e) => { 
+                  e.target.onerror = null; 
+                  e.target.src = '/placeholder-car.png'; 
+                }}
+              />
+              
+              {/* Плавающие кнопки действий */}
+              <button 
+                className="floating-action-button left"
+                onClick={onOpenCarSelector}
+                title="Выбрать машину"
+              >
+                🚗
+              </button>
+              
+              <button 
+                className="floating-action-button right"
+                onClick={onTuneClick}
+                title="Тюнинг"
+              >
+                🔧
+              </button>
             </div>
-          </div>
-          
-          {/* Статы машины (компактно) */}
-          <div className="car-stats-compact">
-            <div className="stat-item">
-              <span className="stat-icon">⚡</span>
-              <span className="stat-value">{car?.stats?.power || 0}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-icon">🏎️</span>
-              <span className="stat-value">{car?.stats?.speed || 0}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-icon">✨</span>
-              <span className="stat-value">{car?.stats?.style || 0}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-icon">🔧</span>
-              <span className="stat-value">{car?.stats?.reliability || 0}</span>
+            
+            {/* Компактные статы машины */}
+            <div className="car-stats-compact">
+              <div className="stat-item">
+                <span className="stat-icon">⚡</span>
+                <span className="stat-value">{car?.stats?.power || 0}</span>
+                <span className="stat-label">Мощность</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-icon">🏎️</span>
+                <span className="stat-value">{car?.stats?.speed || 0}</span>
+                <span className="stat-label">Скорость</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-icon">🎯</span>
+                <span className="stat-value">{car?.stats?.handling || 0}</span>
+                <span className="stat-label">Управление</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-icon">🔧</span>
+                <span className="stat-value">{car?.stats?.reliability || 0}</span>
+                <span className="stat-label">Надежность</span>
+              </div>
             </div>
           </div>
         </div>
         
-        {/* Прогресс накопления */}
-        <div className="income-progress-section">
+        {/* Секция прогресса и сбора */}
+        <div className="income-section">
           <div className="progress-container">
             <div className="progress-bar">
               <div 
@@ -143,85 +171,78 @@ const MainGameScreen = ({
           </button>
         </div>
 
-        {/* 🆕 НОВАЯ СЕКЦИЯ - Реклама за награды */}
-        <div className="ad-rewards-section" style={{
-          margin: '15px 0',
-          padding: '15px',
-          background: 'linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(238, 90, 36, 0.1))',
-          borderRadius: '12px',
-          border: '1px solid rgba(255, 107, 107, 0.3)',
-          textAlign: 'center'
-        }}>
-          <h3 style={{ 
-            color: '#ff6b6b', 
-            marginBottom: '8px', 
-            fontSize: '16px',
-            fontWeight: 'bold'
-          }}>
-            🎁 Бесплатные награды
-          </h3>
-          <p style={{ 
-            color: '#ccc', 
-            fontSize: '12px', 
-            marginBottom: '12px',
-            lineHeight: '1.3'
-          }}>
-            Смотрите рекламу и получайте бонусные монеты!
-          </p>
-          
-          {/* Компонент рекламы Adsgram */}
-          {onAdReward && (
-            <AdsgramButton
-              onReward={onAdReward}
-              rewardAmount={100}
-              buttonText="📺 Получить 100 монет"
-              blockId="12355"
-            />
-          )}
-          
-          <div style={{
-            fontSize: '10px',
-            color: '#888',
-            marginTop: '8px'
-          }}>
-            Кулдаун: 5 минут между просмотрами
+        {/* Секция зданий - УЛУЧШЕННАЯ */}
+        <div className="buildings-section">
+          <div className="buildings-header">
+            <h3>🏢 Здания</h3>
+            <div className="buildings-subtitle">Развивайте автосервис для увеличения дохода</div>
           </div>
-        </div>
-        
-        {/* Плавающие кнопки действий */}
-        <button 
-          className="floating-action-button left"
-          onClick={onOpenCarSelector}
-          title="Выбрать машину"
-        >
-          🚗
-        </button>
-        
-        <button 
-          className="floating-action-button right"
-          onClick={onTuneClick}
-          title="Тюнинг"
-        >
-          🔧
-        </button>
-      </div>
-      
-      {/* Зона построек - интегрированная */}
-      <div className="buildings-integrated">
-        <div className="buildings-grid-minimal">
-          {buildings.map((building) => (
-            <div 
-              key={building.id}
-              className={`building-item-minimal ${building.isLocked ? 'locked' : ''} ${building.level > 0 ? 'active' : ''}`}
-              onClick={() => !building.isLocked && onBuildingClick(building.name)}
-              title={building.name}
-            >
-              <div className="building-icon">{building.icon}</div>
-              <div className="building-level-badge">
-                {building.isLocked ? '🔒' : building.level > 0 ? building.level : '+'}
-              </div>
-            </div>
-          ))}
+          
+          <div className="buildings-grid">
+            {buildings.map((building) => {
+              const cost = calculateBuildingCost(building);
+              const canAfford = gameCoins >= cost;
+              const isUnlocked = !building.isLocked; // Разблокируем все здания
+              const currentIncome = building.incomePerHour * building.level;
+              const nextIncome = building.incomePerHour * (building.level + 1);
+              const incomeIncrease = nextIncome - currentIncome;
+
+              return (
+                <div 
+                  key={building.id}
+                  className={`building-card ${!isUnlocked ? 'locked' : canAfford ? 'affordable' : 'expensive'}`}
+                  onClick={() => isUnlocked && onBuildingClick(building.name)}
+                >
+                  <div className="building-card-header">
+                    <div className="building-icon">{building.icon}</div>
+                    <div className="building-level-badge">
+                      {!isUnlocked ? '🔒' : building.level}
+                    </div>
+                  </div>
+                  
+                  <div className="building-info">
+                    <div className="building-name">{building.name}</div>
+                    <div className="building-description">
+                      {building.level === 0 ? 'Не построено' : `Уровень ${building.level}`}
+                    </div>
+                    
+                    {isUnlocked && (
+                      <>
+                        <div className="building-income">
+                          <span className="income-current">💰 {formatNumber(currentIncome)}/час</span>
+                          {building.level > 0 && incomeIncrease > 0 && (
+                            <span className="income-increase">+{formatNumber(incomeIncrease)}</span>
+                          )}
+                        </div>
+                        
+                        <div className={`building-cost ${canAfford ? 'affordable' : 'expensive'}`}>
+                          <span className="cost-icon">💎</span>
+                          <span className="cost-amount">{formatNumber(cost)}</span>
+                        </div>
+                        
+                        <button 
+                          className={`building-upgrade-btn ${canAfford ? 'can-upgrade' : 'cant-upgrade'}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (canAfford) onBuildingClick(building.name);
+                          }}
+                          disabled={!canAfford}
+                        >
+                          {building.level === 0 ? 'Построить' : 'Улучшить'}
+                        </button>
+                      </>
+                    )}
+                    
+                    {!isUnlocked && (
+                      <div className="building-locked-text">
+                        Откроется позже
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
       

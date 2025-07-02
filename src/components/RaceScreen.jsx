@@ -21,19 +21,26 @@ const getRandomOpponentName = () => {
     return names[Math.floor(Math.random() * names.length)];
 };
 
-function RaceScreen({ playerCar, onStartRace }) {
+function RaceScreen({ playerCar, onStartRace, onAdReward }) { // Добавлен пропс onAdReward
   const [selectedDifficulty, setSelectedDifficulty] = useState('easy');
   const [raceResult, setRaceResult] = useState(null);
   const [reward, setReward] = useState(null);
   const [isRacing, setIsRacing] = useState(false);
   const [shouldAnimate, setShouldAnimate] = useState(false);
   const [isReturning, setIsReturning] = useState(false); 
-  const [isWaitingForReturn, setIsWaitingForReturn] = useState(false); // НОВОЕ состояние
+  const [isWaitingForReturn, setIsWaitingForReturn] = useState(false);
   const [opponentCarImageUrl, setOpponentCarImageUrl] = useState(() => getRandomOpponentImage());
   const [opponentName, setOpponentName] = useState(() => getRandomOpponentName());
-  const [countdown, setCountdown] = useState(0); // Обратный отсчет
-  const [winStreak, setWinStreak] = useState(0); // Серия побед
-  const [totalRaces, setTotalRaces] = useState(0); // Всего гонок
+  const [countdown, setCountdown] = useState(0);
+  const [winStreak, setWinStreak] = useState(0);
+  const [totalRaces, setTotalRaces] = useState(0);
+  
+  // 🆕 НОВЫЕ СОСТОЯНИЯ ДЛЯ РЕКЛАМЫ
+  const [racesCount, setRacesCount] = useState(() => {
+    const saved = localStorage.getItem('racesCount');
+    return saved ? parseInt(saved) : 0;
+  });
+  const [showAdOffer, setShowAdOffer] = useState(false);
   
   const raceStartSound = useRef(null);
   const raceFinishSound = useRef(null);
@@ -44,6 +51,11 @@ function RaceScreen({ playerCar, onStartRace }) {
     // raceStartSound.current = new Audio('/sounds/race-start.mp3');
     // raceFinishSound.current = new Audio('/sounds/race-finish.mp3');
   }, []);
+
+  // 🆕 СОХРАНЕНИЕ СЧЕТЧИКА ЗАЕЗДОВ
+  useEffect(() => {
+    localStorage.setItem('racesCount', racesCount.toString());
+  }, [racesCount]);
 
   // Функция смены оппонента
   const changeOpponent = () => {
@@ -75,6 +87,25 @@ function RaceScreen({ playerCar, onStartRace }) {
     }, 800);
   };
 
+  // 🆕 ФУНКЦИИ ОБРАБОТКИ РЕКЛАМЫ
+  const handleAdOfferAccept = () => {
+    setShowAdOffer(false);
+    // Здесь будет показ рекламы через Adsgram когда настроят домены
+    console.log('🎬 Показ рекламы после 5 заездов');
+    
+    // Временная имитация награды за рекламу
+    if (onAdReward) {
+      setTimeout(() => {
+        onAdReward(100); // 100 монет за просмотр
+        alert('🎉 Получено 100 монет за просмотр рекламы!');
+      }, 2000);
+    }
+  };
+
+  const handleAdOfferDecline = () => {
+    setShowAdOffer(false);
+  };
+
   // Главный обработчик гонки
   const handleRaceClick = async () => {
     if (isRacing || isReturning || isWaitingForReturn || !playerCar) {
@@ -83,6 +114,10 @@ function RaceScreen({ playerCar, onStartRace }) {
     }
     
     console.log('🏁 Starting race sequence...');
+    
+    // 🆕 УВЕЛИЧИВАЕМ СЧЕТЧИК ЗАЕЗДОВ
+    const newRacesCount = racesCount + 1;
+    setRacesCount(newRacesCount);
     
     // Сбрасываем предыдущие результаты
     setRaceResult(null);
@@ -106,7 +141,7 @@ function RaceScreen({ playerCar, onStartRace }) {
     
     // КРИТИЧНО: СРАЗУ блокируем кнопку, как только гонка закончилась
     setIsRacing(false);
-    setIsWaitingForReturn(true); // БЛОКИРУЕМ кнопку ПЕРВЫМ ДЕЛОМ
+    setIsWaitingForReturn(true);
     console.log('🏁 Race animation finished, button blocked for return...');
     
     // Получаем результат гонки
@@ -142,9 +177,14 @@ function RaceScreen({ playerCar, onStartRace }) {
       setTimeout(() => {
         console.log('✅ Cars returned, button should be active now');
         setIsReturning(false);
-        setIsWaitingForReturn(false); // РАЗБЛОКИРУЕМ кнопку
+        setIsWaitingForReturn(false);
         changeOpponent();
         console.log('🏁 Full cycle complete, ready for next race');
+        
+        // 🆕 ПРОВЕРЯЕМ НУЖНО ЛИ ПОКАЗАТЬ РЕКЛАМУ (каждые 5 заездов)
+        if (newRacesCount > 0 && newRacesCount % 5 === 0) {
+          setTimeout(() => setShowAdOffer(true), 1000); // Показываем через секунду после завершения
+        }
       }, 2500);
     }, 2000);
   };
@@ -192,6 +232,35 @@ function RaceScreen({ playerCar, onStartRace }) {
               Всего гонок: {totalRaces}
             </div>
           )}
+          
+          {/* 🆕 ПРОГРЕСС ДО РЕКЛАМЫ */}
+          <div className="ad-progress" style={{
+            fontSize: '0.8rem',
+            color: '#ff9800',
+            margin: '5px 0',
+            padding: '5px 10px',
+            background: 'rgba(255, 152, 0, 0.1)',
+            borderRadius: '10px',
+            border: '1px solid rgba(255, 152, 0, 0.3)'
+          }}>
+            📺 До бонусной рекламы: {5 - (racesCount % 5)} заездов
+            <div style={{
+              width: '100%',
+              height: '4px',
+              background: 'rgba(255, 152, 0, 0.2)',
+              borderRadius: '2px',
+              marginTop: '3px',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                width: `${((racesCount % 5) / 5) * 100}%`,
+                height: '100%',
+                background: 'linear-gradient(90deg, #ff9800, #f57c00)',
+                borderRadius: '2px',
+                transition: 'width 0.5s ease'
+              }} />
+            </div>
+          </div>
         </div>
 
         {/* Информация об участниках */}
@@ -339,6 +408,129 @@ function RaceScreen({ playerCar, onStartRace }) {
             </div>
           )}
         </div>
+
+        {/* 🆕 МОДАЛКА ПРЕДЛОЖЕНИЯ РЕКЛАМЫ */}
+        {showAdOffer && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.8)',
+            backdropFilter: 'blur(5px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px',
+            animation: 'modalAppear 0.3s ease-out'
+          }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #1a1a2e, #16213e)',
+              borderRadius: '20px',
+              padding: '30px',
+              maxWidth: '350px',
+              width: '100%',
+              border: '1px solid #4a9eff',
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)',
+              textAlign: 'center',
+              color: 'white'
+            }}>
+              <h3 style={{
+                color: '#4a9eff',
+                fontSize: '22px',
+                margin: '0 0 10px 0'
+              }}>
+                🎁 Бонусная реклама!
+              </h3>
+              <p style={{
+                color: '#bbb',
+                fontSize: '16px',
+                margin: '0 0 20px 0'
+              }}>
+                Вы совершили 5 заездов!
+              </p>
+              
+              <div style={{ fontSize: '48px', margin: '20px 0' }}>📺</div>
+              
+              <p style={{
+                color: 'white',
+                fontSize: '16px',
+                lineHeight: '1.4',
+                margin: '0 0 10px 0'
+              }}>
+                Посмотрите короткую рекламу и получите <strong style={{ color: '#ff9800' }}>100 монет</strong> бонусом!
+              </p>
+              <p style={{
+                fontSize: '14px',
+                color: '#999',
+                fontStyle: 'italic',
+                margin: '0 0 25px 0'
+              }}>
+                Это не обязательно, но поможет развитию игры
+              </p>
+              
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                marginBottom: '20px'
+              }}>
+                <button 
+                  onClick={handleAdOfferAccept}
+                  style={{
+                    padding: '15px 20px',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    background: 'linear-gradient(135deg, #ff6b6b, #ee5a24)',
+                    color: 'white',
+                    boxShadow: '0 4px 15px rgba(255, 107, 107, 0.4)',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
+                  onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+                >
+                  📺 Смотреть рекламу (+100 💰)
+                </button>
+                <button 
+                  onClick={handleAdOfferDecline}
+                  style={{
+                    padding: '15px 20px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '12px',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    color: '#bbb',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseOver={(e) => {
+                    e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                    e.target.style.color = 'white';
+                  }}
+                  onMouseOut={(e) => {
+                    e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+                    e.target.style.color = '#bbb';
+                  }}
+                >
+                  ❌ Пропустить
+                </button>
+              </div>
+              
+              <div style={{
+                fontSize: '12px',
+                color: '#888'
+              }}>
+                Следующее предложение через 5 заездов
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

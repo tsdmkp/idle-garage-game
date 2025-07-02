@@ -678,6 +678,7 @@ function App() {
           <RaceScreen
             playerCar={currentCar}
             onStartRace={handleStartRace}
+            onAdReward={handleAdReward}
           />
         )}
         {activeScreen === 'shop' && (
