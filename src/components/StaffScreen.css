@@ -237,10 +237,11 @@
 
 .staff-description {
   margin: 0 0 10px 0;
-  font-size: 0.9rem;
+  font-size: 1rem; /* Увеличили с 0.9rem до 1rem */
   color: #e0e0e0;
   line-height: 1.4;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  font-weight: 500; /* Добавили немного жирности для лучшей читаемости */
 }
 
 .staff-progress {
@@ -505,8 +506,9 @@
   }
   
   .staff-description {
-    font-size: 0.75rem;
-    line-height: 1.2;
+    font-size: 0.85rem; /* Увеличили с 0.75rem до 0.85rem */
+    line-height: 1.3; /* Увеличили межстрочный интервал */
+    font-weight: 500; /* Добавили жирности */
   }
   
   .staff-name-row {
@@ -570,8 +572,9 @@
   }
   
   .staff-description {
-    font-size: 0.7rem;
-    line-height: 1.1;
+    font-size: 0.8rem; /* Увеличили с 0.7rem до 0.8rem */
+    line-height: 1.2; /* Улучшили межстрочный интервал */
+    font-weight: 500; /* Добавили жирности для читаемости */
   }
   
   .staff-name-row {
