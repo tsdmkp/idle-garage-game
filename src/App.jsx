@@ -39,6 +39,10 @@ const INITIAL_HIRED_STAFF = (() => {
 })();
 
 function App() {
+  // ЗАЩИТА ОТ ДВОЙНОЙ ИНИЦИАЛИЗАЦИИ
+  const initializationRef = useRef(false);
+  const isInitializedRef = useRef(false);
+  
   // Основные состояния игры
   const [isLoading, setIsLoading] = useState(true);
   const [hasLoadedData, setHasLoadedData] = useState(false);
@@ -80,23 +84,16 @@ function App() {
 
   // Refs для предотвращения лишних ререндеров
   const saveTimeoutRef = useRef(null);
-  const userIdRef = useRef(null);
 
   const currentCar = playerCars.find(car => car.id === selectedCarId) || playerCars[0] || null;
 
-  // Функция получения userId - теперь с мемоизацией через ref
+  // УПРОЩЕННАЯ функция получения userId
   const getUserId = useCallback(() => {
-    if (userIdRef.current) {
-      return userIdRef.current;
-    }
-    
     if (isTgApp && tgUserData?.id) {
       const userId = tgUserData.id.toString();
-      userIdRef.current = userId;
       console.log('🆔 getUserId (Telegram):', userId);
       return userId;
     } else if (!isTgApp) {
-      userIdRef.current = 'default';
       console.log('🆔 getUserId (Standalone): default');
       return 'default';
     }
@@ -207,10 +204,17 @@ function App() {
     return { fuel: currentFuel, shouldUpdate: false };
   }, []);
 
-  // Инициализация приложения
+  // ИСПРАВЛЕННАЯ инициализация приложения
   useEffect(() => {
+    // ЗАЩИТА ОТ ДВОЙНОЙ ИНИЦИАЛИЗАЦИИ
+    if (initializationRef.current) {
+      console.log('⚠️ Повторная инициализация заблокирована');
+      return;
+    }
+    
     const initializeApp = async () => {
       console.log('🚀 Инициализация приложения...');
+      initializationRef.current = true; // Устанавливаем флаг сразу
       
       // Инициализация Telegram WebApp
       const tg = window.Telegram?.WebApp;
@@ -249,13 +253,15 @@ function App() {
     };
 
     const loadGameData = async (userId) => {
-      if (hasLoadedData) {
+      // ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА
+      if (hasLoadedData || isInitializedRef.current) {
         console.log('⏭️ Данные уже загружены, пропускаем...');
         return;
       }
 
       console.log('📥 Начинаем загрузку данных для userId:', userId);
       setHasLoadedData(true);
+      isInitializedRef.current = true;
       
       try {
         const initialState = await apiClient('/game_state', 'GET', { params: { userId } });
@@ -265,7 +271,8 @@ function App() {
           // Основные данные игрока
           setPlayerLevel(Number(initialState.player_level) || 1);
           
-          if (initialState.first_name && initialState.first_name !== 'Игрок') {
+          // ИСПРАВЛЕНО: правильно устанавливаем имя
+          if (initialState.first_name) {
             setPlayerName(initialState.first_name);
           }
           
@@ -396,9 +403,7 @@ function App() {
       }
     };
 
-    if (!hasLoadedData) {
-      initializeApp();
-    }
+    initializeApp();
 
     // Cleanup
     return () => {
@@ -416,7 +421,7 @@ function App() {
         }).catch(err => console.error('Failed to save last exit time:', err));
       }
     };
-  }, [hasLoadedData, getUserId, debouncedSave, checkAndRestoreFuel]);
+  }, []); // ВАЖНО: пустой массив зависимостей!
 
   // Таймер дохода
   useEffect(() => {
