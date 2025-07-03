@@ -309,16 +309,23 @@ const RaceScreen = ({
     setFuelCount(newFuelCount);
     setLastRaceTime(now);
     
+    console.log(`⛽ Потрачено топливо. Было: ${fuelCount}, стало: ${newFuelCount}`);
+    
     // Если топливо закончилось, устанавливаем время восстановления
     if (newFuelCount <= 0) {
+      console.log('🚨 ТОПЛИВО ЗАКОНЧИЛОСЬ! Устанавливаем время восстановления');
       const refillTime = now + FUEL_REFILL_HOUR;
       setFuelRefillTime(refillTime);
       saveFuelData(newFuelCount, now, refillTime);
+      
+      // ПОКАЗЫВАЕМ МОДАЛКУ СРАЗУ ПОСЛЕ ЗАВЕРШЕНИЯ ГОНКИ
+      setTimeout(() => {
+        console.log('⛽ Показываем модалку через 2 секунды после завершения гонки');
+        setShowFuelModal(true);
+      }, 2000);
     } else {
       saveFuelData(newFuelCount, now);
     }
-    
-    console.log(`⛽ Потрачено топливо. Осталось: ${newFuelCount}/${MAX_FUEL}`);
   };
 
   const difficulties = {
@@ -343,13 +350,17 @@ const RaceScreen = ({
   };
 
   const startCountdown = () => {
+    console.log('🚀 Попытка начать обратный отсчет...');
+    console.log('⛽ Проверяем топливо перед стартом. Уровень:', fuelCount);
+    
     // Проверяем топливо перед стартом
-    if (!checkFuelBeforeRace()) {
-      console.log('❌ Гонка отменена - нет топлива');
+    if (fuelCount <= 0) {
+      console.log('❌ Топливо закончилось! Показываем модалку');
+      setShowFuelModal(true);
       return;
     }
     
-    console.log('🚀 Начинаем обратный отсчет...');
+    console.log('✅ Топливо есть, начинаем гонку');
     setRaceState('countdown');
     setCountdown(3);
     
@@ -435,13 +446,11 @@ const RaceScreen = ({
 
   const timeUntilRefill = getTimeUntilRefill();
 
-  // Отладочная информация
-  console.log('🔍 RaceScreen текущее состояние:', {
+  // Отладочная информация (минимальная)
+  console.log('🔍 RaceScreen состояние:', {
     fuelCount,
     showFuelModal,
-    raceState,
-    canStartRace,
-    adsgramReady
+    canStartRace
   });
 
   return (
@@ -570,68 +579,6 @@ const RaceScreen = ({
           >
             {buttonText()}
           </button>
-
-          {/* ВРЕМЕННЫЕ КНОПКИ ДЛЯ ТЕСТИРОВАНИЯ */}
-          <div style={{display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap'}}>
-            <button 
-              onClick={() => {
-                console.log('🧪 Принудительно показываем модалку');
-                setShowFuelModal(true);
-              }}
-              style={{
-                padding: '8px 12px',
-                background: '#ff6b35',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '12px'
-              }}
-            >
-              🧪 ТЕСТ: Показать модалку
-            </button>
-            
-            <button 
-              onClick={() => {
-                console.log('🧪 Обнуляем топливо');
-                setFuelCount(0);
-              }}
-              style={{
-                padding: '8px 12px',
-                background: '#e74c3c',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '12px'
-              }}
-            >
-              🧪 Обнулить топливо
-            </button>
-            
-            <button 
-              onClick={() => {
-                console.log('🧪 Восстанавливаем топливо');
-                setFuelCount(5);
-              }}
-              style={{
-                padding: '8px 12px',
-                background: '#27ae60',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '12px'
-              }}
-            >
-              🧪 Восстановить топливо
-            </button>
-          </div>
-
-          {/* ОТЛАДОЧНАЯ ИНФОРМАЦИЯ */}
-          <div style={{color: 'white', fontSize: '12px', marginTop: '10px', background: 'rgba(0,0,0,0.5)', padding: '8px', borderRadius: '4px'}}>
-            <div>Топливо: {fuelCount}/5</div>
-            <div>Модалка: {showFuelModal ? 'ДА' : 'НЕТ'}</div>
-            <div>Можно гонку: {canStartRace ? 'ДА' : 'НЕТ'}</div>
-            <div>Adsgram: {adsgramReady ? 'Готов' : 'Не готов'}</div>
-          </div>
 
           {raceResult && raceState === 'finished' && (
             <div className={`race-result ${raceResult.result}`}>
