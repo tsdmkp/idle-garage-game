@@ -12,16 +12,14 @@ const RaceScreen = ({
   onFuelRefillByAd
 }) => {
 
- console.log('RaceScreen props:');
-  console.log('playerCar:', playerCar);
-  console.log('propsFuelCount:', propsFuelCount);
-  console.log('propsLastRaceTime:', propsLastRaceTime);
-  console.log('propsFuelRefillTime:', propsFuelRefillTime);
-  console.log('onFuelUpdate (is function?):', typeof onFuelUpdate === 'function');
-  console.log('onFuelRefillByAd (is function?):', typeof onFuelRefillByAd === 'function');
-
-
-
+  console.log('🏁 RaceScreen props:', {
+    playerCar: playerCar?.name,
+    propsFuelCount,
+    propsLastRaceTime,
+    propsFuelRefillTime,
+    onFuelUpdate: typeof onFuelUpdate === 'function',
+    onFuelRefillByAd: typeof onFuelRefillByAd === 'function'
+  });
 
   const [selectedDifficulty, setSelectedDifficulty] = useState('easy');
   const [raceState, setRaceState] = useState('ready');
@@ -46,102 +44,106 @@ const RaceScreen = ({
   const MAX_FUEL = 5;
   const FUEL_REFILL_HOUR = 60 * 60 * 1000; // 1 час в миллисекундах
 
-  // Загрузка Adsgram SDK
-useEffect(() => {
-  const loadAdsgram = () => {
-    console.log('🔄 Начинаем загрузку Adsgram...');
-    
-    if (window.Adsgram) {
-      console.log('✅ Adsgram уже доступен');
-      setAdsgramReady(true);
-      return;
-    }
-
-    if (document.querySelector('script[src*="sad.min.js"]')) {
-      console.log('⏳ Adsgram уже загружается...');
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = 'https://sad.adsgram.ai/js/sad.min.js';
-    script.async = true;
-    script.defer = true;
-    
-    script.onload = () => {
-      console.log('📦 Adsgram скрипт загружен');
-      
-      setTimeout(() => {
-        try {
-          if (window.Adsgram && typeof window.Adsgram.init === 'function') {
-            console.log('🚀 Инициализируем Adsgram...');
-            
-            const isProduction = window.location.hostname !== 'localhost' && 
-                               !window.location.hostname.includes('vercel.app');
-            
-            const debugMode = !isProduction;
-            
-            const adsgramController = window.Adsgram.init({
-              blockId: "12355",
-              debug: debugMode,
-              debugBannerType: "RewardedVideo"
-            });
-            
-            window.adsgramController = adsgramController;
-            setAdsgramReady(true);
-            console.log('✅ Adsgram успешно инициализирован');
-          }
-        } catch (error) {
-          console.error('❌ Ошибка инициализации Adsgram:', error);
-          setAdsgramReady(false);
-        }
-      }, 100);
-    };
-    
-    script.onerror = (error) => {
-      console.error('❌ Ошибка загрузки Adsgram SDK:', error);
-      setAdsgramReady(false);
-    };
-    
-    document.head.appendChild(script);
-  };
-
-  loadAdsgram();
-
-  return () => {
-    const script = document.querySelector('script[src*="sad.min.js"]');
-    if (script) {
-      script.remove();
-    }
-  };
-}, []); // ❌ УБРАЛИ ВСЕ ЗАВИСИМОСТИ!
-
-  // Загрузка данных топлива
-  const loadFuelData = () => {
-    const savedFuel = localStorage.getItem('fuelCount');
-    const savedLastRaceTime = localStorage.getItem('lastRaceTime');
-    const savedRefillTime = localStorage.getItem('fuelRefillTime');
-    
-    if (savedFuel) {
-      setFuelCount(parseInt(savedFuel));
-    }
-    
-    if (savedLastRaceTime) {
-      setLastRaceTime(parseInt(savedLastRaceTime));
-    }
-    
-    if (savedRefillTime) {
-      setFuelRefillTime(parseInt(savedRefillTime));
-    }
-    
-    console.log('⛽ Загружены данные топлива:', {
-      fuel: savedFuel || MAX_FUEL,
-      lastRace: savedLastRaceTime ? new Date(parseInt(savedLastRaceTime)).toLocaleString() : 'нет',
-      refillTime: savedRefillTime ? new Date(parseInt(savedRefillTime)).toLocaleString() : 'нет'
+  // Синхронизация с пропсами от App.jsx
+  useEffect(() => {
+    console.log('🔄 Синхронизация топлива с App.jsx:', {
+      propsFuelCount,
+      propsLastRaceTime,
+      propsFuelRefillTime
     });
     
-    // Проверяем, нужно ли восстановить топливо
-    checkFuelRefill();
-  };
+    if (propsFuelCount !== undefined) {
+      setFuelCount(propsFuelCount);
+    }
+    if (propsLastRaceTime !== undefined) {
+      setLastRaceTime(propsLastRaceTime);
+    }
+    if (propsFuelRefillTime !== undefined) {
+      setFuelRefillTime(propsFuelRefillTime);
+    }
+  }, [propsFuelCount, propsLastRaceTime, propsFuelRefillTime]);
+
+  // Загрузка Adsgram SDK
+  useEffect(() => {
+    const loadAdsgram = () => {
+      console.log('🔄 Начинаем загрузку Adsgram...');
+      
+      if (window.Adsgram) {
+        console.log('✅ Adsgram уже доступен');
+        setAdsgramReady(true);
+        return;
+      }
+
+      if (document.querySelector('script[src*="sad.min.js"]')) {
+        console.log('⏳ Adsgram уже загружается...');
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://sad.adsgram.ai/js/sad.min.js';
+      script.async = true;
+      script.defer = true;
+      
+      script.onload = () => {
+        console.log('📦 Adsgram скрипт загружен');
+        
+        setTimeout(() => {
+          try {
+            if (window.Adsgram && typeof window.Adsgram.init === 'function') {
+              console.log('🚀 Инициализируем Adsgram...');
+              
+              const isProduction = window.location.hostname !== 'localhost' && 
+                                 !window.location.hostname.includes('vercel.app');
+              
+              const debugMode = !isProduction;
+              console.log('🔧 Debug mode:', debugMode);
+              
+              const adsgramController = window.Adsgram.init({
+                blockId: "12355",
+                debug: debugMode,
+                debugBannerType: "RewardedVideo"
+              });
+              
+              window.adsgramController = adsgramController;
+              
+              // Добавляем обработчики событий
+              if (adsgramController && typeof adsgramController.addEventListener === 'function') {
+                adsgramController.addEventListener('onReward', () => {
+                  console.log('🎁 Adsgram onReward event');
+                });
+                
+                adsgramController.addEventListener('onError', (error) => {
+                  console.log('❌ Adsgram onError:', error);
+                });
+              }
+              
+              setAdsgramReady(true);
+              console.log('✅ Adsgram успешно инициализирован');
+            }
+          } catch (error) {
+            console.error('❌ Ошибка инициализации Adsgram:', error);
+            setAdsgramReady(false);
+          }
+        }, 100);
+      };
+      
+      script.onerror = (error) => {
+        console.error('❌ Ошибка загрузки Adsgram SDK:', error);
+        setAdsgramReady(false);
+      };
+      
+      document.head.appendChild(script);
+    };
+
+    loadAdsgram();
+
+    return () => {
+      const script = document.querySelector('script[src*="sad.min.js"]');
+      if (script) {
+        script.remove();
+      }
+    };
+  }, []);
 
   // Проверка восстановления топлива
   const checkFuelRefill = () => {
@@ -149,7 +151,7 @@ useEffect(() => {
     const refillTime = fuelRefillTime || (lastRaceTime ? lastRaceTime + FUEL_REFILL_HOUR : null);
     
     if (refillTime && now >= refillTime && fuelCount < MAX_FUEL) {
-      console.log('⛽ Топливо восстановлено!');
+      console.log('⛽ Топливо должно быть восстановлено!');
       const newFuelCount = MAX_FUEL;
       const newLastRaceTime = now;
       
@@ -171,9 +173,9 @@ useEffect(() => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [fuelCount, lastRaceTime, fuelRefillTime]);
+  }, [fuelCount, lastRaceTime, fuelRefillTime, onFuelUpdate]);
 
-  // Сохранение данных топлива - теперь через App.jsx
+  // Сохранение данных топлива через App.jsx
   const saveFuelData = (newFuelCount, newLastRaceTime, newRefillTime = null) => {
     console.log('💾 Обновляем данные топлива через App.jsx:', {
       fuel: newFuelCount,
@@ -213,48 +215,76 @@ useEffect(() => {
 
     try {
       if (!window.adsgramController) {
-        console.error('❌ AdController не найден');
-        alert('😔 Реклама временно недоступна');
-        setIsAdLoading(false);
+        console.warn('❌ AdController не найден, используем мок');
+        // Fallback на моковую рекламу
+        showMockAd();
         return;
       }
       
-      console.log('🎬 Показываем рекламу для восстановления топлива...');
+      console.log('🎬 Показываем настоящую Adsgram рекламу...');
       
       const result = await window.adsgramController.show();
       
-      console.log('✅ Реклама успешно просмотрена! Восстанавливаем топливо');
+      console.log('✅ Adsgram реклама успешно просмотрена!', result);
       
       // Восстанавливаем топливо
-      const now = Date.now();
-      const newFuelCount = MAX_FUEL;
-      const newLastRaceTime = now;
-      
-      setFuelCount(newFuelCount);
-      setLastRaceTime(newLastRaceTime);
-      setFuelRefillTime(null);
-      
-      // Уведомляем App.jsx
-      if (onFuelRefillByAd) {
-        onFuelRefillByAd();
-      }
-      
-      // Закрываем модалку
-      setShowFuelModal(false);
-      
-      // Уведомление пользователю
-      alert('⛽ Топливный бак заправлен!\nМожете продолжать гонки!');
-      
-      // Тактильная обратная связь
-      if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-      }
+      handleFuelRestore();
       
     } catch (error) {
-      console.log('⏭️ Реклама была пропущена:', error);
-      alert('📺 Для заправки нужно досмотреть рекламу до конца');
+      console.log('⏭️ Adsgram реклама была пропущена или ошибка:', error);
+      
+      // Fallback на моковую рекламу
+      showMockAd();
     } finally {
       setIsAdLoading(false);
+    }
+  };
+
+  // Моковая реклама для тестирования
+  const showMockAd = () => {
+    console.log('🎭 Показываем моковую рекламу...');
+    
+    setTimeout(() => {
+      const watchAd = window.confirm('🎥 [ТЕСТ] Реклама загружена!\n\nПросмотреть рекламу за восстановление топлива?');
+      
+      if (watchAd) {
+        setTimeout(() => {
+          console.log('✅ Моковая реклама просмотрена');
+          handleFuelRestore();
+        }, 1500);
+      } else {
+        console.log('⏭️ Моковая реклама пропущена');
+        alert('📺 Для заправки нужно досмотреть рекламу до конца');
+      }
+      
+      setIsAdLoading(false);
+    }, 800);
+  };
+
+  // Восстановление топлива после рекламы
+  const handleFuelRestore = () => {
+    const now = Date.now();
+    const newFuelCount = MAX_FUEL;
+    const newLastRaceTime = now;
+    
+    setFuelCount(newFuelCount);
+    setLastRaceTime(newLastRaceTime);
+    setFuelRefillTime(null);
+    
+    // Уведомляем App.jsx
+    if (onFuelRefillByAd) {
+      onFuelRefillByAd();
+    }
+    
+    // Закрываем модалку
+    setShowFuelModal(false);
+    
+    // Уведомление пользователю
+    alert('⛽ Топливный бак заправлен!\nМожете продолжать гонки!');
+    
+    // Тактильная обратная связь
+    if (window.Telegram?.WebApp?.HapticFeedback) {
+      window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
     }
   };
 
@@ -315,6 +345,7 @@ useEffect(() => {
   const startCountdown = () => {
     // Проверяем топливо перед стартом
     if (!checkFuelBeforeRace()) {
+      console.log('❌ Гонка отменена - нет топлива');
       return;
     }
     
@@ -403,6 +434,15 @@ useEffect(() => {
   };
 
   const timeUntilRefill = getTimeUntilRefill();
+
+  // Отладочная информация
+  console.log('🔍 RaceScreen текущее состояние:', {
+    fuelCount,
+    showFuelModal,
+    raceState,
+    canStartRace,
+    adsgramReady
+  });
 
   return (
     <div className="race-screen">
@@ -531,6 +571,68 @@ useEffect(() => {
             {buttonText()}
           </button>
 
+          {/* ВРЕМЕННЫЕ КНОПКИ ДЛЯ ТЕСТИРОВАНИЯ */}
+          <div style={{display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap'}}>
+            <button 
+              onClick={() => {
+                console.log('🧪 Принудительно показываем модалку');
+                setShowFuelModal(true);
+              }}
+              style={{
+                padding: '8px 12px',
+                background: '#ff6b35',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '12px'
+              }}
+            >
+              🧪 ТЕСТ: Показать модалку
+            </button>
+            
+            <button 
+              onClick={() => {
+                console.log('🧪 Обнуляем топливо');
+                setFuelCount(0);
+              }}
+              style={{
+                padding: '8px 12px',
+                background: '#e74c3c',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '12px'
+              }}
+            >
+              🧪 Обнулить топливо
+            </button>
+            
+            <button 
+              onClick={() => {
+                console.log('🧪 Восстанавливаем топливо');
+                setFuelCount(5);
+              }}
+              style={{
+                padding: '8px 12px',
+                background: '#27ae60',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '12px'
+              }}
+            >
+              🧪 Восстановить топливо
+            </button>
+          </div>
+
+          {/* ОТЛАДОЧНАЯ ИНФОРМАЦИЯ */}
+          <div style={{color: 'white', fontSize: '12px', marginTop: '10px', background: 'rgba(0,0,0,0.5)', padding: '8px', borderRadius: '4px'}}>
+            <div>Топливо: {fuelCount}/5</div>
+            <div>Модалка: {showFuelModal ? 'ДА' : 'НЕТ'}</div>
+            <div>Можно гонку: {canStartRace ? 'ДА' : 'НЕТ'}</div>
+            <div>Adsgram: {adsgramReady ? 'Готов' : 'Не готов'}</div>
+          </div>
+
           {raceResult && raceState === 'finished' && (
             <div className={`race-result ${raceResult.result}`}>
               <h3>
@@ -595,7 +697,7 @@ useEffect(() => {
               <button 
                 className="fuel-modal-button watch"
                 onClick={showAdForFuel}
-                disabled={isAdLoading || !adsgramReady}
+                disabled={isAdLoading}
               >
                 📺 Заправиться (реклама)
               </button>
