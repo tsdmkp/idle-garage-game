@@ -1,4 +1,4 @@
-/* src/components/RaceScreen.css - с ФОНОМ */
+/* src/components/RaceScreen.css - с ФОНОМ и ТОПЛИВНОЙ СИСТЕМОЙ */
 
 /* --- Базовые стили для страницы --- */
 html, body, #root {
@@ -28,22 +28,22 @@ body {
   color: #ffffff;
   text-align: center;
   position: relative;
-  
-  /* Затемнение для читаемости */
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(
-      rgba(15, 15, 35, 0.7) 0%,
-      rgba(26, 26, 62, 0.6) 50%,
-      rgba(45, 27, 105, 0.7) 100%
-    );
-    z-index: -1;
-  }
+}
+
+/* Затемнение для читаемости */
+.race-screen::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    rgba(15, 15, 35, 0.7) 0%,
+    rgba(26, 26, 62, 0.6) 50%,
+    rgba(45, 27, 105, 0.7) 100%
+  );
+  z-index: -1;
 }
 
 /* Анимированные звездочки на фон */
@@ -105,6 +105,438 @@ body {
   animation: gradientShift 3s ease-in-out infinite;
   text-shadow: 0 0 30px rgba(255, 107, 107, 0.5);
 }
+
+/* ⛽ ТОПЛИВНАЯ СИСТЕМА - НАЧАЛО */
+
+/* Индикатор топлива */
+.fuel-indicator {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
+  backdrop-filter: blur(15px);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 18px;
+  padding: 16px;
+  margin: 12px 0;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fuel-indicator::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  animation: fuelGlow 3s ease-in-out infinite;
+}
+
+@keyframes fuelGlow {
+  0%, 100% { left: -100%; }
+  50% { left: 100%; }
+}
+
+.fuel-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+.fuel-label {
+  font-weight: 700;
+  color: #fff;
+  font-size: 16px;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.fuel-tanks {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.fuel-tank {
+  font-size: 24px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.fuel-tank.full {
+  filter: brightness(1.3) saturate(1.2);
+  transform: scale(1.1);
+  animation: fuelPulse 2s ease-in-out infinite;
+}
+
+.fuel-tank.empty {
+  opacity: 0.25;
+  filter: grayscale(100%);
+  transform: scale(0.9);
+}
+
+@keyframes fuelPulse {
+  0%, 100% { 
+    filter: brightness(1.3) saturate(1.2);
+    text-shadow: 0 0 10px rgba(0, 255, 0, 0.6);
+  }
+  50% { 
+    filter: brightness(1.5) saturate(1.4);
+    text-shadow: 0 0 15px rgba(0, 255, 0, 0.8);
+  }
+}
+
+.fuel-count {
+  font-weight: 800;
+  color: #fff;
+  font-size: 18px;
+  background: linear-gradient(145deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.3));
+  padding: 6px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
+}
+
+.fuel-refill-timer {
+  margin-top: 10px;
+  font-size: 15px;
+  color: #ffd700;
+  font-weight: 700;
+  text-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+  animation: timerPulse 2s ease-in-out infinite;
+  background: linear-gradient(145deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1));
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 215, 0, 0.4);
+}
+
+@keyframes timerPulse {
+  0%, 100% { 
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+.fuel-empty-message {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #ff6b6b;
+  font-weight: 700;
+  text-shadow: 0 0 15px rgba(255, 107, 107, 0.8);
+  animation: warningPulse 1.5s ease-in-out infinite;
+  background: linear-gradient(145deg, rgba(255, 107, 107, 0.2), rgba(255, 107, 107, 0.1));
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 107, 107, 0.5);
+  position: relative;
+}
+
+@keyframes warningPulse {
+  0%, 100% { 
+    opacity: 1;
+    border-color: rgba(255, 107, 107, 0.5);
+  }
+  50% { 
+    opacity: 0.7;
+    border-color: rgba(255, 107, 107, 0.8);
+  }
+}
+
+/* Модалка топлива */
+.fuel-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.fuel-modal {
+  background: linear-gradient(145deg, #1a1a2e, #16213e);
+  border-radius: 24px;
+  padding: 28px;
+  max-width: 90vw;
+  width: 420px;
+  color: white;
+  text-align: center;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.fuel-modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  animation: modalGlow 4s ease-in-out infinite;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(40px) scale(0.9);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modalGlow {
+  0%, 100% { left: -100%; }
+  50% { left: 100%; }
+}
+
+.fuel-modal-header h3 {
+  margin: 0 0 20px 0;
+  font-size: 26px;
+  font-weight: 800;
+  background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 30px rgba(255, 107, 107, 0.3);
+}
+
+.fuel-modal-icon {
+  font-size: 60px;
+  margin: 20px 0;
+  animation: bounce 2.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.3));
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-15px); }
+  60% { transform: translateY(-8px); }
+}
+
+.fuel-modal-content {
+  position: relative;
+  z-index: 1;
+}
+
+.fuel-modal-content p {
+  font-size: 19px;
+  margin: 20px 0;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.fuel-options {
+  margin: 28px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fuel-option {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 18px;
+  padding: 18px;
+  backdrop-filter: blur(15px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.fuel-option::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.6s;
+}
+
+.fuel-option:hover::before {
+  left: 100%;
+}
+
+.fuel-option:hover {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.fuel-option strong {
+  display: block;
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.fuel-option div {
+  font-size: 15px;
+  opacity: 0.85;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.fuel-option-or {
+  font-weight: 800;
+  font-size: 18px;
+  color: #ffd93d;
+  margin: 12px 0;
+  text-shadow: 0 0 15px rgba(255, 215, 61, 0.6);
+  position: relative;
+}
+
+.fuel-option-or::before,
+.fuel-option-or::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 30%;
+  height: 2px;
+  background: linear-gradient(to right, transparent, #ffd93d, transparent);
+}
+
+.fuel-option-or::before { left: 0; }
+.fuel-option-or::after { right: 0; }
+
+.time-remaining {
+  font-weight: 800 !important;
+  color: #ffd93d !important;
+  font-size: 18px !important;
+  margin-top: 12px !important;
+  text-shadow: 0 0 15px rgba(255, 215, 0, 0.8) !important;
+  animation: timerPulse 2s ease-in-out infinite;
+  background: linear-gradient(145deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1)) !important;
+  padding: 8px 12px !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(255, 215, 0, 0.4) !important;
+}
+
+.fuel-modal-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+
+.fuel-modal-button {
+  flex: 1;
+  min-width: 140px;
+  padding: 16px 20px;
+  border: none;
+  border-radius: 18px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(15px);
+  position: relative;
+  overflow: hidden;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.fuel-modal-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.6s;
+}
+
+.fuel-modal-button:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.fuel-modal-button:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+.fuel-modal-button:active:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.fuel-modal-button.wait {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.15));
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.fuel-modal-button.wait:hover:not(:disabled) {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.25));
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.fuel-modal-button.watch {
+  background: linear-gradient(145deg, #ff6b6b, #ffd93d);
+  color: #333;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+}
+
+.fuel-modal-button.watch:hover:not(:disabled) {
+  background: linear-gradient(145deg, #ff5252, #ffeb3b);
+  box-shadow: 0 12px 35px rgba(255, 107, 107, 0.6);
+}
+
+.fuel-modal-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+}
+
+.ad-loading {
+  font-size: 15px;
+  color: #ffd93d;
+  margin: 18px 0;
+  font-weight: 600;
+  animation: loadingPulse 1.5s ease-in-out infinite;
+  text-shadow: 0 0 10px rgba(255, 215, 61, 0.6);
+}
+
+@keyframes loadingPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* ⛽ ТОПЛИВНАЯ СИСТЕМА - КОНЕЦ */
 
 .win-streak {
   font-size: 0.9rem;
@@ -464,6 +896,22 @@ body {
   animation: racingButtonPulse 1s ease-in-out infinite alternate;
 }
 
+/* ⛽ Стили для отключенной кнопки при пустом топливе */
+.start-race-button.disabled {
+  background: linear-gradient(145deg, #666, #888) !important;
+  color: #aaa !important;
+  cursor: not-allowed !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+  transform: none !important;
+  opacity: 0.6;
+}
+
+.start-race-button.disabled:hover {
+  background: linear-gradient(145deg, #666, #888) !important;
+  transform: none !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+}
+
 @keyframes countdownButtonPulse {
   0% { transform: scale(1); }
   50% { transform: scale(1.1); }
@@ -601,6 +1049,71 @@ body {
     font-size: 1.5rem;
   }
   
+  /* ⛽ Адаптивность топливной системы */
+  .fuel-indicator {
+    padding: 14px;
+    margin: 10px 0;
+  }
+  
+  .fuel-bar {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .fuel-label {
+    font-size: 15px;
+  }
+  
+  .fuel-tanks {
+    justify-content: center;
+  }
+  
+  .fuel-tank {
+    font-size: 22px;
+  }
+  
+  .fuel-count {
+    font-size: 16px;
+    padding: 5px 10px;
+  }
+  
+  .fuel-refill-timer {
+    font-size: 14px;
+    padding: 6px 10px;
+  }
+  
+  .fuel-empty-message {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+  
+  .fuel-modal {
+    width: 95vw;
+    padding: 24px;
+  }
+  
+  .fuel-modal-header h3 {
+    font-size: 22px;
+  }
+  
+  .fuel-modal-icon {
+    font-size: 50px;
+  }
+  
+  .fuel-modal-content p {
+    font-size: 17px;
+  }
+  
+  .fuel-modal-actions {
+    flex-direction: column;
+  }
+  
+  .fuel-modal-button {
+    width: 100%;
+    padding: 14px;
+    font-size: 15px;
+  }
+  
   .participants-info {
     padding: 12px 8px;
   }
@@ -681,6 +1194,57 @@ body {
     font-size: 1.4rem;
   }
   
+  /* ⛽ Очень маленькие экраны - топливо */
+  .fuel-indicator {
+    padding: 12px;
+    margin: 8px 0;
+  }
+  
+  .fuel-label {
+    font-size: 14px;
+  }
+  
+  .fuel-tank {
+    font-size: 20px;
+  }
+  
+  .fuel-count {
+    font-size: 15px;
+    padding: 4px 8px;
+  }
+  
+  .fuel-refill-timer {
+    font-size: 13px;
+    padding: 5px 8px;
+  }
+  
+  .fuel-empty-message {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+  
+  .fuel-modal {
+    width: 98vw;
+    padding: 20px;
+  }
+  
+  .fuel-modal-header h3 {
+    font-size: 20px;
+  }
+  
+  .fuel-modal-icon {
+    font-size: 45px;
+  }
+  
+  .fuel-modal-content p {
+    font-size: 16px;
+  }
+  
+  .fuel-modal-button {
+    padding: 12px;
+    font-size: 14px;
+  }
+  
   .participants-info {
     padding: 10px 6px;
   }
@@ -728,4 +1292,121 @@ body {
 @keyframes winnerBounce {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
+}
+
+/* ⛽ Дополнительные эффекты для топливной системы */
+
+/* Анимация восстановления топлива */
+@keyframes fuelRestore {
+  0% { 
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% { 
+    transform: scale(1.1);
+    filter: brightness(1.3) hue-rotate(90deg);
+  }
+  100% { 
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+.fuel-tank.restoring {
+  animation: fuelRestore 0.8s ease-in-out;
+}
+
+/* Эффект мигания при критически низком топливе */
+.fuel-indicator.critical {
+  animation: criticalFuel 1s ease-in-out infinite;
+}
+
+@keyframes criticalFuel {
+  0%, 100% { 
+    border-color: rgba(255, 107, 107, 0.5);
+    box-shadow: 0 8px 32px rgba(255, 107, 107, 0.3);
+  }
+  50% { 
+    border-color: rgba(255, 107, 107, 0.8);
+    box-shadow: 0 8px 32px rgba(255, 107, 107, 0.6);
+  }
+}
+
+/* Стили для уведомлений о топливе */
+.fuel-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(145deg, rgba(255, 107, 107, 0.95), rgba(255, 107, 107, 0.85));
+  color: white;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 14px;
+  z-index: 1001;
+  animation: slideInRight 0.5s ease-out;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.fuel-notification.success {
+  background: linear-gradient(145deg, rgba(76, 175, 80, 0.95), rgba(76, 175, 80, 0.85));
+}
+
+.fuel-notification.warning {
+  background: linear-gradient(145deg, rgba(255, 152, 0, 0.95), rgba(255, 152, 0, 0.85));
+}
+
+/* Улучшенные переходы для всех интерактивных элементов */
+* {
+  box-sizing: border-box;
+}
+
+button, .fuel-tank, .fuel-modal-button {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .fuel-tank.full,
+  .fuel-refill-timer,
+  .fuel-empty-message,
+  .time-remaining {
+    animation: none !important;
+  }
+}
+
+/* Высокий контраст для лучшей читаемости */
+@media (prefers-contrast: high) {
+  .fuel-modal {
+    border-width: 3px;
+    border-color: #ffffff;
+  }
+  
+  .fuel-indicator {
+    border-width: 3px;
+    border-color: #ffffff;
+  }
+  
+  .fuel-modal-button {
+    border-width: 3px;
+  }
 }
