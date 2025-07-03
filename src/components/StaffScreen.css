@@ -1,8 +1,8 @@
-/* StaffScreen.css - Компактная версия с фоном */
+/* StaffScreen.css - Полная версия с красивым фоном и сеткой 2×3 */
 
 .staff-screen {
   padding: 15px;
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
   min-height: 100vh;
   background-image: url('/staff-background.jpg');
@@ -39,7 +39,7 @@
 
 .staff-header h2 {
   margin: 0 0 10px 0;
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   font-weight: 700;
   background: linear-gradient(45deg, #4CAF50, #81C784, #66BB6A);
   background-size: 200% 200%;
@@ -66,44 +66,51 @@
 .total-staff-count {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   background: linear-gradient(135deg, rgba(76, 175, 80, 0.25) 0%, rgba(76, 175, 80, 0.15) 100%);
-  padding: 8px 16px;
-  border-radius: 20px;
+  padding: 10px 20px;
+  border-radius: 25px;
   border: 1px solid rgba(76, 175, 80, 0.4);
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 .count-icon {
-  font-size: 1.1em;
+  font-size: 1.2em;
 }
 
 .count-text {
   color: #81C784;
 }
 
+/* ГЛАВНОЕ: Сетка 2×3 для персонала */
 .staff-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 15px;
-  margin-top: 15px;
+  grid-template-columns: repeat(2, 1fr); /* 2 колонки */
+  grid-template-rows: repeat(3, minmax(200px, auto)); /* 3 ряда */
+  gap: 20px;
+  margin-top: 20px;
   position: relative;
   z-index: 1;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .staff-item {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
-  backdrop-filter: blur(15px);
-  border: 2px solid rgba(255, 255, 255, 0.15);
-  border-radius: 15px;
-  padding: 15px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 20px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  gap: 15px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  min-height: 180px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .staff-item::before {
@@ -113,7 +120,7 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
   transition: left 0.6s;
 }
 
@@ -122,24 +129,27 @@
 }
 
 .staff-item:hover {
-  transform: translateY(-3px);
-  border-color: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  transform: translateY(-5px) scale(1.02);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.12) 100%);
 }
 
 .staff-item.hired {
-  border-color: rgba(76, 175, 80, 0.6);
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.18) 0%, rgba(76, 175, 80, 0.1) 100%);
+  border-color: rgba(76, 175, 80, 0.7);
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.2) 0%, rgba(76, 175, 80, 0.12) 100%);
+  box-shadow: 0 8px 32px rgba(76, 175, 80, 0.2);
 }
 
 .staff-item.hired:hover {
-  border-color: rgba(76, 175, 80, 0.8);
-  box-shadow: 0 10px 25px rgba(76, 175, 80, 0.3);
+  border-color: rgba(76, 175, 80, 0.9);
+  box-shadow: 0 15px 40px rgba(76, 175, 80, 0.4);
 }
 
 .staff-item.max-level {
-  border-color: rgba(255, 193, 7, 0.7);
-  background: linear-gradient(135deg, rgba(255, 193, 7, 0.22) 0%, rgba(255, 193, 7, 0.12) 100%);
+  border-color: rgba(255, 193, 7, 0.8);
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.25) 0%, rgba(255, 193, 7, 0.15) 100%);
+  box-shadow: 0 8px 32px rgba(255, 193, 7, 0.3);
 }
 
 .staff-icon-container {
@@ -148,39 +158,41 @@
 }
 
 .staff-icon {
-  width: 55px;
-  height: 55px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  transition: all 0.3s ease;
+  font-size: 2.2rem;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.4s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .staff-item:hover .staff-icon {
-  transform: scale(1.08);
-  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.1) rotate(5deg);
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
 .staff-count-badge {
   position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 24px;
-  height: 24px;
+  top: -8px;
+  right: -8px;
+  width: 26px;
+  height: 26px;
   background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 3px 10px rgba(255, 107, 107, 0.5);
   animation: badgePulse 2s ease-in-out infinite;
 }
 
@@ -189,7 +201,7 @@
     transform: scale(1); 
   }
   50% { 
-    transform: scale(1.05); 
+    transform: scale(1.08); 
   }
 }
 
@@ -202,58 +214,63 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .staff-details h3 {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 600;
   color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .staff-quantity {
   background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
   color: white;
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 15px;
+  font-size: 0.85rem;
   font-weight: 600;
-  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
 }
 
 .staff-description {
-  margin: 0 0 8px 0;
-  font-size: 0.85rem;
-  color: #cccccc;
-  line-height: 1.3;
+  margin: 0 0 10px 0;
+  font-size: 0.9rem;
+  color: #e0e0e0;
+  line-height: 1.4;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .staff-progress {
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .staff-level {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: #ffffff;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
   font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .level-progress-bar {
-  height: 5px;
+  height: 6px;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 3px;
   overflow: hidden;
   position: relative;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .level-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #4CAF50 0%, #66BB6A 100%);
+  background: linear-gradient(90deg, #4CAF50 0%, #66BB6A 50%, #81C784 100%);
   border-radius: 3px;
   transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  box-shadow: 0 1px 3px rgba(76, 175, 80, 0.5);
 }
 
 .level-progress-fill::after {
@@ -263,8 +280,8 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  animation: progressShine 2s ease-in-out infinite;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: progressShine 2.5s ease-in-out infinite;
 }
 
 @keyframes progressShine {
@@ -277,69 +294,72 @@
 }
 
 .staff-bonus {
-  margin: 4px 0 0 0;
+  margin: 5px 0 0 0;
   font-size: 0.8rem;
   color: #81C784;
   font-weight: 600;
-  background: rgba(76, 175, 80, 0.12);
-  padding: 4px 8px;
-  border-radius: 8px;
+  background: rgba(76, 175, 80, 0.15);
+  padding: 6px 10px;
+  border-radius: 10px;
   border-left: 3px solid #4CAF50;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .staff-action {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
-  min-width: 100px;
+  min-width: 110px;
 }
 
 .staff-cost {
   display: flex;
   align-items: center;
-  gap: 3px;
-  padding: 4px 8px;
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  font-size: 0.75rem;
+  gap: 5px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  font-size: 0.8rem;
   font-weight: 600;
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .staff-cost.insufficient {
-  background: rgba(244, 67, 54, 0.25);
-  border-color: rgba(244, 67, 54, 0.5);
+  background: rgba(244, 67, 54, 0.3);
+  border-color: rgba(244, 67, 54, 0.6);
   color: #ffcdd2;
 }
 
 .cost-icon {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
 }
 
 .cost-amount {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
 }
 
 .hire-upgrade-button {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 8px 12px;
+  gap: 6px;
+  padding: 10px 15px;
   background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
   color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
   position: relative;
   overflow: hidden;
   width: 100%;
   justify-content: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .hire-upgrade-button::before {
@@ -349,7 +369,7 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
   transition: left 0.5s;
 }
 
@@ -359,12 +379,12 @@
 
 .hire-upgrade-button:hover:not(:disabled) {
   background: linear-gradient(135deg, #66BB6A 0%, #81C784 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.6);
 }
 
 .hire-upgrade-button:active:not(:disabled) {
-  transform: translateY(0);
+  transform: translateY(-1px);
 }
 
 .hire-upgrade-button:disabled {
@@ -376,28 +396,29 @@
 }
 
 .button-icon {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
 }
 
 .button-text {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
 }
 
 .max-level-indicator {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
-  padding: 8px;
-  background: linear-gradient(135deg, rgba(255, 193, 7, 0.25) 0%, rgba(255, 193, 7, 0.15) 100%);
-  border-radius: 10px;
-  border: 1px solid rgba(255, 193, 7, 0.5);
+  gap: 5px;
+  padding: 10px;
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.3) 0%, rgba(255, 193, 7, 0.2) 100%);
+  border-radius: 12px;
+  border: 2px solid rgba(255, 193, 7, 0.6);
   width: 100%;
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
 }
 
 .max-level-icon {
-  font-size: 1.1rem;
-  animation: starTwinkle 2s ease-in-out infinite;
+  font-size: 1.3rem;
+  animation: starTwinkle 2.5s ease-in-out infinite;
 }
 
 @keyframes starTwinkle {
@@ -405,17 +426,18 @@
     transform: scale(1) rotate(0deg); 
   }
   50% { 
-    transform: scale(1.1) rotate(180deg); 
+    transform: scale(1.15) rotate(180deg); 
   }
 }
 
 .max-level-label {
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   font-weight: 700;
   color: #FFC107;
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .staff-screen.error {
@@ -428,9 +450,79 @@
   font-weight: 600;
 }
 
-@media (max-width: 768px) {
+/* Адаптивность для планшетов */
+@media (max-width: 1024px) {
   .staff-screen {
     padding: 12px;
+    max-width: 100%;
+  }
+  
+  .staff-list {
+    gap: 15px;
+    max-width: 700px;
+  }
+}
+
+/* Мобильные устройства - вертикальная сетка */
+@media (max-width: 768px) {
+  .staff-screen {
+    padding: 10px;
+  }
+  
+  .staff-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .staff-list {
+    grid-template-columns: 1fr; /* 1 колонка на мобильных */
+    grid-template-rows: repeat(6, minmax(160px, auto)); /* 6 рядов */
+    gap: 12px;
+    max-width: 100%;
+  }
+  
+  .staff-item {
+    padding: 15px;
+    min-height: 150px;
+  }
+  
+  .staff-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 1.8rem;
+  }
+  
+  .staff-count-badge {
+    width: 22px;
+    height: 22px;
+    font-size: 0.7rem;
+  }
+  
+  .staff-details h3 {
+    font-size: 1rem;
+  }
+  
+  .staff-description {
+    font-size: 0.8rem;
+  }
+}
+
+/* Очень маленькие экраны */
+@media (max-width: 480px) {
+  .staff-screen {
+    padding: 8px;
+  }
+  
+  .staff-header {
+    padding: 12px;
+  }
+  
+  .staff-header h2 {
+    font-size: 1.3rem;
+  }
+  
+  .total-staff-count {
+    padding: 8px 15px;
+    font-size: 0.9rem;
   }
   
   .staff-list {
@@ -438,19 +530,19 @@
   }
   
   .staff-item {
-    padding: 10px;
-    min-height: 160px;
+    padding: 12px;
+    min-height: 130px;
   }
   
   .staff-icon {
     width: 45px;
     height: 45px;
-    font-size: 1.4rem;
+    font-size: 1.5rem;
   }
   
   .staff-count-badge {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     font-size: 0.65rem;
   }
   
@@ -459,59 +551,11 @@
   }
   
   .staff-description {
-    font-size: 0.7rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .staff-screen {
-    padding: 10px;
-  }
-  
-  .staff-header {
-    padding: 10px;
-  }
-  
-  .staff-header h2 {
-    font-size: 1.3rem;
-  }
-  
-  .total-staff-count {
-    padding: 6px 12px;
-    font-size: 0.8rem;
-  }
-  
-  .staff-list {
-    gap: 8px;
-  }
-  
-  .staff-item {
-    padding: 8px;
-    min-height: 140px;
-  }
-  
-  .staff-icon {
-    width: 40px;
-    height: 40px;
-    font-size: 1.2rem;
-  }
-  
-  .staff-count-badge {
-    width: 16px;
-    height: 16px;
-    font-size: 0.6rem;
-  }
-  
-  .staff-details h3 {
-    font-size: 0.85rem;
-  }
-  
-  .staff-description {
-    font-size: 0.65rem;
+    font-size: 0.75rem;
   }
   
   .hire-upgrade-button {
-    padding: 6px 10px;
-    font-size: 0.7rem;
+    padding: 8px 12px;
+    font-size: 0.75rem;
   }
 }
