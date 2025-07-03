@@ -11,6 +11,18 @@ const RaceScreen = ({
   onFuelUpdate,
   onFuelRefillByAd
 }) => {
+
+ console.log('RaceScreen props:');
+  console.log('playerCar:', playerCar);
+  console.log('propsFuelCount:', propsFuelCount);
+  console.log('propsLastRaceTime:', propsLastRaceTime);
+  console.log('propsFuelRefillTime:', propsFuelRefillTime);
+  console.log('onFuelUpdate (is function?):', typeof onFuelUpdate === 'function');
+  console.log('onFuelRefillByAd (is function?):', typeof onFuelRefillByAd === 'function');
+
+
+
+
   const [selectedDifficulty, setSelectedDifficulty] = useState('easy');
   const [raceState, setRaceState] = useState('ready');
   const [countdown, setCountdown] = useState(0);
