@@ -463,7 +463,7 @@
   }
 }
 
-/* Мобильные устройства - вертикальная сетка */
+/* Мобильные устройства - тоже сетка 2×3 */
 @media (max-width: 768px) {
   .staff-screen {
     padding: 10px;
@@ -474,70 +474,24 @@
   }
   
   .staff-list {
-    grid-template-columns: 1fr; /* 1 колонка на мобильных */
-    grid-template-rows: repeat(6, minmax(160px, auto)); /* 6 рядов */
+    grid-template-columns: repeat(2, 1fr); /* 2 колонки на мобильных тоже */
+    grid-template-rows: repeat(3, minmax(160px, auto)); /* 3 ряда */
     gap: 12px;
     max-width: 100%;
   }
   
   .staff-item {
-    padding: 15px;
+    padding: 12px;
     min-height: 150px;
-  }
-  
-  .staff-icon {
-    width: 50px;
-    height: 50px;
-    font-size: 1.8rem;
-  }
-  
-  .staff-count-badge {
-    width: 22px;
-    height: 22px;
-    font-size: 0.7rem;
-  }
-  
-  .staff-details h3 {
-    font-size: 1rem;
-  }
-  
-  .staff-description {
-    font-size: 0.8rem;
-  }
-}
-
-/* Очень маленькие экраны */
-@media (max-width: 480px) {
-  .staff-screen {
-    padding: 8px;
-  }
-  
-  .staff-header {
-    padding: 12px;
-  }
-  
-  .staff-header h2 {
-    font-size: 1.3rem;
-  }
-  
-  .total-staff-count {
-    padding: 8px 15px;
-    font-size: 0.9rem;
-  }
-  
-  .staff-list {
-    gap: 10px;
-  }
-  
-  .staff-item {
-    padding: 12px;
-    min-height: 130px;
+    flex-direction: column; /* Вертикальная раскладка для экономии места */
+    text-align: center;
+    gap: 8px;
   }
   
   .staff-icon {
     width: 45px;
     height: 45px;
-    font-size: 1.5rem;
+    font-size: 1.6rem;
   }
   
   .staff-count-badge {
@@ -552,10 +506,95 @@
   
   .staff-description {
     font-size: 0.75rem;
+    line-height: 1.2;
+  }
+  
+  .staff-name-row {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .staff-action {
+    min-width: auto;
+    width: 100%;
+  }
+}
+
+/* Очень маленькие экраны - тоже 2×3 но более компактно */
+@media (max-width: 480px) {
+  .staff-screen {
+    padding: 8px;
+  }
+  
+  .staff-header {
+    padding: 10px;
+  }
+  
+  .staff-header h2 {
+    font-size: 1.3rem;
+  }
+  
+  .total-staff-count {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+  
+  .staff-list {
+    grid-template-columns: repeat(2, 1fr); /* 2 колонки даже на маленьких экранах */
+    grid-template-rows: repeat(3, minmax(140px, auto)); /* 3 ряда */
+    gap: 8px;
+  }
+  
+  .staff-item {
+    padding: 10px;
+    min-height: 130px;
+    flex-direction: column; /* Вертикальная раскладка */
+    text-align: center;
+    gap: 6px;
+  }
+  
+  .staff-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.3rem;
+  }
+  
+  .staff-count-badge {
+    width: 18px;
+    height: 18px;
+    font-size: 0.6rem;
+  }
+  
+  .staff-details h3 {
+    font-size: 0.8rem;
+  }
+  
+  .staff-description {
+    font-size: 0.7rem;
+    line-height: 1.1;
+  }
+  
+  .staff-name-row {
+    flex-direction: column;
+    gap: 2px;
+  }
+  
+  .staff-level {
+    font-size: 0.7rem;
+  }
+  
+  .staff-bonus {
+    font-size: 0.65rem;
+    padding: 4px 6px;
   }
   
   .hire-upgrade-button {
-    padding: 8px 12px;
-    font-size: 0.75rem;
+    padding: 6px 10px;
+    font-size: 0.7rem;
+  }
+  
+  .staff-cost {
+    padding: 4px 8px;
+    font-size: 0.7rem;
   }
 }
