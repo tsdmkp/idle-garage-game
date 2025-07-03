@@ -1,5 +1,5 @@
 import React from 'react';
-import './StaffScreen.css'; // Убедись, что CSS файл подключен
+//import './StaffScreen.css'; // Убедись, что CSS файл подключен
 
 // Компонент для отображения экрана Персонала
 // Получает:
