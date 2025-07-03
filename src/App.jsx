@@ -39,11 +39,14 @@ const INITIAL_HIRED_STAFF = (() => {
 })();
 
 function App() {
+  // Основные состояния игры
   const [isLoading, setIsLoading] = useState(true);
   const [hasLoadedData, setHasLoadedData] = useState(false);
   const [error, setError] = useState(null);
   const [tgUserData, setTgUserData] = useState(null);
   const [isTgApp, setIsTgApp] = useState(false);
+  
+  // Состояния игрока
   const [playerLevel, setPlayerLevel] = useState(1);
   const [playerName, setPlayerName] = useState('Игрок');
   const [gameCoins, setGameCoins] = useState(STARTING_COINS);
@@ -53,39 +56,79 @@ function App() {
   const [incomeRatePerHour, setIncomeRatePerHour] = useState(0);
   const lastCollectedTimeRef = useRef(Date.now());
   const [accumulatedIncome, setAccumulatedIncome] = useState(0);
+  
+  // Состояния игровых объектов
   const [buildings, setBuildings] = useState(INITIAL_BUILDINGS);
   const [playerCars, setPlayerCars] = useState(() => [INITIAL_CAR]);
   const [selectedCarId, setSelectedCarId] = useState(INITIAL_CAR.id);
   const [hiredStaff, setHiredStaff] = useState(INITIAL_HIRED_STAFF);
+  
+  // UI состояния
   const [activeScreen, setActiveScreen] = useState('garage');
   const [isTuningVisible, setIsTuningVisible] = useState(false);
   const [isCarSelectorVisible, setIsCarSelectorVisible] = useState(false);
   
+  // Туториал
   const [isTutorialActive, setIsTutorialActive] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
   const [hasCompletedTutorial, setHasCompletedTutorial] = useState(false);
 
-  // Состояния топливной системы
+  // Топливная система
   const [fuelCount, setFuelCount] = useState(5);
   const [lastRaceTime, setLastRaceTime] = useState(null);
   const [fuelRefillTime, setFuelRefillTime] = useState(null);
 
+  // Refs для предотвращения лишних ререндеров
+  const saveTimeoutRef = useRef(null);
+  const userIdRef = useRef(null);
+
   const currentCar = playerCars.find(car => car.id === selectedCarId) || playerCars[0] || null;
 
-  // Определяем userId правильно
+  // Функция получения userId - теперь с мемоизацией через ref
   const getUserId = useCallback(() => {
+    if (userIdRef.current) {
+      return userIdRef.current;
+    }
+    
     if (isTgApp && tgUserData?.id) {
       const userId = tgUserData.id.toString();
+      userIdRef.current = userId;
       console.log('🆔 getUserId (Telegram):', userId);
       return userId;
     } else if (!isTgApp) {
+      userIdRef.current = 'default';
       console.log('🆔 getUserId (Standalone): default');
       return 'default';
     }
+    
     console.log('🆔 getUserId: null (не готов)');
     return null;
   }, [isTgApp, tgUserData?.id]);
 
+  // Debounced save function для предотвращения частых сохранений
+  const debouncedSave = useCallback((data) => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    saveTimeoutRef.current = setTimeout(async () => {
+      const userId = getUserId();
+      if (!userId) {
+        console.warn('⚠️ Отмена сохранения: userId не готов');
+        return;
+      }
+
+      try {
+        console.log('📤 Сохранение состояния для userId:', userId);
+        await apiClient('/game_state', 'POST', { body: { userId, ...data } });
+        console.log('✅ Состояние успешно сохранено');
+      } catch (err) {
+        console.error('❌ Ошибка сохранения:', err.message);
+      }
+    }, 500); // 500ms debounce
+  }, [getUserId]);
+
+  // Основная функция сохранения состояния
   const saveGameState = useCallback(async (updates = {}) => {
     const userId = getUserId();
     if (!userId) {
@@ -109,50 +152,79 @@ function App() {
       hired_staff: hiredStaff,
       has_completed_tutorial: hasCompletedTutorial,
       last_exit_time: new Date().toISOString(),
-      // Добавляем данные топлива
+      // Топливные данные
       fuel_count: fuelCount,
       last_race_time: lastRaceTime ? new Date(lastRaceTime).toISOString() : null,
       fuel_refill_time: fuelRefillTime ? new Date(fuelRefillTime).toISOString() : null,
       ...updates
     };
 
+    // Используем debounced save для неважных обновлений
+    if (updates && Object.keys(updates).length < 3) {
+      debouncedSave(stateToSave);
+      return;
+    }
+
+    // Мгновенное сохранение для важных действий
     try {
-      console.log('📤 Сохранение состояния для userId:', userId, stateToSave);
+      console.log('📤 Мгновенное сохранение состояния для userId:', userId);
       await apiClient('/game_state', 'POST', { body: stateToSave });
       console.log('✅ Состояние успешно сохранено');
     } catch (err) {
       console.error('❌ Ошибка сохранения:', err.message);
     }
   }, [
-    getUserId, playerLevel, playerName, gameCoins, jetCoins, currentXp, xpToNextLevel,
-    incomeRatePerHour, buildings, playerCars, selectedCarId, hiredStaff, hasCompletedTutorial,
-    fuelCount, lastRaceTime, fuelRefillTime
+    playerLevel, playerName, gameCoins, jetCoins, currentXp, xpToNextLevel,
+    incomeRatePerHour, buildings, playerCars, selectedCarId, hiredStaff, 
+    hasCompletedTutorial, fuelCount, lastRaceTime, fuelRefillTime,
+    getUserId, debouncedSave
   ]);
 
-  // Инициализация Telegram WebApp И загрузка данных
+  // Вспомогательная функция валидации дат
+  const parseTimestamp = (dateString) => {
+    if (!dateString) return null;
+    const timestamp = new Date(dateString).getTime();
+    return isNaN(timestamp) ? null : timestamp;
+  };
+
+  // Функция проверки и восстановления топлива
+  const checkAndRestoreFuel = useCallback((currentFuel, lastRace, refillTime) => {
+    if (currentFuel >= 5) return { fuel: currentFuel, shouldUpdate: false };
+    
+    const now = Date.now();
+    const timeToCheck = refillTime || (lastRace ? lastRace + (60 * 60 * 1000) : null);
+    
+    if (timeToCheck && now >= timeToCheck) {
+      console.log('⛽ Топливо должно быть восстановлено');
+      return { 
+        fuel: 5, 
+        shouldUpdate: true, 
+        newLastRaceTime: now, 
+        newRefillTime: null 
+      };
+    }
+    
+    return { fuel: currentFuel, shouldUpdate: false };
+  }, []);
+
+  // Инициализация приложения
   useEffect(() => {
     const initializeApp = async () => {
       console.log('🚀 Инициализация приложения...');
       
-      // Сначала инициализируем Telegram
+      // Инициализация Telegram WebApp
       const tg = window.Telegram?.WebApp;
       if (tg) {
         console.log('✅ Telegram WebApp найден');
-        console.log('📋 Telegram WebApp initData:', tg.initData);
-        console.log('📋 Telegram WebApp initDataUnsafe:', tg.initDataUnsafe);
-        console.log('🔗 Start param:', tg.initDataUnsafe?.start_param);
         
         setIsTgApp(true);
         const userData = tg.initDataUnsafe?.user || null;
-        console.log('👤 Telegram user data:', JSON.stringify(userData, null, 2));
         setTgUserData(userData);
         
         if (userData && typeof userData === 'object') {
           const firstName = userData.first_name || userData.firstName || userData.username || 'Игрок';
           setPlayerName(firstName);
           console.log('📝 Player name установлен:', firstName);
-        } else {
-          console.warn('⚠️ Нет валидных данных пользователя в userData:', userData);
         }
         
         tg.ready();
@@ -160,11 +232,8 @@ function App() {
         tg.BackButton.hide();
         tg.MainButton.hide();
         
-        // ВАЖНО: Ждем немного чтобы initData точно был готов
         await new Promise(resolve => setTimeout(resolve, 100));
-        console.log('📋 Final initData after ready():', tg.initData);
-
-        // Теперь загружаем данные с правильным userId
+        
         if (userData?.id) {
           await loadGameData(userData.id.toString());
         } else {
@@ -175,7 +244,6 @@ function App() {
       } else {
         console.log('⚠️ Telegram WebApp не найден, режим standalone');
         setIsTgApp(false);
-        // Загружаем данные для standalone режима
         await loadGameData('default');
       }
     };
@@ -194,38 +262,25 @@ function App() {
         console.log('📦 Получено состояние с бэкенда:', initialState);
 
         if (initialState && typeof initialState === 'object') {
-          // Обновляем состояние из бэкенда
-          setPlayerLevel(initialState.player_level ?? playerLevel);
+          // Основные данные игрока
+          setPlayerLevel(Number(initialState.player_level) || 1);
+          
           if (initialState.first_name && initialState.first_name !== 'Игрок') {
             setPlayerName(initialState.first_name);
-            console.log('📝 Имя обновлено с бэкенда:', initialState.first_name);
           }
           
-          let coinsToSet = initialState.game_coins;
-          if (typeof coinsToSet === 'string') {
-            coinsToSet = parseInt(coinsToSet) || STARTING_COINS;
-          }
-          setGameCoins(coinsToSet || STARTING_COINS);
-          console.log('💰 Монеты установлены:', coinsToSet || STARTING_COINS);
+          const coinsToSet = Number(initialState.game_coins) || STARTING_COINS;
+          setGameCoins(coinsToSet);
           
-          setJetCoins(parseInt(initialState.jet_coins) || 0);
-          setCurrentXp(initialState.current_xp ?? currentXp);
-          setXpToNextLevel(initialState.xp_to_next_level ?? xpToNextLevel);
+          setJetCoins(Number(initialState.jet_coins) || 0);
+          setCurrentXp(Number(initialState.current_xp) || 10);
+          setXpToNextLevel(Number(initialState.xp_to_next_level) || 100);
+          setHasCompletedTutorial(Boolean(initialState.has_completed_tutorial));
           
-          const savedTutorial = initialState.has_completed_tutorial;
-          setHasCompletedTutorial(savedTutorial || false);
-          console.log('🎓 Туториал завершен:', savedTutorial);
-          
-          // Загружаем данные топлива
-          const loadedFuelCount = initialState.fuel_count ?? 5;
-          const loadedLastRaceTime = initialState.last_race_time ? 
-            new Date(initialState.last_race_time).getTime() : null;
-          const loadedFuelRefillTime = initialState.fuel_refill_time ? 
-            new Date(initialState.fuel_refill_time).getTime() : null;
-          
-          setFuelCount(loadedFuelCount);
-          setLastRaceTime(loadedLastRaceTime);
-          setFuelRefillTime(loadedFuelRefillTime);
+          // Загрузка топливных данных с валидацией
+          const loadedFuelCount = Math.min(Math.max(Number(initialState.fuel_count) || 5, 0), 5);
+          const loadedLastRaceTime = parseTimestamp(initialState.last_race_time);
+          const loadedFuelRefillTime = parseTimestamp(initialState.fuel_refill_time);
           
           console.log('⛽ Загружены данные топлива:', {
             fuel: loadedFuelCount,
@@ -233,51 +288,50 @@ function App() {
             refillTime: loadedFuelRefillTime ? new Date(loadedFuelRefillTime).toLocaleString() : 'нет'
           });
           
-          // Проверяем восстановление топлива при загрузке
-          const now = Date.now();
-          const refillTime = loadedFuelRefillTime || (loadedLastRaceTime ? loadedLastRaceTime + (60 * 60 * 1000) : null);
+          // Проверяем восстановление топлива
+          const fuelResult = checkAndRestoreFuel(loadedFuelCount, loadedLastRaceTime, loadedFuelRefillTime);
           
-          if (refillTime && now >= refillTime && loadedFuelCount < 5) {
+          setFuelCount(fuelResult.fuel);
+          setLastRaceTime(fuelResult.newLastRaceTime || loadedLastRaceTime);
+          setFuelRefillTime(fuelResult.newRefillTime !== undefined ? fuelResult.newRefillTime : loadedFuelRefillTime);
+          
+          // Если топливо было восстановлено, сохраняем это
+          if (fuelResult.shouldUpdate) {
             console.log('⛽ Топливо восстановлено при загрузке!');
-            setFuelCount(5);
-            setFuelRefillTime(null);
-            
-            // Сохраняем обновленные данные
+            // Отложенное сохранение после полной инициализации
             setTimeout(() => {
-              saveGameState({
+              debouncedSave({
+                userId,
                 fuel_count: 5,
                 fuel_refill_time: null,
+                last_race_time: new Date(fuelResult.newLastRaceTime).toISOString()
               });
-            }, 1000);
+            }, 2000);
           }
           
-          // Запускаем туториал только если не завершен И это новый игрок
-          if (!savedTutorial && (initialState.player_level === 1 || !initialState.player_level)) {
+          // Туториал
+          const savedTutorial = Boolean(initialState.has_completed_tutorial);
+          if (!savedTutorial && (Number(initialState.player_level) === 1 || !initialState.player_level)) {
             console.log('🎯 Запускаем туториал для нового игрока');
             setTimeout(() => {
               setIsTutorialActive(true);
               setTutorialStep(0);
-              // Даем новому игроку стартовый доход для туториала
-              setAccumulatedIncome(25); // Достаточно для сбора в туториале
+              setAccumulatedIncome(25);
             }, 1000);
-          } else {
-            console.log('⏭️ Туториал пропущен:', { 
-              tutorialCompleted: savedTutorial, 
-              playerLevel: initialState.player_level 
-            });
           }
 
-          const loadedLastCollectedTime = initialState.last_collected_time ? new Date(initialState.last_collected_time).getTime() : Date.now();
-          const loadedLastExitTime = initialState.last_exit_time ? new Date(initialState.last_exit_time).getTime() : loadedLastCollectedTime;
-          lastCollectedTimeRef.current = isFinite(loadedLastCollectedTime) ? loadedLastCollectedTime : Date.now();
-          console.log('⏰ Время последнего сбора:', new Date(lastCollectedTimeRef.current).toISOString());
+          // Время последнего сбора
+          const loadedLastCollectedTime = parseTimestamp(initialState.last_collected_time) || Date.now();
+          const loadedLastExitTime = parseTimestamp(initialState.last_exit_time) || loadedLastCollectedTime;
+          lastCollectedTimeRef.current = loadedLastCollectedTime;
 
+          // Оффлайн доход
           const now = Date.now();
           const offlineTimeMs = Math.max(0, now - loadedLastExitTime);
-          console.log('⏱️ Оффлайн время (мс):', offlineTimeMs);
 
+          // Здания
           let loadedBuildings = INITIAL_BUILDINGS;
-          if (initialState?.buildings && Array.isArray(initialState.buildings) && initialState.buildings.length > 0) {
+          if (Array.isArray(initialState.buildings) && initialState.buildings.length > 0) {
             const validBuildings = initialState.buildings.every(building => 
               building && 
               typeof building.id === 'string' && 
@@ -289,70 +343,69 @@ function App() {
             
             if (validBuildings) {
               loadedBuildings = initialState.buildings;
-              console.log('🏢 Загружены здания с бэкенда:', loadedBuildings);
-            } else {
-              console.warn('⚠️ Невалидные здания, используем дефолтные');
             }
-          } else {
-            console.log('🏢 Используем дефолтные здания');
           }
           setBuildings(loadedBuildings);
 
-          const loadedHiredStaff = initialState.hired_staff ?? INITIAL_HIRED_STAFF;
+          // Персонал
+          const loadedHiredStaff = initialState.hired_staff && typeof initialState.hired_staff === 'object' 
+            ? initialState.hired_staff 
+            : INITIAL_HIRED_STAFF;
           setHiredStaff(loadedHiredStaff);
-          console.log('👥 Загружен персонал:', loadedHiredStaff);
 
+          // Машины
           const loadedPlayerCarsRaw = Array.isArray(initialState.player_cars) ? initialState.player_cars : [INITIAL_CAR];
-          const loadedPlayerCars = loadedPlayerCarsRaw.map(sc =>
-            sc && sc.id && sc.parts ? { ...sc, stats: recalculateStatsAndIncomeBonus(sc.id, sc.parts).stats } : null
-          ).filter(Boolean);
+          const loadedPlayerCars = loadedPlayerCarsRaw.map(sc => {
+            if (sc && sc.id && sc.parts) {
+              return { ...sc, stats: recalculateStatsAndIncomeBonus(sc.id, sc.parts).stats };
+            }
+            return null;
+          }).filter(Boolean);
+          
           const actualPlayerCars = loadedPlayerCars.length > 0 ? loadedPlayerCars : [INITIAL_CAR];
           setPlayerCars(actualPlayerCars);
-          console.log('🚗 Загружены машины:', actualPlayerCars);
 
+          // Выбранная машина
           const loadedSelectedCarId = initialState.selected_car_id;
           const finalSelectedCarId = loadedSelectedCarId && actualPlayerCars.some(c => c.id === loadedSelectedCarId)
             ? loadedSelectedCarId
             : actualPlayerCars[0]?.id || INITIAL_CAR.id;
           setSelectedCarId(finalSelectedCarId);
-          console.log('🎯 Выбранная машина:', finalSelectedCarId);
 
+          // Расчет дохода
           const carToCalculateFrom = actualPlayerCars.find(c => c.id === finalSelectedCarId) || actualPlayerCars[0] || INITIAL_CAR;
           const initialTotalRate = calculateTotalIncomeRate(loadedBuildings, carToCalculateFrom, loadedHiredStaff);
           setIncomeRatePerHour(initialTotalRate);
-          console.log('💸 Рассчитана скорость дохода:', initialTotalRate);
           
+          // Оффлайн доход
           let offlineIncome = 0;
           if (offlineTimeMs > 0 && initialTotalRate > 0) {
             offlineIncome = (initialTotalRate / 3600) * Math.min(offlineTimeMs / 1000, MAX_OFFLINE_HOURS * 3600);
-            console.log('💰 Рассчитан оффлайн доход:', offlineIncome);
           }
-          setAccumulatedIncome(offlineIncome);
+          setAccumulatedIncome(Math.max(offlineIncome, 0));
+          
         } else {
           console.error('❌ Бэкенд вернул невалидные данные');
           setError('Не удалось получить данные игрока');
-          setBuildings(INITIAL_BUILDINGS);
-          setPlayerCars([INITIAL_CAR]);
-          setSelectedCarId(INITIAL_CAR.id);
-          setHiredStaff(INITIAL_HIRED_STAFF);
-          setIncomeRatePerHour(calculateTotalIncomeRate(INITIAL_BUILDINGS, INITIAL_CAR, INITIAL_HIRED_STAFF));
         }
       } catch (err) {
         console.error('❌ Ошибка загрузки данных:', err.message);
         setError(`Ошибка загрузки: ${err.message}`);
       } finally {
         setIsLoading(false);
-        console.log('✅ Загрузка завершена, isLoading = false');
       }
     };
 
-    // Запускаем инициализацию только один раз
     if (!hasLoadedData) {
       initializeApp();
     }
 
+    // Cleanup
     return () => {
-      // Сохраняем время выхода при размонтировании
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      
       const userId = getUserId();
       if (userId) {
         apiClient('/game_state', 'POST', {
@@ -363,40 +416,39 @@ function App() {
         }).catch(err => console.error('Failed to save last exit time:', err));
       }
     };
-  }, []); // Пустой массив - запускаем только один раз
+  }, [hasLoadedData, getUserId, debouncedSave, checkAndRestoreFuel]);
 
   // Таймер дохода
   useEffect(() => {
     if (incomeRatePerHour <= 0 || isLoading) {
-      console.log('⏸️ Таймер дохода не запущен:', { incomeRatePerHour, isLoading });
       return;
     }
     
-    console.log('▶️ Таймер дохода запущен со скоростью:', incomeRatePerHour);
     const incomePerSecond = incomeRatePerHour / 3600;
     const maxAccumulationCap = incomeRatePerHour * MAX_OFFLINE_HOURS;
     
     const intervalId = setInterval(() => {
       const now = Date.now();
       const timePassedTotalSeconds = (now - lastCollectedTimeRef.current) / 1000;
+      
       if (!isFinite(timePassedTotalSeconds) || !isFinite(incomePerSecond) || timePassedTotalSeconds < 0) {
-        console.error('❌ Ошибка в таймере дохода:', { timePassedTotalSeconds, incomePerSecond });
         return;
       }
+      
       const potentialTotalIncome = timePassedTotalSeconds * incomePerSecond;
       const newAccumulated = Math.min(potentialTotalIncome, maxAccumulationCap);
-      setAccumulatedIncome(isFinite(newAccumulated) && newAccumulated >= 0 ? newAccumulated : 0);
+      
+      if (isFinite(newAccumulated) && newAccumulated >= 0) {
+        setAccumulatedIncome(newAccumulated);
+      }
     }, UPDATE_INTERVAL);
     
-    return () => {
-      console.log('⏹️ Таймер дохода остановлен');
-      clearInterval(intervalId);
-    };
+    return () => clearInterval(intervalId);
   }, [incomeRatePerHour, isLoading]);
 
-  const handleCollect = () => {
+  // Обработчики игровых действий
+  const handleCollect = useCallback(() => {
     const incomeToAdd = Math.floor(accumulatedIncome);
-    console.log('💰 Сбор дохода:', incomeToAdd);
     if (incomeToAdd > 0) {
       const newTotalCoins = gameCoins + incomeToAdd;
       setGameCoins(newTotalCoins);
@@ -405,10 +457,7 @@ function App() {
       lastCollectedTimeRef.current = collectionTime;
       
       if (isTutorialActive && tutorialStep === 3) {
-        console.log('🎓 Шаг туториала 3 завершен, переход к 4');
-        setTimeout(() => {
-          setTutorialStep(4);
-        }, 500);
+        setTimeout(() => setTutorialStep(4), 500);
       }
       
       saveGameState({
@@ -416,19 +465,13 @@ function App() {
         last_collected_time: new Date(collectionTime).toISOString(),
       });
     }
-  };
+  }, [accumulatedIncome, gameCoins, isTutorialActive, tutorialStep, saveGameState]);
 
-  const handleBuildingClick = (buildingName) => {
-    console.log('🏢 Клик по зданию:', buildingName);
+  const handleBuildingClick = useCallback((buildingName) => {
     const targetBuilding = buildings.find(b => b.name === buildingName);
-    
-    if (!targetBuilding) {
-      console.log('❌ Здание не найдено:', buildingName);
-      return;
-    }
+    if (!targetBuilding) return;
 
     const cost = calculateBuildingCost(targetBuilding.id, targetBuilding.level);
-    console.log('💸 Стоимость улучшения здания:', cost);
     
     if (gameCoins >= cost) {
       const newCoins = gameCoins - cost;
@@ -440,9 +483,7 @@ function App() {
       setGameCoins(newCoins);
       setBuildings(updatedBuildings);
       setIncomeRatePerHour(newTotalRate);
-      console.log('✅ Здание улучшено, новая скорость дохода:', newTotalRate);
       
-      // Тактильная обратная связь в Telegram
       if (window.Telegram?.WebApp?.HapticFeedback) {
         window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
       }
@@ -453,37 +494,20 @@ function App() {
         income_rate_per_hour: newTotalRate,
       });
     } else {
-      console.log('❌ Недостаточно монет для улучшения здания. Нужно:', cost, 'Есть:', gameCoins);
-      
-      // Уведомление пользователю
       alert(`💰 Недостаточно монет! Нужно: ${cost.toLocaleString()}, у вас: ${gameCoins.toLocaleString()}`);
       
-      // Тактильная обратная связь об ошибке
       if (window.Telegram?.WebApp?.HapticFeedback) {
         window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
       }
     }
-  };
+  }, [buildings, gameCoins, currentCar, hiredStaff, saveGameState]);
 
-  const handleOpenTuning = () => {
-    console.log('🔧 Открытие тюнинга');
-    setIsTuningVisible(true);
-  };
-
-  const handleCloseTuning = () => {
-    console.log('❌ Закрытие тюнинга');
-    setIsTuningVisible(false);
-  };
-
-  const handleUpgradePart = (partId) => {
-    console.log('🔧 Улучшение детали:', partId);
-    if (!currentCar?.parts?.[partId]) {
-      console.log('❌ Деталь не найдена');
-      return;
-    }
+  const handleUpgradePart = useCallback((partId) => {
+    if (!currentCar?.parts?.[partId]) return;
+    
     const part = currentCar.parts[partId];
     const cost = calculateUpgradeCost(partId, part.level, hiredStaff);
-    console.log('💸 Стоимость улучшения детали:', cost);
+    
     if (gameCoins >= cost && cost !== Infinity) {
       const newCoins = gameCoins - cost;
       const updatedParts = { ...currentCar.parts, [partId]: { ...part, level: part.level + 1 } };
@@ -494,52 +518,47 @@ function App() {
       );
       
       const updatedCarForRate = updatedPlayerCars.find(c => c.id === selectedCarId);
-      let newTotalRate = incomeRatePerHour;
       if (updatedCarForRate) {
-        newTotalRate = calculateTotalIncomeRate(buildings, updatedCarForRate, hiredStaff);
+        const newTotalRate = calculateTotalIncomeRate(buildings, updatedCarForRate, hiredStaff);
         setIncomeRatePerHour(newTotalRate);
+        
+        setGameCoins(newCoins);
+        setPlayerCars(updatedPlayerCars);
+        
+        saveGameState({
+          game_coins: newCoins,
+          player_cars: updatedPlayerCars,
+          income_rate_per_hour: newTotalRate,
+        });
       }
-      
-      setGameCoins(newCoins);
-      setPlayerCars(updatedPlayerCars);
-      console.log('✅ Деталь улучшена, новая скорость дохода:', newTotalRate);
-      
-      saveGameState({
-        game_coins: newCoins,
-        player_cars: updatedPlayerCars,
-        income_rate_per_hour: newTotalRate,
-      });
-    } else {
-      console.log('❌ Недостаточно монет для улучшения детали');
     }
-  };
+  }, [currentCar, hiredStaff, gameCoins, playerCars, selectedCarId, buildings, saveGameState]);
 
-  const handleStartRace = async (difficulty) => {
-    console.log('🏎️ Старт гонки, сложность:', difficulty);
+  const handleStartRace = useCallback(async (difficulty) => {
     if (!currentCar) return { result: 'error', reward: null };
+    
     const raceOutcome = await simulateRace(currentCar, difficulty, gameCoins, currentXp, hiredStaff);
     if (raceOutcome) {
       setGameCoins(raceOutcome.newGameCoins);
       setCurrentXp(raceOutcome.newCurrentXp);
-      console.log('🏁 Результат гонки:', raceOutcome);
       
       saveGameState({
         game_coins: raceOutcome.newGameCoins,
         current_xp: raceOutcome.newCurrentXp,
       });
+      
       return { result: raceOutcome.result, reward: raceOutcome.reward };
-    } else {
-      return { result: 'error', reward: null };
     }
-  };
+    
+    return { result: 'error', reward: null };
+  }, [currentCar, gameCoins, currentXp, hiredStaff, saveGameState]);
 
-  const handleBuyCar = (carIdToBuy) => {
-    console.log('🛒 Покупка машины:', carIdToBuy);
+  const handleBuyCar = useCallback((carIdToBuy) => {
     const carData = CAR_CATALOG.find(c => c.id === carIdToBuy);
     if (!carData || gameCoins < carData.price || playerCars.some(c => c.id === carIdToBuy)) {
-      console.log('❌ Невозможно купить машину');
       return;
     }
+    
     const newCoins = gameCoins - carData.price;
     const newCar = {
       id: carData.id,
@@ -548,21 +567,20 @@ function App() {
       parts: { ...carData.initialParts },
       stats: recalculateStatsAndIncomeBonus(carData.id, carData.initialParts).stats
     };
+    
     const updatedPlayerCars = [...playerCars, newCar];
     setGameCoins(newCoins);
     setPlayerCars(updatedPlayerCars);
-    console.log('✅ Машина куплена:', carData.name);
     
     saveGameState({
       game_coins: newCoins,
       player_cars: updatedPlayerCars,
     });
-  };
+  }, [gameCoins, playerCars, saveGameState]);
 
-  const handleHireOrUpgradeStaff = (staffId) => {
-    console.log('👥 Найм/улучшение персонала:', staffId);
+  const handleHireOrUpgradeStaff = useCallback((staffId) => {
     const cost = calculateStaffCost(staffId, hiredStaff);
-    console.log('💸 Стоимость персонала:', cost);
+    
     if (gameCoins >= cost && cost !== Infinity) {
       const newCoins = gameCoins - cost;
       const updatedHiredStaff = { ...hiredStaff, [staffId]: (hiredStaff[staffId] || 0) + 1 };
@@ -571,56 +589,34 @@ function App() {
       setGameCoins(newCoins);
       setHiredStaff(updatedHiredStaff);
       setIncomeRatePerHour(newTotalRate);
-      console.log('✅ Персонал нанят, новая скорость дохода:', newTotalRate);
       
       saveGameState({
         game_coins: newCoins,
         hired_staff: updatedHiredStaff,
         income_rate_per_hour: newTotalRate,
       });
-    } else {
-      console.log('❌ Недостаточно монет для найма персонала');
     }
-  };
+  }, [hiredStaff, gameCoins, buildings, currentCar, saveGameState]);
 
-  const handleNavClick = (screenId) => {
-    console.log('🧭 Навигация:', screenId);
-    setIsTuningVisible(false);
-    setIsCarSelectorVisible(false);
-    setActiveScreen(screenId);
-  };
-
-  const handleOpenCarSelector = () => {
-    console.log('🚗 Открытие выбора машины');
-    setIsCarSelectorVisible(true);
-  };
-  
-  const handleCloseCarSelector = () => {
-    console.log('❌ Закрытие выбора машины');
-    setIsCarSelectorVisible(false);
-  };
-
-  const handleSelectCar = (carId) => {
-    console.log('🎯 Выбор машины:', carId);
+  const handleSelectCar = useCallback((carId) => {
     if (carId !== selectedCarId) {
       setSelectedCarId(carId);
       const newSelectedCar = playerCars.find(c => c.id === carId);
-      let newTotalRate = incomeRatePerHour;
-      if (newSelectedCar) {
-        newTotalRate = calculateTotalIncomeRate(buildings, newSelectedCar, hiredStaff);
-        setIncomeRatePerHour(newTotalRate);
-      }
-      console.log('✅ Машина выбрана, новая скорость дохода:', newTotalRate);
       
-      saveGameState({
-        selected_car_id: carId,
-        income_rate_per_hour: newTotalRate,
-      });
+      if (newSelectedCar) {
+        const newTotalRate = calculateTotalIncomeRate(buildings, newSelectedCar, hiredStaff);
+        setIncomeRatePerHour(newTotalRate);
+        
+        saveGameState({
+          selected_car_id: carId,
+          income_rate_per_hour: newTotalRate,
+        });
+      }
     }
     setIsCarSelectorVisible(false);
-  };
+  }, [selectedCarId, playerCars, buildings, hiredStaff, saveGameState]);
 
-  // Функция обновления топлива (вызывается из RaceScreen)
+  // Топливные обработчики
   const handleFuelUpdate = useCallback((newFuelCount, newLastRaceTime, newRefillTime = null) => {
     console.log('⛽ Обновление топлива:', {
       fuel: newFuelCount,
@@ -628,17 +624,20 @@ function App() {
       refillTime: newRefillTime ? new Date(newRefillTime).toLocaleString() : 'нет'
     });
     
-    setFuelCount(newFuelCount);
-    setLastRaceTime(newLastRaceTime);
+    // Валидация данных
+    const validFuelCount = Math.min(Math.max(Number(newFuelCount) || 0, 0), 5);
+    const validLastRaceTime = Number(newLastRaceTime) || Date.now();
+    
+    setFuelCount(validFuelCount);
+    setLastRaceTime(validLastRaceTime);
     
     if (newRefillTime !== undefined) {
-      setFuelRefillTime(newRefillTime);
+      setFuelRefillTime(newRefillTime ? Number(newRefillTime) : null);
     }
     
-    // Сохраняем в базу данных
     const updateData = {
-      fuel_count: newFuelCount,
-      last_race_time: new Date(newLastRaceTime).toISOString(),
+      fuel_count: validFuelCount,
+      last_race_time: new Date(validLastRaceTime).toISOString(),
     };
     
     if (newRefillTime !== undefined) {
@@ -648,7 +647,6 @@ function App() {
     saveGameState(updateData);
   }, [saveGameState]);
 
-  // Функция восстановления топлива за рекламу
   const handleFuelRefillByAd = useCallback(() => {
     const now = Date.now();
     console.log('📺 Топливо восстановлено за просмотр рекламы');
@@ -664,89 +662,116 @@ function App() {
     });
   }, [saveGameState]);
 
-  const xpPercentage = xpToNextLevel > 0 ? Math.min((currentXp / xpToNextLevel) * 100, 100) : 0;
-  
-  const handleTutorialNext = () => {
-    console.log('➡️ Туториал: следующий шаг');
-    setTutorialStep(prev => prev + 1);
-  };
-  
-  const handleTutorialComplete = () => {
-    console.log('🎓 Туториал завершен');
-    setIsTutorialActive(false);
-    setHasCompletedTutorial(true);
-    
-    saveGameState({
-      has_completed_tutorial: true,
-    });
-  };
-  
-  const handleTutorialAction = (action) => {
-    console.log('🎯 Действие туториала:', action);
-    if (action === 'expand-buildings') {
-      // Больше не нужно
-    } else if (action === 'close-tuning') {
-      setIsTuningVisible(false);
-    }
-  };
-
-  // 🎯 ФУНКЦИЯ: Обновление баланса от рефералов
+  // Остальные обработчики
   const handleReferralRewardUpdate = useCallback((coinsEarned) => {
-    console.log('💰 Обновление баланса от рефералов:', coinsEarned);
-    
     if (coinsEarned > 0) {
       const newTotalCoins = gameCoins + coinsEarned;
       setGameCoins(newTotalCoins);
       
-      console.log('✅ Баланс обновлен:', {
-        старый: gameCoins,
-        добавлено: coinsEarned,
-        новый: newTotalCoins
-      });
-      
-      // Сохраняем новый баланс на сервер
       saveGameState({
         game_coins: newTotalCoins,
       });
     }
   }, [gameCoins, saveGameState]);
 
-  // 🎯 ФУНКЦИЯ: Обработка наград за рекламу Adsgram
   const handleAdReward = useCallback((rewardAmount) => {
-    console.log('📺 Получена награда за рекламу Adsgram:', rewardAmount);
-    
     if (rewardAmount > 0) {
       const newTotalCoins = gameCoins + rewardAmount;
       setGameCoins(newTotalCoins);
       
-      console.log('✅ Баланс обновлен от рекламы:', {
-        старый: gameCoins,
-        добавлено: rewardAmount,
-        новый: newTotalCoins
-      });
-      
-      // Сохраняем новый баланс на сервер
       saveGameState({
         game_coins: newTotalCoins,
       });
       
-      // Показываем уведомление
       alert(`🎉 Получено ${rewardAmount} монет за просмотр рекламы!`);
       
-      // Тактильная обратная связь в Telegram
       if (window.Telegram?.WebApp?.HapticFeedback) {
         window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
       }
     }
   }, [gameCoins, saveGameState]);
 
+  // UI обработчики
+  const handleNavClick = useCallback((screenId) => {
+    setIsTuningVisible(false);
+    setIsCarSelectorVisible(false);
+    setActiveScreen(screenId);
+  }, []);
+
+  const handleOpenTuning = useCallback(() => {
+    setIsTuningVisible(true);
+  }, []);
+
+  const handleCloseTuning = useCallback(() => {
+    setIsTuningVisible(false);
+  }, []);
+
+  const handleOpenCarSelector = useCallback(() => {
+    setIsCarSelectorVisible(true);
+  }, []);
+  
+  const handleCloseCarSelector = useCallback(() => {
+    setIsCarSelectorVisible(false);
+  }, []);
+
+  // Туториал обработчики
+  const handleTutorialNext = useCallback(() => {
+    setTutorialStep(prev => prev + 1);
+  }, []);
+  
+  const handleTutorialComplete = useCallback(() => {
+    setIsTutorialActive(false);
+    setHasCompletedTutorial(true);
+    
+    saveGameState({
+      has_completed_tutorial: true,
+    });
+  }, [saveGameState]);
+  
+  const handleTutorialAction = useCallback((action) => {
+    if (action === 'close-tuning') {
+      setIsTuningVisible(false);
+    }
+  }, []);
+
+  const handleShowTutorial = useCallback(() => {
+    setIsTutorialActive(true);
+    setTutorialStep(0);
+  }, []);
+
+  // Вычисляемые значения
+  const xpPercentage = xpToNextLevel > 0 ? Math.min((currentXp / xpToNextLevel) * 100, 100) : 0;
+
+  // Рендер состояний загрузки и ошибок
   if (isLoading) {
-    return <div className="loading-screen">Загрузка данных...</div>;
-  }
-  if (error) {
-    return <div className="error-screen">Ошибка: {error}</div>;
+    return (
+      <div className="loading-screen">
+        <div className="loading-content">
+          <div className="loading-spinner">🔄</div>
+          <div>Загрузка данных...</div>
+        </div>
+      </div>
+    );
   }
 
+  if (error) {
+    return (
+      <div className="error-screen">
+        <div className="error-content">
+          <div className="error-icon">❌</div>
+          <div>Ошибка: {error}</div>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="retry-button"
+          >
+            Попробовать снова
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Основной рендер приложения
   return (
     <div className="App">
       <div className="header-container">
@@ -756,13 +781,10 @@ function App() {
           gameCoins={gameCoins}
           jetCoins={jetCoins}
           xpPercentage={xpPercentage}
-          onShowTutorial={() => {
-            console.log('🎓 Ручной запуск туториала');
-            setIsTutorialActive(true);
-            setTutorialStep(0);
-          }}
+          onShowTutorial={handleShowTutorial}
         />
       </div>
+
       <main className="main-content">
         {activeScreen === 'garage' && currentCar && (
           <MainGameScreen
@@ -778,12 +800,12 @@ function App() {
             onBuildingClick={handleBuildingClick}
           />
         )}
+
         {activeScreen === 'race' && currentCar && (
           <RaceScreen
             playerCar={currentCar}
             onStartRace={handleStartRace}
             onAdReward={handleAdReward}
-            // Добавляем пропсы для топливной системы
             fuelCount={fuelCount}
             lastRaceTime={lastRaceTime}
             fuelRefillTime={fuelRefillTime}
@@ -791,6 +813,7 @@ function App() {
             onFuelRefillByAd={handleFuelRefillByAd}
           />
         )}
+
         {activeScreen === 'shop' && (
           <ShopScreen
             catalog={CAR_CATALOG}
@@ -799,6 +822,7 @@ function App() {
             onBuyCar={handleBuyCar}
           />
         )}
+
         {activeScreen === 'staff' && (
           <StaffScreen
             staffCatalog={STAFF_CATALOG}
@@ -808,30 +832,35 @@ function App() {
             calculateCost={(staffId) => calculateStaffCost(staffId, hiredStaff)}
           />
         )}
+
         {activeScreen === 'leaderboard' && (
           <LeaderboardScreen
             tgUserData={tgUserData}
           />
         )}
+
         {activeScreen === 'friends' && (
           <FriendsScreen
             tgUserData={tgUserData}
             onBalanceUpdate={handleReferralRewardUpdate}
           />
         )}
+
         {activeScreen === 'p2e' && (
           <div className="placeholder-screen">
-            <div>
-              <div style={{ fontSize: '3em', marginBottom: '10px' }}>🎮</div>
-              <div>Play to Earn</div>
-              <div style={{ fontSize: '0.8em', opacity: 0.6, marginTop: '10px' }}>
+            <div className="placeholder-content">
+              <div className="placeholder-icon">🎮</div>
+              <div className="placeholder-title">Play to Earn</div>
+              <div className="placeholder-subtitle">
                 Скоро здесь появятся новые возможности!
               </div>
             </div>
           </div>
         )}
       </main>
-      {isTuningVisible && (
+
+      {/* Модальные окна */}
+      {isTuningVisible && currentCar && (
         <TuningScreen
           car={currentCar}
           gameCoins={gameCoins}
@@ -839,6 +868,7 @@ function App() {
           onUpgrade={handleUpgradePart}
         />
       )}
+
       {isCarSelectorVisible && (
         <CarSelector
           playerCars={playerCars}
@@ -847,11 +877,14 @@ function App() {
           onClose={handleCloseCarSelector}
         />
       )}
+
+      {/* Навигация */}
       <NavBar
         activeScreen={activeScreen}
         onScreenChange={handleNavClick}
       />
       
+      {/* Туториал */}
       <Tutorial
         isActive={isTutorialActive}
         currentStep={tutorialStep}
