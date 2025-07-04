@@ -20,7 +20,31 @@ export const BASE_CAR_STATS = {
     'car_001': { power: 40, speed: 70, style: 5, reliability: 25, baseIncome: 10 },   // ✅ 10 монет/час - старт
     'car_002': { power: 60, speed: 95, style: 10, reliability: 35, baseIncome: 50 },  // ✅ 50 монет/час - средняя
     'car_003': { power: 75, speed: 110, style: 15, reliability: 45, baseIncome: 150 }, // ✅ 150 монет/час - продвинутая
+
+  // ✨ НОВЫЕ МАШИНЫ (улучшенный баланс):
+    'car_004': { 
+        power: 90, speed: 125, style: 20, reliability: 50, 
+        baseIncome: 350,           // +50 от оригинала
+        name: 'Легендарный "Мерс"',
+        price: 45000               // -5000 от оригинала
+    },
+    'car_005': { 
+        power: 110, speed: 140, style: 30, reliability: 55, 
+        baseIncome: 650,           // +50 от оригинала
+        name: 'Заряженный "Баварец"',
+        price: 100000              // -20000 от оригинала
+    },
+    'car_006': { 
+        power: 130, speed: 160, style: 40, reliability: 60, 
+        baseIncome: 1100,          // +100 от оригинала
+        name: 'Безумный "Скайлайн"',
+        price: 200000              // -50000 от оригинала
+    }
 };
+
+
+
+  
 
 // --- Функция пересчета СТАТОВ машины и БОНУСА дохода от деталей ---
 export const recalculateStatsAndIncomeBonus = (carId, parts) => {
