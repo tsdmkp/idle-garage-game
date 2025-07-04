@@ -12,12 +12,8 @@ import LeaderboardScreen from './components/LeaderboardScreen';
 import FriendsScreen from './components/FriendsScreen';
 import LoadingScreen from './components/LoadingScreen';
 import { useGameState } from './hooks/useGameState';
+import { useGameHandlers } from './hooks/useGameHandlers'; // ✅ НОВЫЙ ИМПОРТ
 import {
-  calculateUpgradeCost,
-  calculateBuildingCost,
-  recalculateStatsAndIncomeBonus,
-  calculateTotalIncomeRate,
-  simulateRace,
   calculateStaffCost,
   CAR_CATALOG,
   STAFF_CATALOG,
@@ -58,39 +54,46 @@ function App() {
     return null;
   }, [isTgApp, tgUserData?.id]);
 
-  // ✅ ИСПОЛЬЗУЕМ НАШ ОБНОВЛЕННЫЙ ХУК - теперь с топливной системой
-  const {
+  // ✅ ИСПОЛЬЗУЕМ useGameState хук (без изменений)
+  const gameState = useGameState(getUserId);
+
+  // ✅ ИСПОЛЬЗУЕМ НОВЫЙ useGameHandlers хук - передаем все необходимые состояния
+  const gameHandlers = useGameHandlers({
     // Состояния игрока
-    playerLevel, setPlayerLevel,
-    playerName, setPlayerName,
-    gameCoins, setGameCoins,
-    jetCoins, setJetCoins,
-    currentXp, setCurrentXp,
-    xpToNextLevel, setXpToNextLevel,
-    incomeRatePerHour, setIncomeRatePerHour,
-    lastCollectedTimeRef,
-    accumulatedIncome, setAccumulatedIncome,
+    gameCoins: gameState.gameCoins,
+    setGameCoins: gameState.setGameCoins,
+    currentXp: gameState.currentXp,
+    setCurrentXp: gameState.setCurrentXp,
+    accumulatedIncome: gameState.accumulatedIncome,
+    setAccumulatedIncome: gameState.setAccumulatedIncome,
+    lastCollectedTimeRef: gameState.lastCollectedTimeRef,
+    incomeRatePerHour: gameState.incomeRatePerHour,
+    setIncomeRatePerHour: gameState.setIncomeRatePerHour,
     
     // Игровые объекты
-    buildings, setBuildings,
-    playerCars, setPlayerCars,
-    selectedCarId, setSelectedCarId,
-    hiredStaff, setHiredStaff,
-    currentCar,
+    buildings: gameState.buildings,
+    setBuildings: gameState.setBuildings,
+    playerCars: gameState.playerCars,
+    setPlayerCars: gameState.setPlayerCars,
+    selectedCarId: gameState.selectedCarId,
+    setSelectedCarId: gameState.setSelectedCarId,
+    hiredStaff: gameState.hiredStaff,
+    setHiredStaff: gameState.setHiredStaff,
+    currentCar: gameState.currentCar,
     
     // Туториал
-    isTutorialActive, setIsTutorialActive,
-    tutorialStep, setTutorialStep,
-    hasCompletedTutorial, setHasCompletedTutorial,
+    isTutorialActive: gameState.isTutorialActive,
+    tutorialStep: gameState.tutorialStep,
+    setTutorialStep: gameState.setTutorialStep,
+    setIsTutorialActive: gameState.setIsTutorialActive,
+    setHasCompletedTutorial: gameState.setHasCompletedTutorial,
     
-    // ✅ ТОПЛИВНАЯ система - теперь объект
-    fuelSystem,
+    // Топливная система
+    fuelSystem: gameState.fuelSystem,
     
     // Функции
-    saveGameState,
-    loadGameData,
-    cleanup
-  } = useGameState(getUserId);
+    saveGameState: gameState.saveGameState
+  });
 
   // ✅ ОБРАБОТЧИК ЗАВЕРШЕНИЯ ЗАГРУЗКИ (без изменений)
   const handleLoadingComplete = useCallback(() => {
@@ -98,7 +101,7 @@ function App() {
     setIsLoading(false);
   }, []);
 
-  // ✅ ИНИЦИАЛИЗАЦИЯ (без изменений, но использует обновленный loadGameData)
+  // ✅ ИНИЦИАЛИЗАЦИЯ (без изменений)
   useEffect(() => {
     if (initializationRef.current) {
       console.log('⚠️ Повторная инициализация заблокирована');
@@ -119,7 +122,7 @@ function App() {
         
         if (userData && typeof userData === 'object') {
           const firstName = userData.first_name || userData.firstName || userData.username || 'Игрок';
-          setPlayerName(firstName);
+          gameState.setPlayerName(firstName);
           console.log('📝 Player name установлен:', firstName);
         }
         
@@ -154,7 +157,7 @@ function App() {
       isInitializedRef.current = true;
       
       try {
-        const result = await loadGameData(userId);
+        const result = await gameState.loadGameData(userId);
         
         if (result.success) {
           console.log('✅ Данные успешно загружены через хук');
@@ -171,22 +174,22 @@ function App() {
     initializeApp();
 
     return () => {
-      cleanup();
+      gameState.cleanup();
     };
   }, []);
 
   // ✅ Таймер дохода (без изменений)
   useEffect(() => {
-    if (incomeRatePerHour <= 0 || isLoading) {
+    if (gameState.incomeRatePerHour <= 0 || isLoading) {
       return;
     }
     
-    const incomePerSecond = incomeRatePerHour / 3600;
-    const maxAccumulationCap = incomeRatePerHour * MAX_OFFLINE_HOURS;
+    const incomePerSecond = gameState.incomeRatePerHour / 3600;
+    const maxAccumulationCap = gameState.incomeRatePerHour * MAX_OFFLINE_HOURS;
     
     const intervalId = setInterval(() => {
       const now = Date.now();
-      const timePassedTotalSeconds = (now - lastCollectedTimeRef.current) / 1000;
+      const timePassedTotalSeconds = (now - gameState.lastCollectedTimeRef.current) / 1000;
       
       if (!isFinite(timePassedTotalSeconds) || !isFinite(incomePerSecond) || timePassedTotalSeconds < 0) {
         return;
@@ -196,12 +199,12 @@ function App() {
       const newAccumulated = Math.min(potentialTotalIncome, maxAccumulationCap);
       
       if (isFinite(newAccumulated) && newAccumulated >= 0) {
-        setAccumulatedIncome(newAccumulated);
+        gameState.setAccumulatedIncome(newAccumulated);
       }
     }, UPDATE_INTERVAL);
     
     return () => clearInterval(intervalId);
-  }, [incomeRatePerHour, isLoading, lastCollectedTimeRef, setAccumulatedIncome]);
+  }, [gameState.incomeRatePerHour, isLoading, gameState.lastCollectedTimeRef, gameState.setAccumulatedIncome]);
 
   // ✅ ESC handler (без изменений)
   useEffect(() => {
@@ -216,217 +219,7 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [isLoading]);
 
-  // ✅ ОБРАБОТЧИКИ ИГРОВЫХ ДЕЙСТВИЙ (без изменений, используют хук)
-  const handleCollect = useCallback(() => {
-    const incomeToAdd = Math.floor(accumulatedIncome);
-    if (incomeToAdd > 0) {
-      const newTotalCoins = gameCoins + incomeToAdd;
-      setGameCoins(newTotalCoins);
-      setAccumulatedIncome(0);
-      const collectionTime = Date.now();
-      lastCollectedTimeRef.current = collectionTime;
-      
-      if (isTutorialActive && tutorialStep === 3) {
-        setTimeout(() => setTutorialStep(4), 500);
-      }
-      
-      saveGameState({
-        game_coins: newTotalCoins,
-        last_collected_time: new Date(collectionTime).toISOString(),
-      });
-    }
-  }, [accumulatedIncome, gameCoins, isTutorialActive, tutorialStep, setGameCoins, setAccumulatedIncome, setTutorialStep, lastCollectedTimeRef, saveGameState]);
-
-  const handleBuildingClick = useCallback((buildingName) => {
-    const targetBuilding = buildings.find(b => b.name === buildingName);
-    if (!targetBuilding) return;
-
-    const cost = calculateBuildingCost(targetBuilding.id, targetBuilding.level);
-    
-    if (gameCoins >= cost) {
-      const newCoins = gameCoins - cost;
-      const updatedBuildings = buildings.map(b =>
-        b.name === buildingName ? { ...b, level: b.level + 1 } : b
-      );
-      const newTotalRate = calculateTotalIncomeRate(updatedBuildings, currentCar, hiredStaff);
-
-      setGameCoins(newCoins);
-      setBuildings(updatedBuildings);
-      setIncomeRatePerHour(newTotalRate);
-      
-      if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-      }
-      
-      saveGameState({
-        game_coins: newCoins,
-        buildings: updatedBuildings,
-        income_rate_per_hour: newTotalRate,
-      });
-    } else {
-      alert(`💰 Недостаточно монет! Нужно: ${cost.toLocaleString()}, у вас: ${gameCoins.toLocaleString()}`);
-      
-      if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
-      }
-    }
-  }, [buildings, gameCoins, currentCar, hiredStaff, setGameCoins, setBuildings, setIncomeRatePerHour, saveGameState]);
-
-  const handleUpgradePart = useCallback((partId) => {
-    if (!currentCar?.parts?.[partId]) return;
-    
-    const part = currentCar.parts[partId];
-    const cost = calculateUpgradeCost(partId, part.level, hiredStaff);
-    
-    if (gameCoins >= cost && cost !== Infinity) {
-      const newCoins = gameCoins - cost;
-      const updatedParts = { ...currentCar.parts, [partId]: { ...part, level: part.level + 1 } };
-      const { stats: newStats } = recalculateStatsAndIncomeBonus(currentCar.id, updatedParts);
-      
-      const updatedPlayerCars = playerCars.map(car =>
-        car.id === selectedCarId ? { ...car, parts: updatedParts, stats: newStats } : car
-      );
-      
-      const updatedCarForRate = updatedPlayerCars.find(c => c.id === selectedCarId);
-      if (updatedCarForRate) {
-        const newTotalRate = calculateTotalIncomeRate(buildings, updatedCarForRate, hiredStaff);
-        setIncomeRatePerHour(newTotalRate);
-        
-        setGameCoins(newCoins);
-        setPlayerCars(updatedPlayerCars);
-        
-        saveGameState({
-          game_coins: newCoins,
-          player_cars: updatedPlayerCars,
-          income_rate_per_hour: newTotalRate,
-        });
-      }
-    }
-  }, [currentCar, hiredStaff, gameCoins, playerCars, selectedCarId, buildings, setIncomeRatePerHour, setGameCoins, setPlayerCars, saveGameState]);
-
-  const handleStartRace = useCallback(async (difficulty) => {
-    if (!currentCar) return { result: 'error', reward: null };
-    
-    const raceOutcome = await simulateRace(currentCar, difficulty, gameCoins, currentXp, hiredStaff);
-    if (raceOutcome) {
-      setGameCoins(raceOutcome.newGameCoins);
-      setCurrentXp(raceOutcome.newCurrentXp);
-      
-      saveGameState({
-        game_coins: raceOutcome.newGameCoins,
-        current_xp: raceOutcome.newCurrentXp,
-      });
-      
-      return { result: raceOutcome.result, reward: raceOutcome.reward };
-    }
-    
-    return { result: 'error', reward: null };
-  }, [currentCar, gameCoins, currentXp, hiredStaff, setGameCoins, setCurrentXp, saveGameState]);
-
-  const handleBuyCar = useCallback((carIdToBuy) => {
-    const carData = CAR_CATALOG.find(c => c.id === carIdToBuy);
-    if (!carData || gameCoins < carData.price || playerCars.some(c => c.id === carIdToBuy)) {
-      return;
-    }
-    
-    const newCoins = gameCoins - carData.price;
-    const newCar = {
-      id: carData.id,
-      name: carData.name,
-      imageUrl: carData.imageUrl,
-      parts: { ...carData.initialParts },
-      stats: recalculateStatsAndIncomeBonus(carData.id, carData.initialParts).stats
-    };
-    
-    const updatedPlayerCars = [...playerCars, newCar];
-    setGameCoins(newCoins);
-    setPlayerCars(updatedPlayerCars);
-    
-    saveGameState({
-      game_coins: newCoins,
-      player_cars: updatedPlayerCars,
-    });
-  }, [gameCoins, playerCars, setGameCoins, setPlayerCars, saveGameState]);
-
-  const handleHireOrUpgradeStaff = useCallback((staffId) => {
-    const cost = calculateStaffCost(staffId, hiredStaff);
-    
-    if (gameCoins >= cost && cost !== Infinity) {
-      const newCoins = gameCoins - cost;
-      const updatedHiredStaff = { ...hiredStaff, [staffId]: (hiredStaff[staffId] || 0) + 1 };
-      const newTotalRate = calculateTotalIncomeRate(buildings, currentCar, updatedHiredStaff);
-
-      setGameCoins(newCoins);
-      setHiredStaff(updatedHiredStaff);
-      setIncomeRatePerHour(newTotalRate);
-      
-      saveGameState({
-        game_coins: newCoins,
-        hired_staff: updatedHiredStaff,
-        income_rate_per_hour: newTotalRate,
-      });
-    }
-  }, [hiredStaff, gameCoins, buildings, currentCar, setGameCoins, setHiredStaff, setIncomeRatePerHour, saveGameState]);
-
-  const handleSelectCar = useCallback((carId) => {
-    if (carId !== selectedCarId) {
-      setSelectedCarId(carId);
-      const newSelectedCar = playerCars.find(c => c.id === carId);
-      
-      if (newSelectedCar) {
-        const newTotalRate = calculateTotalIncomeRate(buildings, newSelectedCar, hiredStaff);
-        setIncomeRatePerHour(newTotalRate);
-        
-        saveGameState({
-          selected_car_id: carId,
-          income_rate_per_hour: newTotalRate,
-        });
-      }
-    }
-    setIsCarSelectorVisible(false);
-  }, [selectedCarId, playerCars, buildings, hiredStaff, setSelectedCarId, setIncomeRatePerHour, saveGameState]);
-
-  // ✅ ТОПЛИВНЫЕ ОБРАБОТЧИКИ - теперь используют fuelSystem
-  const handleFuelUpdate = useCallback((newFuelCount, newLastRaceTime, newRefillTime = null) => {
-    // ✅ Используем функцию из топливного хука
-    fuelSystem.handleFuelUpdate(newFuelCount, newLastRaceTime, newRefillTime);
-  }, [fuelSystem]);
-
-  const handleFuelRefillByAd = useCallback(() => {
-    // ✅ Используем функцию из топливного хука
-    fuelSystem.handleFuelRefillByAd();
-  }, [fuelSystem]);
-
-  // ✅ Остальные обработчики (без изменений)
-  const handleReferralRewardUpdate = useCallback((coinsEarned) => {
-    if (coinsEarned > 0) {
-      const newTotalCoins = gameCoins + coinsEarned;
-      setGameCoins(newTotalCoins);
-      
-      saveGameState({
-        game_coins: newTotalCoins,
-      });
-    }
-  }, [gameCoins, setGameCoins, saveGameState]);
-
-  const handleAdReward = useCallback((rewardAmount) => {
-    if (rewardAmount > 0) {
-      const newTotalCoins = gameCoins + rewardAmount;
-      setGameCoins(newTotalCoins);
-      
-      saveGameState({
-        game_coins: newTotalCoins,
-      });
-      
-      alert(`🎉 Получено ${rewardAmount} монет за просмотр рекламы!`);
-      
-      if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-      }
-    }
-  }, [gameCoins, setGameCoins, saveGameState]);
-
-  // UI обработчики (без изменений)
+  // ✅ UI обработчики (только UI, игровые теперь в useGameHandlers)
   const handleNavClick = useCallback((screenId) => {
     setIsTuningVisible(false);
     setIsCarSelectorVisible(false);
@@ -449,33 +242,23 @@ function App() {
     setIsCarSelectorVisible(false);
   }, []);
 
-  // ✅ Туториал обработчики (без изменений)
-  const handleTutorialNext = useCallback(() => {
-    setTutorialStep(prev => prev + 1);
-  }, [setTutorialStep]);
-  
-  const handleTutorialComplete = useCallback(() => {
-    setIsTutorialActive(false);
-    setHasCompletedTutorial(true);
+  // ✅ СПЕЦИАЛЬНЫЕ обработчики (расширяют логику из useGameHandlers)
+  const handleSelectCarWithClose = useCallback((carId) => {
+    gameHandlers.handleSelectCar(carId);
+    setIsCarSelectorVisible(false); // ✅ Дополнительная логика UI
+  }, [gameHandlers.handleSelectCar]);
+
+  const handleTutorialActionWithUI = useCallback((action) => {
+    const result = gameHandlers.handleTutorialAction(action);
     
-    saveGameState({
-      has_completed_tutorial: true,
-    });
-  }, [setIsTutorialActive, setHasCompletedTutorial, saveGameState]);
-  
-  const handleTutorialAction = useCallback((action) => {
-    if (action === 'close-tuning') {
+    // ✅ Дополнительная UI логика на основе результата
+    if (result === 'close-tuning') {
       setIsTuningVisible(false);
     }
-  }, []);
+  }, [gameHandlers.handleTutorialAction]);
 
-  const handleShowTutorial = useCallback(() => {
-    setIsTutorialActive(true);
-    setTutorialStep(0);
-  }, [setIsTutorialActive, setTutorialStep]);
-
-  // ✅ Вычисляемые значения (без изменений)
-  const xpPercentage = xpToNextLevel > 0 ? Math.min((currentXp / xpToNextLevel) * 100, 100) : 0;
+  // ✅ Вычисляемые значения (используют состояния из gameState)
+  const xpPercentage = gameState.xpToNextLevel > 0 ? Math.min((gameState.currentXp / gameState.xpToNextLevel) * 100, 100) : 0;
 
   // ✅ ПОКАЗ ЗАСТАВКИ ЗАГРУЗКИ (без изменений)
   if (isLoading) {
@@ -500,66 +283,65 @@ function App() {
     );
   }
 
-  // ✅ Основной рендер приложения (ОБНОВЛЕН для работы с fuelSystem)
+  // ✅ ФИНАЛЬНЫЙ ЧИСТЫЙ РЕНДЕР - используем обработчики из gameHandlers
   return (
     <div className="App">
       <div className="header-container">
         <Header
-          level={playerLevel}
-          playerName={playerName}
-          gameCoins={gameCoins}
-          jetCoins={jetCoins}
+          level={gameState.playerLevel}
+          playerName={gameState.playerName}
+          gameCoins={gameState.gameCoins}
+          jetCoins={gameState.jetCoins}
           xpPercentage={xpPercentage}
-          onShowTutorial={handleShowTutorial}
+          onShowTutorial={gameHandlers.handleShowTutorial}
         />
       </div>
 
       <main className="main-content">
-        {activeScreen === 'garage' && currentCar && (
+        {activeScreen === 'garage' && gameState.currentCar && (
           <MainGameScreen
-            car={currentCar}
-            incomeRate={incomeRatePerHour}
-            accumulatedIncome={accumulatedIncome}
-            maxAccumulation={incomeRatePerHour * MAX_OFFLINE_HOURS}
-            gameCoins={gameCoins}
-            buildings={buildings}
-            onCollect={handleCollect}
+            car={gameState.currentCar}
+            incomeRate={gameState.incomeRatePerHour}
+            accumulatedIncome={gameState.accumulatedIncome}
+            maxAccumulation={gameState.incomeRatePerHour * MAX_OFFLINE_HOURS}
+            gameCoins={gameState.gameCoins}
+            buildings={gameState.buildings}
+            onCollect={gameHandlers.handleCollect}
             onTuneClick={handleOpenTuning}
             onOpenCarSelector={handleOpenCarSelector}
-            onBuildingClick={handleBuildingClick}
+            onBuildingClick={gameHandlers.handleBuildingClick}
           />
         )}
 
-        {activeScreen === 'race' && currentCar && (
+        {activeScreen === 'race' && gameState.currentCar && (
           <RaceScreen
-            playerCar={currentCar}
-            onStartRace={handleStartRace}
-            onAdReward={handleAdReward}
-            // ✅ ТОПЛИВНЫЕ пропсы теперь из fuelSystem
-            fuelCount={fuelSystem.fuelCount}
-            lastRaceTime={fuelSystem.lastRaceTime}
-            fuelRefillTime={fuelSystem.fuelRefillTime}
-            onFuelUpdate={handleFuelUpdate}
-            onFuelRefillByAd={handleFuelRefillByAd}
+            playerCar={gameState.currentCar}
+            onStartRace={gameHandlers.handleStartRace}
+            onAdReward={gameHandlers.handleAdReward}
+            fuelCount={gameState.fuelSystem.fuelCount}
+            lastRaceTime={gameState.fuelSystem.lastRaceTime}
+            fuelRefillTime={gameState.fuelSystem.fuelRefillTime}
+            onFuelUpdate={gameHandlers.handleFuelUpdate}
+            onFuelRefillByAd={gameHandlers.handleFuelRefillByAd}
           />
         )}
 
         {activeScreen === 'shop' && (
           <ShopScreen
             catalog={CAR_CATALOG}
-            playerCars={playerCars}
-            gameCoins={gameCoins}
-            onBuyCar={handleBuyCar}
+            playerCars={gameState.playerCars}
+            gameCoins={gameState.gameCoins}
+            onBuyCar={gameHandlers.handleBuyCar}
           />
         )}
 
         {activeScreen === 'staff' && (
           <StaffScreen
             staffCatalog={STAFF_CATALOG}
-            hiredStaff={hiredStaff}
-            gameCoins={gameCoins}
-            onHireOrUpgrade={handleHireOrUpgradeStaff}
-            calculateCost={(staffId) => calculateStaffCost(staffId, hiredStaff)}
+            hiredStaff={gameState.hiredStaff}
+            gameCoins={gameState.gameCoins}
+            onHireOrUpgrade={gameHandlers.handleHireOrUpgradeStaff}
+            calculateCost={(staffId) => calculateStaffCost(staffId, gameState.hiredStaff)}
           />
         )}
 
@@ -572,7 +354,7 @@ function App() {
         {activeScreen === 'friends' && (
           <FriendsScreen
             tgUserData={tgUserData}
-            onBalanceUpdate={handleReferralRewardUpdate}
+            onBalanceUpdate={gameHandlers.handleReferralRewardUpdate}
           />
         )}
 
@@ -590,20 +372,20 @@ function App() {
       </main>
 
       {/* Модальные окна */}
-      {isTuningVisible && currentCar && (
+      {isTuningVisible && gameState.currentCar && (
         <TuningScreen
-          car={currentCar}
-          gameCoins={gameCoins}
+          car={gameState.currentCar}
+          gameCoins={gameState.gameCoins}
           onClose={handleCloseTuning}
-          onUpgrade={handleUpgradePart}
+          onUpgrade={gameHandlers.handleUpgradePart}
         />
       )}
 
       {isCarSelectorVisible && (
         <CarSelector
-          playerCars={playerCars}
-          selectedCarId={selectedCarId}
-          onSelectCar={handleSelectCar}
+          playerCars={gameState.playerCars}
+          selectedCarId={gameState.selectedCarId}
+          onSelectCar={handleSelectCarWithClose}
           onClose={handleCloseCarSelector}
         />
       )}
@@ -616,15 +398,15 @@ function App() {
       
       {/* Туториал */}
       <Tutorial
-        isActive={isTutorialActive}
-        currentStep={tutorialStep}
-        onNext={handleTutorialNext}
-        onComplete={handleTutorialComplete}
-        onAction={handleTutorialAction}
+        isActive={gameState.isTutorialActive}
+        currentStep={gameState.tutorialStep}
+        onNext={gameHandlers.handleTutorialNext}
+        onComplete={gameHandlers.handleTutorialComplete}
+        onAction={handleTutorialActionWithUI}
         gameState={{
-          gameCoins,
-          incomeRate: incomeRatePerHour,
-          accumulatedIncome
+          gameCoins: gameState.gameCoins,
+          incomeRate: gameState.incomeRatePerHour,
+          accumulatedIncome: gameState.accumulatedIncome
         }}
       />
     </div>
