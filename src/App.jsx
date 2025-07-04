@@ -64,6 +64,15 @@ function App() {
       return;
     }
     
+    // ✅ УСТАНАВЛИВАЕМ ИМЯ ИГРОКА ИЗ TELEGRAM СРАЗУ ПОСЛЕ ИНИЦИАЛИЗАЦИИ
+    if (telegram.isInitialized && telegram.tgUserData) {
+      const userName = telegram.getUserName();
+      if (userName && userName !== 'Игрок') {
+        gameState.setPlayerName(userName);
+        console.log('📝 Player name установлен из Telegram:', userName);
+      }
+    }
+    
     const initializeApp = async () => {
       console.log('🚀 Инициализация приложения...');
       initializationRef.current = true;
@@ -72,13 +81,6 @@ function App() {
       if (!telegram.isInitialized) {
         console.log('⏳ Ожидание инициализации Telegram...');
         return;
-      }
-      
-      // Устанавливаем имя игрока из Telegram
-      const userName = telegram.getUserName();
-      if (userName && userName !== 'Игрок') {
-        gameState.setPlayerName(userName);
-        console.log('📝 Player name установлен из Telegram:', userName);
       }
       
       // Получаем user ID и загружаем данные
@@ -130,6 +132,7 @@ function App() {
     };
   }, [
     telegram.isInitialized, 
+    telegram.tgUserData, // ✅ ДОБАВЛЕНО ДЛЯ ОТСЛЕЖИВАНИЯ ИЗМЕНЕНИЙ ДАННЫХ ПОЛЬЗОВАТЕЛЯ
     telegram.getUserId, 
     telegram.getUserName,
     saveHook,

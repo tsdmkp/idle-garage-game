@@ -1,320 +1,421 @@
-import { useRef, useCallback } from 'react';
-import apiClient from '../apiClient';
-import { MAX_OFFLINE_HOURS } from '../utils';
+import { useState, useRef, useCallback } from 'react';
+import {
+  calculateUpgradeCost,
+  calculateBuildingCost,
+  recalculateStatsAndIncomeBonus,
+  calculateTotalIncomeRate,
+  simulateRace,
+  calculateStaffCost,
+  getInitialPlayerCar,
+  CAR_CATALOG,
+  INITIAL_BUILDINGS,
+  STARTING_COINS
+} from '../utils';
 
-export const useGameSave = (getUserId) => {
-  const saveTimeoutRef = useRef(null);
+const INITIAL_CAR = getInitialPlayerCar();
 
-  // Вспомогательная функция валидации дат
-  const parseTimestamp = useCallback((dateString) => {
-    if (!dateString) return null;
-    const timestamp = new Date(dateString).getTime();
-    return isNaN(timestamp) ? null : timestamp;
-  }, []);
+const INITIAL_HIRED_STAFF = (() => {
+  const init = {};
+  const staffIds = ['mechanic', 'manager', 'cleaner', 'security', 'marketer', 'accountant'];
+  staffIds.forEach(id => {
+    init[id] = 0;
+  });
+  return init;
+})();
 
-  // Debounced save function для предотвращения частых сохранений
-  const debouncedSave = useCallback((data) => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
+export const useGameState = (saveGameState) => {
+  // Состояния игрока
+  const [playerLevel, setPlayerLevel] = useState(1);
+  const [playerName, setPlayerName] = useState('Игрок');
+  const [gameCoins, setGameCoins] = useState(STARTING_COINS);
+  const [jetCoins, setJetCoins] = useState(0);
+  const [currentXp, setCurrentXp] = useState(10);
+  const [xpToNextLevel, setXpToNextLevel] = useState(100);
+  const [incomeRatePerHour, setIncomeRatePerHour] = useState(0);
+  const lastCollectedTimeRef = useRef(Date.now());
+  const [accumulatedIncome, setAccumulatedIncome] = useState(0);
+  
+  // Состояния игровых объектов
+  const [buildings, setBuildings] = useState(INITIAL_BUILDINGS);
+  const [playerCars, setPlayerCars] = useState(() => [INITIAL_CAR]);
+  const [selectedCarId, setSelectedCarId] = useState(INITIAL_CAR.id);
+  const [hiredStaff, setHiredStaff] = useState(INITIAL_HIRED_STAFF);
+  
+  // Туториал
+  const [isTutorialActive, setIsTutorialActive] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
+  const [hasCompletedTutorial, setHasCompletedTutorial] = useState(false);
+
+  // Вычисляемые значения
+  const currentCar = playerCars.find(car => car.id === selectedCarId) || playerCars[0] || null;
+  const xpPercentage = xpToNextLevel > 0 ? Math.min((currentXp / xpToNextLevel) * 100, 100) : 0;
+
+  // Функция инициализации состояния из загруженных данных
+  const initializeGameState = useCallback((initialState) => {
+    console.log('🎮 Инициализация состояния игры...');
+    
+    // Основные данные игрока
+    setPlayerLevel(Number(initialState.player_level) || 1);
+    
+    // ✅ НЕ ПЕРЕЗАПИСЫВАЕМ ИМЯ, ЕСЛИ ОНО УЖЕ УСТАНОВЛЕНО
+    // (например, из Telegram данных)
+    if (initialState.first_name && playerName === 'Игрок') {
+      setPlayerName(initialState.first_name);
     }
     
-    saveTimeoutRef.current = setTimeout(async () => {
-      const userId = getUserId();
-      if (!userId) {
-        console.warn('⚠️ Отмена сохранения: userId не готов');
-        return;
-      }
-
-      try {
-        console.log('📤 Сохранение состояния для userId:', userId);
-        await apiClient('/game_state', 'POST', { body: { userId, ...data } });
-        console.log('✅ Состояние успешно сохранено');
-      } catch (err) {
-        console.error('❌ Ошибка сохранения:', err.message);
-      }
-    }, 500); // 500ms debounce
-  }, [getUserId]);
-
-  // Основная функция сохранения состояния
-  const saveGameState = useCallback(async (gameState, fuelState, updates = {}) => {
-    const userId = getUserId();
-    if (!userId) {
-      console.warn('⚠️ Отмена сохранения: userId не готов');
-      return;
-    }
-
-    const stateToSave = {
-      userId: userId,
-      player_level: gameState.playerLevel,
-      first_name: gameState.playerName,
-      game_coins: gameState.gameCoins,
-      jet_coins: gameState.jetCoins,
-      current_xp: gameState.currentXp,
-      xp_to_next_level: gameState.xpToNextLevel,
-      income_rate_per_hour: gameState.incomeRatePerHour,
-      last_collected_time: new Date(gameState.lastCollectedTimeRef.current).toISOString(),
-      buildings: gameState.buildings,
-      player_cars: gameState.playerCars,
-      selected_car_id: gameState.selectedCarId,
-      hired_staff: gameState.hiredStaff,
-      has_completed_tutorial: gameState.hasCompletedTutorial,
-      last_exit_time: new Date().toISOString(),
-      // Топливные данные
-      fuel_count: fuelState.fuelCount,
-      last_race_time: fuelState.lastRaceTime ? new Date(fuelState.lastRaceTime).toISOString() : null,
-      fuel_refill_time: fuelState.fuelRefillTime ? new Date(fuelState.fuelRefillTime).toISOString() : null,
-      ...updates
-    };
-
-    // Используем debounced save для неважных обновлений
-    if (updates && Object.keys(updates).length < 3) {
-      debouncedSave(stateToSave);
-      return;
-    }
-
-    // Мгновенное сохранение для важных действий
-    try {
-      console.log('📤 Мгновенное сохранение состояния для userId:', userId);
-      await apiClient('/game_state', 'POST', { body: stateToSave });
-      console.log('✅ Состояние успешно сохранено');
-    } catch (err) {
-      console.error('❌ Ошибка сохранения:', err.message);
-    }
-  }, [getUserId, debouncedSave]);
-
-  // Функция загрузки данных игры
-  const loadGameData = useCallback(async (userId, gameState, fuelState, checkAndRestoreFuel) => {
-    console.log('📥 Начинаем загрузку данных для userId:', userId);
+    const coinsToSet = Number(initialState.game_coins) || STARTING_COINS;
+    setGameCoins(coinsToSet);
     
-    try {
-      const initialState = await apiClient('/game_state', 'GET', { params: { userId } });
-      console.log('📦 Получено состояние с бэкенда:', initialState);
-
-      if (initialState && typeof initialState === 'object') {
-        // Инициализируем игровое состояние
-        const { incomeRate } = gameState.initializeGameState(initialState);
-        
-        // Загрузка топливных данных с валидацией
-        const loadedFuelCount = Math.min(Math.max(Number(initialState.fuel_count) || 5, 0), 5);
-        const loadedLastRaceTime = parseTimestamp(initialState.last_race_time);
-        const loadedFuelRefillTime = parseTimestamp(initialState.fuel_refill_time);
-        
-        console.log('⛽ Загружены данные топлива:', {
-          fuel: loadedFuelCount,
-          lastRace: loadedLastRaceTime ? new Date(loadedLastRaceTime).toLocaleString() : 'нет',
-          refillTime: loadedFuelRefillTime ? new Date(loadedFuelRefillTime).toLocaleString() : 'нет'
-        });
-        
-        // Проверяем восстановление топлива
-        const fuelResult = checkAndRestoreFuel(loadedFuelCount, loadedLastRaceTime, loadedFuelRefillTime);
-        
-        fuelState.setFuelCount(fuelResult.fuel);
-        fuelState.setLastRaceTime(fuelResult.newLastRaceTime || loadedLastRaceTime);
-        fuelState.setFuelRefillTime(fuelResult.newRefillTime !== undefined ? fuelResult.newRefillTime : loadedFuelRefillTime);
-        
-        // Если топливо было восстановлено, сохраняем это
-        if (fuelResult.shouldUpdate) {
-          console.log('⛽ Топливо восстановлено при загрузке!');
-          // Отложенное сохранение после полной инициализации
-          setTimeout(() => {
-            debouncedSave({
-              userId,
-              fuel_count: 5,
-              fuel_refill_time: null,
-              last_race_time: new Date(fuelResult.newLastRaceTime).toISOString()
-            });
-          }, 2000);
-        }
-        
-        // Туториал
-        const savedTutorial = Boolean(initialState.has_completed_tutorial);
-        if (!savedTutorial && (Number(initialState.player_level) === 1 || !initialState.player_level)) {
-          console.log('🎯 Запускаем туториал для нового игрока');
-          setTimeout(() => {
-            gameState.setIsTutorialActive(true);
-            gameState.setTutorialStep(0);
-            gameState.setAccumulatedIncome(25);
-          }, 1000);
-        }
-
-        // Время последнего сбора
-        const loadedLastCollectedTime = parseTimestamp(initialState.last_collected_time) || Date.now();
-        const loadedLastExitTime = parseTimestamp(initialState.last_exit_time) || loadedLastCollectedTime;
-        gameState.updateLastCollectedTime(loadedLastCollectedTime);
-
-        // Оффлайн доход
-        const now = Date.now();
-        const offlineTimeMs = Math.max(0, now - loadedLastExitTime);
-        
-        let offlineIncome = 0;
-        if (offlineTimeMs > 0 && incomeRate > 0) {
-          offlineIncome = (incomeRate / 3600) * Math.min(offlineTimeMs / 1000, MAX_OFFLINE_HOURS * 3600);
-        }
-        gameState.setAccumulatedIncome(Math.max(offlineIncome, 0));
-        
-        return { success: true, data: initialState };
-        
-      } else {
-        console.error('❌ Бэкенд вернул невалидные данные');
-        return { success: false, error: 'Не удалось получить данные игрока' };
-      }
-    } catch (err) {
-      console.error('❌ Ошибка загрузки данных:', err.message);
-      return { success: false, error: `Ошибка загрузки: ${err.message}` };
-    }
-  }, [parseTimestamp, debouncedSave]);
-
-  // Функция сохранения времени выхода при закрытии приложения
-  const saveExitTime = useCallback(async () => {
-    const userId = getUserId();
-    if (!userId) return;
-
-    try {
-      await apiClient('/game_state', 'POST', {
-        body: {
-          userId: userId,
-          last_exit_time: new Date().toISOString(),
-        }
-      });
-      console.log('✅ Время выхода сохранено');
-    } catch (err) {
-      console.error('❌ Ошибка сохранения времени выхода:', err.message);
-    }
-  }, [getUserId]);
-
-  // Функция очистки таймеров сохранения
-  const cleanupSaveTimers = useCallback(() => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-      saveTimeoutRef.current = null;
-    }
-  }, []);
-
-  // Функция создания сокращенного saveGameState для передачи в другие хуки
-  const createSaveFunction = useCallback((gameState, fuelState) => {
-    return (updates = {}) => saveGameState(gameState, fuelState, updates);
-  }, [saveGameState]);
-
-  // Функция сохранения только топливных данных
-  const saveFuelData = useCallback(async (fuelState, updates = {}) => {
-    const userId = getUserId();
-    if (!userId) {
-      console.warn('⚠️ Отмена сохранения топлива: userId не готов');
-      return;
-    }
-
-    const fuelDataToSave = {
-      userId,
-      fuel_count: fuelState.fuelCount,
-      last_race_time: fuelState.lastRaceTime ? new Date(fuelState.lastRaceTime).toISOString() : null,
-      fuel_refill_time: fuelState.fuelRefillTime ? new Date(fuelState.fuelRefillTime).toISOString() : null,
-      ...updates
-    };
-
-    try {
-      console.log('⛽ Сохранение данных топлива для userId:', userId);
-      await apiClient('/game_state', 'POST', { body: fuelDataToSave });
-      console.log('✅ Данные топлива сохранены');
-    } catch (err) {
-      console.error('❌ Ошибка сохранения топлива:', err.message);
-    }
-  }, [getUserId]);
-
-  // Функция валидации загруженных данных
-  const validateLoadedData = useCallback((data) => {
-    if (!data || typeof data !== 'object') {
-      return { isValid: false, error: 'Невалидные данные' };
-    }
-
-    // Проверяем обязательные поля
-    const requiredFields = ['player_level', 'game_coins'];
-    for (const field of requiredFields) {
-      if (data[field] === undefined) {
-        console.warn(`⚠️ Отсутствует обязательное поле: ${field}`);
+    setJetCoins(Number(initialState.jet_coins) || 0);
+    setCurrentXp(Number(initialState.current_xp) || 10);
+    setXpToNextLevel(Number(initialState.xp_to_next_level) || 100);
+    setHasCompletedTutorial(Boolean(initialState.has_completed_tutorial));
+    
+    // Здания
+    let loadedBuildings = INITIAL_BUILDINGS;
+    if (Array.isArray(initialState.buildings) && initialState.buildings.length > 0) {
+      const validBuildings = initialState.buildings.every(building => 
+        building && 
+        typeof building.id === 'string' && 
+        typeof building.name === 'string' && 
+        typeof building.icon === 'string' &&
+        typeof building.level === 'number' &&
+        typeof building.isLocked === 'boolean'
+      );
+      
+      if (validBuildings) {
+        loadedBuildings = initialState.buildings;
       }
     }
+    setBuildings(loadedBuildings);
 
-    // Проверяем валидность массивов
-    if (data.buildings && !Array.isArray(data.buildings)) {
-      console.warn('⚠️ buildings не является массивом');
-      data.buildings = null;
-    }
+    // Персонал
+    const loadedHiredStaff = initialState.hired_staff && typeof initialState.hired_staff === 'object' 
+      ? initialState.hired_staff 
+      : INITIAL_HIRED_STAFF;
+    setHiredStaff(loadedHiredStaff);
 
-    if (data.player_cars && !Array.isArray(data.player_cars)) {
-      console.warn('⚠️ player_cars не является массивом');
-      data.player_cars = null;
-    }
-
-    // Проверяем валидность чисел
-    const numericFields = ['player_level', 'game_coins', 'jet_coins', 'current_xp', 'xp_to_next_level', 'income_rate_per_hour', 'fuel_count'];
-    numericFields.forEach(field => {
-      if (data[field] !== undefined && (isNaN(Number(data[field])) || !isFinite(Number(data[field])))) {
-        console.warn(`⚠️ Невалидное числовое поле ${field}: ${data[field]}`);
-        data[field] = 0;
+    // Машины
+    const loadedPlayerCarsRaw = Array.isArray(initialState.player_cars) ? initialState.player_cars : [INITIAL_CAR];
+    const loadedPlayerCars = loadedPlayerCarsRaw.map(sc => {
+      if (sc && sc.id && sc.parts) {
+        return { ...sc, stats: recalculateStatsAndIncomeBonus(sc.id, sc.parts).stats };
       }
-    });
-
-    return { isValid: true, data };
-  }, []);
-
-  // Функция создания резервной копии данных
-  const createBackup = useCallback(async (gameState, fuelState) => {
-    const userId = getUserId();
-    if (!userId) return null;
-
-    const backupData = {
-      timestamp: new Date().toISOString(),
-      userId,
-      gameState: {
-        playerLevel: gameState.playerLevel,
-        playerName: gameState.playerName,
-        gameCoins: gameState.gameCoins,
-        jetCoins: gameState.jetCoins,
-        currentXp: gameState.currentXp,
-        xpToNextLevel: gameState.xpToNextLevel,
-        incomeRatePerHour: gameState.incomeRatePerHour,
-        buildings: gameState.buildings,
-        playerCars: gameState.playerCars,
-        selectedCarId: gameState.selectedCarId,
-        hiredStaff: gameState.hiredStaff,
-        hasCompletedTutorial: gameState.hasCompletedTutorial,
-      },
-      fuelState: {
-        fuelCount: fuelState.fuelCount,
-        lastRaceTime: fuelState.lastRaceTime,
-        fuelRefillTime: fuelState.fuelRefillTime,
-      }
-    };
-
-    try {
-      // Сохраняем в localStorage для локального бэкапа
-      localStorage.setItem(`gameBackup_${userId}`, JSON.stringify(backupData));
-      console.log('💾 Резервная копия создана локально');
-      return backupData;
-    } catch (err) {
-      console.error('❌ Ошибка создания резервной копии:', err.message);
       return null;
+    }).filter(Boolean);
+    
+    const actualPlayerCars = loadedPlayerCars.length > 0 ? loadedPlayerCars : [INITIAL_CAR];
+    setPlayerCars(actualPlayerCars);
+
+    // Выбранная машина
+    const loadedSelectedCarId = initialState.selected_car_id;
+    const finalSelectedCarId = loadedSelectedCarId && actualPlayerCars.some(c => c.id === loadedSelectedCarId)
+      ? loadedSelectedCarId
+      : actualPlayerCars[0]?.id || INITIAL_CAR.id;
+    setSelectedCarId(finalSelectedCarId);
+
+    // Расчет дохода
+    const carToCalculateFrom = actualPlayerCars.find(c => c.id === finalSelectedCarId) || actualPlayerCars[0] || INITIAL_CAR;
+    const initialTotalRate = calculateTotalIncomeRate(loadedBuildings, carToCalculateFrom, loadedHiredStaff);
+    setIncomeRatePerHour(initialTotalRate);
+    
+    return {
+      buildings: loadedBuildings,
+      playerCars: actualPlayerCars,
+      selectedCarId: finalSelectedCarId,
+      incomeRate: initialTotalRate
+    };
+  }, []);
+
+  // Обработчик сбора дохода
+  const handleCollect = useCallback(() => {
+    const incomeToAdd = Math.floor(accumulatedIncome);
+    if (incomeToAdd > 0) {
+      const newTotalCoins = gameCoins + incomeToAdd;
+      setGameCoins(newTotalCoins);
+      setAccumulatedIncome(0);
+      const collectionTime = Date.now();
+      lastCollectedTimeRef.current = collectionTime;
+      
+      if (isTutorialActive && tutorialStep === 3) {
+        setTimeout(() => setTutorialStep(4), 500);
+      }
+      
+      saveGameState({
+        game_coins: newTotalCoins,
+        last_collected_time: new Date(collectionTime).toISOString(),
+      });
     }
-  }, [getUserId]);
+  }, [accumulatedIncome, gameCoins, isTutorialActive, tutorialStep, saveGameState]);
+
+  // Обработчик клика по зданию
+  const handleBuildingClick = useCallback((buildingName) => {
+    const targetBuilding = buildings.find(b => b.name === buildingName);
+    if (!targetBuilding) return;
+
+    const cost = calculateBuildingCost(targetBuilding.id, targetBuilding.level);
+    
+    if (gameCoins >= cost) {
+      const newCoins = gameCoins - cost;
+      const updatedBuildings = buildings.map(b =>
+        b.name === buildingName ? { ...b, level: b.level + 1 } : b
+      );
+      const newTotalRate = calculateTotalIncomeRate(updatedBuildings, currentCar, hiredStaff);
+
+      setGameCoins(newCoins);
+      setBuildings(updatedBuildings);
+      setIncomeRatePerHour(newTotalRate);
+      
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+      }
+      
+      saveGameState({
+        game_coins: newCoins,
+        buildings: updatedBuildings,
+        income_rate_per_hour: newTotalRate,
+      });
+    } else {
+      alert(`💰 Недостаточно монет! Нужно: ${cost.toLocaleString()}, у вас: ${gameCoins.toLocaleString()}`);
+      
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+      }
+    }
+  }, [buildings, gameCoins, currentCar, hiredStaff, saveGameState]);
+
+  // Обработчик улучшения детали
+  const handleUpgradePart = useCallback((partId) => {
+    if (!currentCar?.parts?.[partId]) return;
+    
+    const part = currentCar.parts[partId];
+    const cost = calculateUpgradeCost(partId, part.level, hiredStaff);
+    
+    if (gameCoins >= cost && cost !== Infinity) {
+      const newCoins = gameCoins - cost;
+      const updatedParts = { ...currentCar.parts, [partId]: { ...part, level: part.level + 1 } };
+      const { stats: newStats } = recalculateStatsAndIncomeBonus(currentCar.id, updatedParts);
+      
+      const updatedPlayerCars = playerCars.map(car =>
+        car.id === selectedCarId ? { ...car, parts: updatedParts, stats: newStats } : car
+      );
+      
+      const updatedCarForRate = updatedPlayerCars.find(c => c.id === selectedCarId);
+      if (updatedCarForRate) {
+        const newTotalRate = calculateTotalIncomeRate(buildings, updatedCarForRate, hiredStaff);
+        setIncomeRatePerHour(newTotalRate);
+        
+        setGameCoins(newCoins);
+        setPlayerCars(updatedPlayerCars);
+        
+        saveGameState({
+          game_coins: newCoins,
+          player_cars: updatedPlayerCars,
+          income_rate_per_hour: newTotalRate,
+        });
+      }
+    }
+  }, [currentCar, hiredStaff, gameCoins, playerCars, selectedCarId, buildings, saveGameState]);
+
+  // Обработчик гонки
+  const handleStartRace = useCallback(async (difficulty) => {
+    if (!currentCar) return { result: 'error', reward: null };
+    
+    const raceOutcome = await simulateRace(currentCar, difficulty, gameCoins, currentXp, hiredStaff);
+    if (raceOutcome) {
+      setGameCoins(raceOutcome.newGameCoins);
+      setCurrentXp(raceOutcome.newCurrentXp);
+      
+      saveGameState({
+        game_coins: raceOutcome.newGameCoins,
+        current_xp: raceOutcome.newCurrentXp,
+      });
+      
+      return { result: raceOutcome.result, reward: raceOutcome.reward };
+    }
+    
+    return { result: 'error', reward: null };
+  }, [currentCar, gameCoins, currentXp, hiredStaff, saveGameState]);
+
+  // Обработчик покупки машины
+  const handleBuyCar = useCallback((carIdToBuy) => {
+    const carData = CAR_CATALOG.find(c => c.id === carIdToBuy);
+    if (!carData || gameCoins < carData.price || playerCars.some(c => c.id === carIdToBuy)) {
+      return;
+    }
+    
+    const newCoins = gameCoins - carData.price;
+    const newCar = {
+      id: carData.id,
+      name: carData.name,
+      imageUrl: carData.imageUrl,
+      parts: { ...carData.initialParts },
+      stats: recalculateStatsAndIncomeBonus(carData.id, carData.initialParts).stats
+    };
+    
+    const updatedPlayerCars = [...playerCars, newCar];
+    setGameCoins(newCoins);
+    setPlayerCars(updatedPlayerCars);
+    
+    saveGameState({
+      game_coins: newCoins,
+      player_cars: updatedPlayerCars,
+    });
+  }, [gameCoins, playerCars, saveGameState]);
+
+  // Обработчик найма/улучшения персонала
+  const handleHireOrUpgradeStaff = useCallback((staffId) => {
+    const cost = calculateStaffCost(staffId, hiredStaff);
+    
+    if (gameCoins >= cost && cost !== Infinity) {
+      const newCoins = gameCoins - cost;
+      const updatedHiredStaff = { ...hiredStaff, [staffId]: (hiredStaff[staffId] || 0) + 1 };
+      const newTotalRate = calculateTotalIncomeRate(buildings, currentCar, updatedHiredStaff);
+
+      setGameCoins(newCoins);
+      setHiredStaff(updatedHiredStaff);
+      setIncomeRatePerHour(newTotalRate);
+      
+      saveGameState({
+        game_coins: newCoins,
+        hired_staff: updatedHiredStaff,
+        income_rate_per_hour: newTotalRate,
+      });
+    }
+  }, [hiredStaff, gameCoins, buildings, currentCar, saveGameState]);
+
+  // Обработчик выбора машины
+  const handleSelectCar = useCallback((carId) => {
+    if (carId !== selectedCarId) {
+      setSelectedCarId(carId);
+      const newSelectedCar = playerCars.find(c => c.id === carId);
+      
+      if (newSelectedCar) {
+        const newTotalRate = calculateTotalIncomeRate(buildings, newSelectedCar, hiredStaff);
+        setIncomeRatePerHour(newTotalRate);
+        
+        saveGameState({
+          selected_car_id: carId,
+          income_rate_per_hour: newTotalRate,
+        });
+      }
+    }
+  }, [selectedCarId, playerCars, buildings, hiredStaff, saveGameState]);
+
+  // Обработчик награды за рекламу
+  const handleAdReward = useCallback((rewardAmount) => {
+    if (rewardAmount > 0) {
+      const newTotalCoins = gameCoins + rewardAmount;
+      setGameCoins(newTotalCoins);
+      
+      saveGameState({
+        game_coins: newTotalCoins,
+      });
+      
+      alert(`🎉 Получено ${rewardAmount} монет за просмотр рекламы!`);
+      
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      }
+    }
+  }, [gameCoins, saveGameState]);
+
+  // Обработчик награды за рефералов
+  const handleReferralRewardUpdate = useCallback((coinsEarned) => {
+    if (coinsEarned > 0) {
+      const newTotalCoins = gameCoins + coinsEarned;
+      setGameCoins(newTotalCoins);
+      
+      saveGameState({
+        game_coins: newTotalCoins,
+      });
+    }
+  }, [gameCoins, saveGameState]);
+
+  // Туториал обработчики
+  const handleTutorialNext = useCallback(() => {
+    setTutorialStep(prev => prev + 1);
+  }, []);
+  
+  const handleTutorialComplete = useCallback(() => {
+    setIsTutorialActive(false);
+    setHasCompletedTutorial(true);
+    
+    saveGameState({
+      has_completed_tutorial: true,
+    });
+  }, [saveGameState]);
+  
+  const handleShowTutorial = useCallback(() => {
+    setIsTutorialActive(true);
+    setTutorialStep(0);
+  }, []);
+
+  // Функции для управления накопленным доходом
+  const updateAccumulatedIncome = useCallback((newAmount) => {
+    setAccumulatedIncome(newAmount);
+  }, []);
+
+  const updateLastCollectedTime = useCallback((timestamp) => {
+    lastCollectedTimeRef.current = timestamp;
+  }, []);
 
   return {
-    // Основные функции
-    saveGameState,
-    loadGameData,
-    saveFuelData,
-    saveExitTime,
+    // Состояния
+    playerLevel,
+    playerName,
+    gameCoins,
+    jetCoins,
+    currentXp,
+    xpToNextLevel,
+    incomeRatePerHour,
+    accumulatedIncome,
+    buildings,
+    playerCars,
+    selectedCarId,
+    hiredStaff,
+    isTutorialActive,
+    tutorialStep,
+    hasCompletedTutorial,
     
-    // Вспомогательные функции
-    parseTimestamp,
-    validateLoadedData,
-    createBackup,
-    cleanupSaveTimers,
-    createSaveFunction,
+    // Вычисляемые значения
+    currentCar,
+    xpPercentage,
+    lastCollectedTimeRef,
     
-    // Служебные функции
-    debouncedSave,
+    // Функции управления состоянием
+    setPlayerLevel,
+    setPlayerName,
+    setGameCoins,
+    setJetCoins,
+    setCurrentXp,
+    setXpToNextLevel,
+    setIncomeRatePerHour,
+    setAccumulatedIncome: updateAccumulatedIncome,
+    setBuildings,
+    setPlayerCars,
+    setSelectedCarId,
+    setHiredStaff,
+    setIsTutorialActive,
+    setTutorialStep,
+    setHasCompletedTutorial,
+    updateLastCollectedTime,
     
-    // Refs
-    saveTimeoutRef,
+    // Функция инициализации
+    initializeGameState,
+    
+    // Обработчики действий
+    handleCollect,
+    handleBuildingClick,
+    handleUpgradePart,
+    handleStartRace,
+    handleBuyCar,
+    handleHireOrUpgradeStaff,
+    handleSelectCar,
+    handleAdReward,
+    handleReferralRewardUpdate,
+    handleTutorialNext,
+    handleTutorialComplete,
+    handleShowTutorial,
   };
 };
