@@ -11,7 +11,7 @@ import CarSelector from './components/CarSelector';
 import LeaderboardScreen from './components/LeaderboardScreen';
 import FriendsScreen from './components/FriendsScreen';
 import LoadingScreen from './components/LoadingScreen';
-import { useGameState } from './hooks/useGameState'; // ✅ НОВЫЙ ИМПОРТ
+import { useGameState } from './hooks/useGameState';
 import {
   calculateUpgradeCost,
   calculateBuildingCost,
@@ -27,24 +27,23 @@ import {
 import './App.css';
 
 function App() {
-  // ЗАЩИТА ОТ ДВОЙНОЙ ИНИЦИАЛИЗАЦИИ (оставляем как есть)
+  // ЗАЩИТА ОТ ДВОЙНОЙ ИНИЦИАЛИЗАЦИИ (без изменений)
   const initializationRef = useRef(false);
   const isInitializedRef = useRef(false);
   
-  // ✅ ЗАМЕНЯЕМ множество useState на один хук
-  // Telegram и UI состояния (оставляем в App.jsx)
+  // Telegram и UI состояния (без изменений)
   const [isLoading, setIsLoading] = useState(true);
   const [hasLoadedData, setHasLoadedData] = useState(false);
   const [error, setError] = useState(null);
   const [tgUserData, setTgUserData] = useState(null);
   const [isTgApp, setIsTgApp] = useState(false);
   
-  // UI состояния (оставляем в App.jsx)
+  // UI состояния (без изменений)
   const [activeScreen, setActiveScreen] = useState('garage');
   const [isTuningVisible, setIsTuningVisible] = useState(false);
   const [isCarSelectorVisible, setIsCarSelectorVisible] = useState(false);
 
-  // ✅ УПРОЩЕННАЯ функция получения userId (оставляем здесь)
+  // ✅ getUserId функция (без изменений)
   const getUserId = useCallback(() => {
     if (isTgApp && tgUserData?.id) {
       const userId = tgUserData.id.toString();
@@ -59,7 +58,7 @@ function App() {
     return null;
   }, [isTgApp, tgUserData?.id]);
 
-  // ✅ ИСПОЛЬЗУЕМ НАШ ХУК - получаем ВСЕ состояния и функции
+  // ✅ ИСПОЛЬЗУЕМ НАШ ОБНОВЛЕННЫЙ ХУК - теперь с топливной системой
   const {
     // Состояния игрока
     playerLevel, setPlayerLevel,
@@ -84,10 +83,8 @@ function App() {
     tutorialStep, setTutorialStep,
     hasCompletedTutorial, setHasCompletedTutorial,
     
-    // Топливная система
-    fuelCount, setFuelCount,
-    lastRaceTime, setLastRaceTime,
-    fuelRefillTime, setFuelRefillTime,
+    // ✅ ТОПЛИВНАЯ система - теперь объект
+    fuelSystem,
     
     // Функции
     saveGameState,
@@ -101,9 +98,8 @@ function App() {
     setIsLoading(false);
   }, []);
 
-  // ✅ ИСПРАВЛЕННАЯ инициализация - ИСПОЛЬЗУЕМ loadGameData из хука
+  // ✅ ИНИЦИАЛИЗАЦИЯ (без изменений, но использует обновленный loadGameData)
   useEffect(() => {
-    // ЗАЩИТА ОТ ДВОЙНОЙ ИНИЦИАЛИЗАЦИИ (без изменений)
     if (initializationRef.current) {
       console.log('⚠️ Повторная инициализация заблокирована');
       return;
@@ -113,7 +109,6 @@ function App() {
       console.log('🚀 Инициализация приложения...');
       initializationRef.current = true;
       
-      // Инициализация Telegram WebApp (без изменений)
       const tg = window.Telegram?.WebApp;
       if (tg) {
         console.log('✅ Telegram WebApp найден');
@@ -124,7 +119,7 @@ function App() {
         
         if (userData && typeof userData === 'object') {
           const firstName = userData.first_name || userData.firstName || userData.username || 'Игрок';
-          setPlayerName(firstName); // ✅ Используем сеттер из хука
+          setPlayerName(firstName);
           console.log('📝 Player name установлен:', firstName);
         }
         
@@ -149,9 +144,7 @@ function App() {
       }
     };
 
-    // ✅ ОБЕРТКА для loadGameData из хука
     const loadGameDataWrapper = async (userId) => {
-      // ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА (без изменений)
       if (hasLoadedData || isInitializedRef.current) {
         console.log('⏭️ Данные уже загружены, пропускаем...');
         return;
@@ -161,7 +154,6 @@ function App() {
       isInitializedRef.current = true;
       
       try {
-        // ✅ ИСПОЛЬЗУЕМ loadGameData из хука вместо дублирования логики
         const result = await loadGameData(userId);
         
         if (result.success) {
@@ -173,20 +165,17 @@ function App() {
       } catch (err) {
         console.error('❌ Ошибка в loadGameDataWrapper:', err.message);
         setError(`Ошибка загрузки: ${err.message}`);
-      } finally {
-        // НЕ устанавливаем setIsLoading(false) здесь - это сделает LoadingScreen
       }
     };
 
     initializeApp();
 
-    // ✅ Cleanup - используем функцию из хука
     return () => {
       cleanup();
     };
-  }, []); // ВАЖНО: пустой массив зависимостей!
+  }, []);
 
-  // ✅ Таймер дохода (без изменений, но использует состояния из хука)
+  // ✅ Таймер дохода (без изменений)
   useEffect(() => {
     if (incomeRatePerHour <= 0 || isLoading) {
       return;
@@ -214,7 +203,7 @@ function App() {
     return () => clearInterval(intervalId);
   }, [incomeRatePerHour, isLoading, lastCollectedTimeRef, setAccumulatedIncome]);
 
-  // ✅ Обработчик клавиши ESC (без изменений)
+  // ✅ ESC handler (без изменений)
   useEffect(() => {
     const handleKeyPress = (e) => {
       if (e.key === 'Escape' && isLoading) {
@@ -227,7 +216,7 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [isLoading]);
 
-  // ✅ ОБРАБОТЧИКИ ИГРОВЫХ ДЕЙСТВИЙ - используют функции из хука
+  // ✅ ОБРАБОТЧИКИ ИГРОВЫХ ДЕЙСТВИЙ (без изменений, используют хук)
   const handleCollect = useCallback(() => {
     const incomeToAdd = Math.floor(accumulatedIncome);
     if (incomeToAdd > 0) {
@@ -241,7 +230,6 @@ function App() {
         setTimeout(() => setTutorialStep(4), 500);
       }
       
-      // ✅ Используем saveGameState из хука
       saveGameState({
         game_coins: newTotalCoins,
         last_collected_time: new Date(collectionTime).toISOString(),
@@ -270,7 +258,6 @@ function App() {
         window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
       }
       
-      // ✅ Используем saveGameState из хука
       saveGameState({
         game_coins: newCoins,
         buildings: updatedBuildings,
@@ -308,7 +295,6 @@ function App() {
         setGameCoins(newCoins);
         setPlayerCars(updatedPlayerCars);
         
-        // ✅ Используем saveGameState из хука
         saveGameState({
           game_coins: newCoins,
           player_cars: updatedPlayerCars,
@@ -326,7 +312,6 @@ function App() {
       setGameCoins(raceOutcome.newGameCoins);
       setCurrentXp(raceOutcome.newCurrentXp);
       
-      // ✅ Используем saveGameState из хука
       saveGameState({
         game_coins: raceOutcome.newGameCoins,
         current_xp: raceOutcome.newCurrentXp,
@@ -357,7 +342,6 @@ function App() {
     setGameCoins(newCoins);
     setPlayerCars(updatedPlayerCars);
     
-    // ✅ Используем saveGameState из хука
     saveGameState({
       game_coins: newCoins,
       player_cars: updatedPlayerCars,
@@ -376,7 +360,6 @@ function App() {
       setHiredStaff(updatedHiredStaff);
       setIncomeRatePerHour(newTotalRate);
       
-      // ✅ Используем saveGameState из хука
       saveGameState({
         game_coins: newCoins,
         hired_staff: updatedHiredStaff,
@@ -394,7 +377,6 @@ function App() {
         const newTotalRate = calculateTotalIncomeRate(buildings, newSelectedCar, hiredStaff);
         setIncomeRatePerHour(newTotalRate);
         
-        // ✅ Используем saveGameState из хука
         saveGameState({
           selected_car_id: carId,
           income_rate_per_hour: newTotalRate,
@@ -404,60 +386,23 @@ function App() {
     setIsCarSelectorVisible(false);
   }, [selectedCarId, playerCars, buildings, hiredStaff, setSelectedCarId, setIncomeRatePerHour, saveGameState]);
 
-  // ✅ Топливные обработчики - используют состояния из хука
+  // ✅ ТОПЛИВНЫЕ ОБРАБОТЧИКИ - теперь используют fuelSystem
   const handleFuelUpdate = useCallback((newFuelCount, newLastRaceTime, newRefillTime = null) => {
-    console.log('⛽ Обновление топлива:', {
-      fuel: newFuelCount,
-      lastRace: newLastRaceTime ? new Date(newLastRaceTime).toLocaleString() : 'нет',
-      refillTime: newRefillTime ? new Date(newRefillTime).toLocaleString() : 'нет'
-    });
-    
-    const validFuelCount = Math.min(Math.max(Number(newFuelCount) || 0, 0), 5);
-    const validLastRaceTime = Number(newLastRaceTime) || Date.now();
-    
-    setFuelCount(validFuelCount);
-    setLastRaceTime(validLastRaceTime);
-    
-    if (newRefillTime !== undefined) {
-      setFuelRefillTime(newRefillTime ? Number(newRefillTime) : null);
-    }
-    
-    const updateData = {
-      fuel_count: validFuelCount,
-      last_race_time: new Date(validLastRaceTime).toISOString(),
-    };
-    
-    if (newRefillTime !== undefined) {
-      updateData.fuel_refill_time = newRefillTime ? new Date(newRefillTime).toISOString() : null;
-    }
-    
-    // ✅ Используем saveGameState из хука
-    saveGameState(updateData);
-  }, [setFuelCount, setLastRaceTime, setFuelRefillTime, saveGameState]);
+    // ✅ Используем функцию из топливного хука
+    fuelSystem.handleFuelUpdate(newFuelCount, newLastRaceTime, newRefillTime);
+  }, [fuelSystem]);
 
   const handleFuelRefillByAd = useCallback(() => {
-    const now = Date.now();
-    console.log('📺 Топливо восстановлено за просмотр рекламы');
-    
-    setFuelCount(5);
-    setLastRaceTime(now);
-    setFuelRefillTime(null);
-    
-    // ✅ Используем saveGameState из хука
-    saveGameState({
-      fuel_count: 5,
-      last_race_time: new Date(now).toISOString(),
-      fuel_refill_time: null,
-    });
-  }, [setFuelCount, setLastRaceTime, setFuelRefillTime, saveGameState]);
+    // ✅ Используем функцию из топливного хука
+    fuelSystem.handleFuelRefillByAd();
+  }, [fuelSystem]);
 
-  // ✅ Остальные обработчики (используют состояния из хука)
+  // ✅ Остальные обработчики (без изменений)
   const handleReferralRewardUpdate = useCallback((coinsEarned) => {
     if (coinsEarned > 0) {
       const newTotalCoins = gameCoins + coinsEarned;
       setGameCoins(newTotalCoins);
       
-      // ✅ Используем saveGameState из хука
       saveGameState({
         game_coins: newTotalCoins,
       });
@@ -469,7 +414,6 @@ function App() {
       const newTotalCoins = gameCoins + rewardAmount;
       setGameCoins(newTotalCoins);
       
-      // ✅ Используем saveGameState из хука
       saveGameState({
         game_coins: newTotalCoins,
       });
@@ -505,7 +449,7 @@ function App() {
     setIsCarSelectorVisible(false);
   }, []);
 
-  // ✅ Туториал обработчики - используют состояния из хука
+  // ✅ Туториал обработчики (без изменений)
   const handleTutorialNext = useCallback(() => {
     setTutorialStep(prev => prev + 1);
   }, [setTutorialStep]);
@@ -514,7 +458,6 @@ function App() {
     setIsTutorialActive(false);
     setHasCompletedTutorial(true);
     
-    // ✅ Используем saveGameState из хука
     saveGameState({
       has_completed_tutorial: true,
     });
@@ -531,10 +474,10 @@ function App() {
     setTutorialStep(0);
   }, [setIsTutorialActive, setTutorialStep]);
 
-  // ✅ Вычисляемые значения (используют состояния из хука)
+  // ✅ Вычисляемые значения (без изменений)
   const xpPercentage = xpToNextLevel > 0 ? Math.min((currentXp / xpToNextLevel) * 100, 100) : 0;
 
-  // ✅ ПОКАЗ ЗАСТАВКИ ЗАГРУЗКИ
+  // ✅ ПОКАЗ ЗАСТАВКИ ЗАГРУЗКИ (без изменений)
   if (isLoading) {
     return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
   }
@@ -557,7 +500,7 @@ function App() {
     );
   }
 
-  // ✅ Основной рендер приложения (использует состояния из хука)
+  // ✅ Основной рендер приложения (ОБНОВЛЕН для работы с fuelSystem)
   return (
     <div className="App">
       <div className="header-container">
@@ -592,9 +535,10 @@ function App() {
             playerCar={currentCar}
             onStartRace={handleStartRace}
             onAdReward={handleAdReward}
-            fuelCount={fuelCount}
-            lastRaceTime={lastRaceTime}
-            fuelRefillTime={fuelRefillTime}
+            // ✅ ТОПЛИВНЫЕ пропсы теперь из fuelSystem
+            fuelCount={fuelSystem.fuelCount}
+            lastRaceTime={fuelSystem.lastRaceTime}
+            fuelRefillTime={fuelSystem.fuelRefillTime}
             onFuelUpdate={handleFuelUpdate}
             onFuelRefillByAd={handleFuelRefillByAd}
           />

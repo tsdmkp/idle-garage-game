@@ -1,21 +1,20 @@
-import { useState, useEffect, useCallback } from 'react';
+// hooks/useFuelSystem.js - Управление топливной системой
+import { useState, useCallback } from 'react';
 
-export const useFuelSystem = (saveHook, sendHapticFeedback) => {
+export const useFuelSystem = (saveGameState) => {
+  // ПРОВЕРКА 1: Состояния топливной системы - точно как в useGameState.js
   const [fuelCount, setFuelCount] = useState(5);
   const [lastRaceTime, setLastRaceTime] = useState(null);
   const [fuelRefillTime, setFuelRefillTime] = useState(null);
 
-  // Создаем объект состояния топлива для передачи в saveHook
-  const fuelState = {
-    fuelCount,
-    lastRaceTime,
-    fuelRefillTime,
-    setFuelCount,
-    setLastRaceTime,
-    setFuelRefillTime,
-  };
+  // ПРОВЕРКА 2: Функция валидации временных меток - точно как в useGameState.js
+  const parseTimestamp = useCallback((dateString) => {
+    if (!dateString) return null;
+    const timestamp = new Date(dateString).getTime();
+    return isNaN(timestamp) ? null : timestamp;
+  }, []);
 
-  // Функция проверки и восстановления топлива
+  // ПРОВЕРКА 2: Функция проверки и восстановления топлива - КРИТИЧЕСКИ ВАЖНО, точно как в useGameState.js
   const checkAndRestoreFuel = useCallback((currentFuel, lastRace, refillTime) => {
     if (currentFuel >= 5) return { fuel: currentFuel, shouldUpdate: false };
     
@@ -35,17 +34,9 @@ export const useFuelSystem = (saveHook, sendHapticFeedback) => {
     return { fuel: currentFuel, shouldUpdate: false };
   }, []);
 
-  // Функция инициализации топливной системы из загруженных данных
-  const initializeFuelSystem = useCallback((initialState) => {
-    console.log('⛽ Инициализация топливной системы...');
-    
-    // Загрузка топливных данных с валидацией
-    const parseTimestamp = (dateString) => {
-      if (!dateString) return null;
-      const timestamp = new Date(dateString).getTime();
-      return isNaN(timestamp) ? null : timestamp;
-    };
-
+  // ПРОВЕРКА 2: Функция загрузки топливных данных - точно как в useGameState.js
+  const loadFuelData = useCallback((initialState, debouncedSave, userId) => {
+    // ПРОВЕРКА 3: Загрузка топливных данных с валидацией - точно как в useGameState.js
     const loadedFuelCount = Math.min(Math.max(Number(initialState.fuel_count) || 5, 0), 5);
     const loadedLastRaceTime = parseTimestamp(initialState.last_race_time);
     const loadedFuelRefillTime = parseTimestamp(initialState.fuel_refill_time);
@@ -56,44 +47,36 @@ export const useFuelSystem = (saveHook, sendHapticFeedback) => {
       refillTime: loadedFuelRefillTime ? new Date(loadedFuelRefillTime).toLocaleString() : 'нет'
     });
     
-    // Проверяем восстановление топлива
+    // ПРОВЕРКА 3: Проверка восстановления топлива - точно как в useGameState.js
     const fuelResult = checkAndRestoreFuel(loadedFuelCount, loadedLastRaceTime, loadedFuelRefillTime);
     
     setFuelCount(fuelResult.fuel);
     setLastRaceTime(fuelResult.newLastRaceTime || loadedLastRaceTime);
     setFuelRefillTime(fuelResult.newRefillTime !== undefined ? fuelResult.newRefillTime : loadedFuelRefillTime);
     
-    // Если топливо было восстановлено, сохраняем это
+    // ПРОВЕРКА 3: Отложенное сохранение восстановленного топлива - точно как в useGameState.js
     if (fuelResult.shouldUpdate) {
       console.log('⛽ Топливо восстановлено при загрузке!');
-      // Отложенное сохранение после полной инициализации
       setTimeout(() => {
-        saveFuelData({
+        // ПРОВЕРКА 3: Используем правильный debouncedSave
+        const saveData = {
+          userId,
           fuel_count: 5,
           fuel_refill_time: null,
           last_race_time: new Date(fuelResult.newLastRaceTime).toISOString()
-        });
+        };
+        debouncedSave(saveData);
       }, 2000);
     }
+    
+    return {
+      fuelCount: fuelResult.fuel,
+      lastRaceTime: fuelResult.newLastRaceTime || loadedLastRaceTime,
+      fuelRefillTime: fuelResult.newRefillTime !== undefined ? fuelResult.newRefillTime : loadedFuelRefillTime
+    };
+  }, [parseTimestamp, checkAndRestoreFuel]);
 
-    return fuelResult;
-  }, [checkAndRestoreFuel]);
-
-  // Функция сохранения топливных данных
-  const saveFuelData = useCallback(async (updates = {}) => {
-    if (!saveHook?.saveFuelData) {
-      console.warn('⚠️ saveHook.saveFuelData недоступен');
-      return;
-    }
-
-    try {
-      await saveHook.saveFuelData(fuelState, updates);
-    } catch (err) {
-      console.error('❌ Ошибка сохранения топлива:', err);
-    }
-  }, [saveHook, fuelState]);
-
-  // Обработчик обновления топлива
+  // ПРОВЕРКА 2: Обработчик обновления топлива - КРИТИЧЕСКИ ВАЖНО, точно как в App.jsx
   const handleFuelUpdate = useCallback((newFuelCount, newLastRaceTime, newRefillTime = null) => {
     console.log('⛽ Обновление топлива:', {
       fuel: newFuelCount,
@@ -101,6 +84,7 @@ export const useFuelSystem = (saveHook, sendHapticFeedback) => {
       refillTime: newRefillTime ? new Date(newRefillTime).toLocaleString() : 'нет'
     });
     
+    // ПРОВЕРКА 3: Валидация данных - точно как в App.jsx
     const validFuelCount = Math.min(Math.max(Number(newFuelCount) || 0, 0), 5);
     const validLastRaceTime = Number(newLastRaceTime) || Date.now();
     
@@ -111,6 +95,7 @@ export const useFuelSystem = (saveHook, sendHapticFeedback) => {
       setFuelRefillTime(newRefillTime ? Number(newRefillTime) : null);
     }
     
+    // ПРОВЕРКА 3: Структура данных для сохранения - точно как в App.jsx
     const updateData = {
       fuel_count: validFuelCount,
       last_race_time: new Date(validLastRaceTime).toISOString(),
@@ -120,10 +105,13 @@ export const useFuelSystem = (saveHook, sendHapticFeedback) => {
       updateData.fuel_refill_time = newRefillTime ? new Date(newRefillTime).toISOString() : null;
     }
     
-    saveFuelData(updateData);
-  }, [saveFuelData]);
+    // ПРОВЕРКА 3: Используем переданный saveGameState
+    if (saveGameState) {
+      saveGameState(updateData);
+    }
+  }, [saveGameState]);
 
-  // Обработчик восстановления топлива за просмотр рекламы
+  // ПРОВЕРКА 2: Обработчик восстановления топлива за рекламу - КРИТИЧЕСКИ ВАЖНО, точно как в App.jsx
   const handleFuelRefillByAd = useCallback(() => {
     const now = Date.now();
     console.log('📺 Топливо восстановлено за просмотр рекламы');
@@ -132,196 +120,130 @@ export const useFuelSystem = (saveHook, sendHapticFeedback) => {
     setLastRaceTime(now);
     setFuelRefillTime(null);
     
-    // Haptic feedback для успешного действия
-    if (sendHapticFeedback) {
-      sendHapticFeedback('success');
-    }
-    
-    saveFuelData({
-      fuel_count: 5,
-      last_race_time: new Date(now).toISOString(),
-      fuel_refill_time: null,
-    });
-  }, [saveFuelData, sendHapticFeedback]);
-
-  // Функция потребления топлива (для гонок)
-  const consumeFuel = useCallback((amount = 1) => {
-    if (fuelCount <= 0) {
-      console.warn('⚠️ Нет топлива для потребления');
-      return false;
-    }
-    
-    const newFuelCount = Math.max(0, fuelCount - amount);
-    const now = Date.now();
-    
-    setFuelCount(newFuelCount);
-    setLastRaceTime(now);
-    
-    // Если топливо закончилось, устанавливаем время восстановления
-    if (newFuelCount === 0) {
-      const refillTime = now + (60 * 60 * 1000); // 1 час
-      setFuelRefillTime(refillTime);
-      
-      saveFuelData({
-        fuel_count: newFuelCount,
+    // ПРОВЕРКА 3: Структура данных для сохранения - точно как в App.jsx
+    if (saveGameState) {
+      saveGameState({
+        fuel_count: 5,
         last_race_time: new Date(now).toISOString(),
-        fuel_refill_time: new Date(refillTime).toISOString(),
-      });
-    } else {
-      saveFuelData({
-        fuel_count: newFuelCount,
-        last_race_time: new Date(now).toISOString(),
+        fuel_refill_time: null,
       });
     }
-    
-    console.log(`⛽ Потрачено ${amount} топлива. Осталось: ${newFuelCount}`);
-    return true;
-  }, [fuelCount, saveFuelData]);
+  }, [saveGameState]);
 
-  // Функция проверки возможности заправки
-  const canRefillFuel = useCallback(() => {
-    if (fuelCount >= 5) return false;
-    
-    const now = Date.now();
-    
-    // Проверяем естественное восстановление
-    if (fuelRefillTime && now >= fuelRefillTime) {
-      return 'natural'; // Естественное восстановление
-    }
-    
-    // Проверяем восстановление по времени последней гонки
-    if (lastRaceTime && now >= (lastRaceTime + (60 * 60 * 1000))) {
-      return 'natural';
-    }
-    
-    return 'ad'; // Только за рекламу
-  }, [fuelCount, fuelRefillTime, lastRaceTime]);
+  // ПРОВЕРКА 2: Функция проверки доступности гонки
+  const canStartRace = useCallback(() => {
+    return fuelCount > 0;
+  }, [fuelCount]);
 
-  // Функция получения времени до восстановления
-  const getTimeToRefill = useCallback(() => {
+  // ПРОВЕРКА 2: Функция расчета времени до восстановления топлива
+  const getTimeUntilRefill = useCallback(() => {
     if (fuelCount >= 5) return 0;
     
     const now = Date.now();
-    let targetTime = null;
+    let refillTime;
     
     if (fuelRefillTime) {
-      targetTime = fuelRefillTime;
+      refillTime = fuelRefillTime;
     } else if (lastRaceTime) {
-      targetTime = lastRaceTime + (60 * 60 * 1000);
+      refillTime = lastRaceTime + (60 * 60 * 1000); // 1 час
+    } else {
+      return 0;
     }
     
-    if (targetTime) {
-      const timeLeft = Math.max(0, targetTime - now);
-      return timeLeft;
-    }
-    
-    return 0;
+    const timeRemaining = Math.max(0, refillTime - now);
+    return timeRemaining;
   }, [fuelCount, fuelRefillTime, lastRaceTime]);
 
-  // Функция форматирования времени восстановления
-  const formatRefillTime = useCallback(() => {
-    const timeLeft = getTimeToRefill();
+  // ПРОВЕРКА 2: Функция расчета времени восстановления в человекочитаемом формате
+  const getRefillTimeText = useCallback(() => {
+    const timeRemaining = getTimeUntilRefill();
     
-    if (timeLeft <= 0) return null;
+    if (timeRemaining <= 0) return null;
     
-    const hours = Math.floor(timeLeft / (60 * 60 * 1000));
-    const minutes = Math.floor((timeLeft % (60 * 60 * 1000)) / (60 * 1000));
-    const seconds = Math.floor((timeLeft % (60 * 1000)) / 1000);
+    const minutes = Math.floor(timeRemaining / (60 * 1000));
+    const seconds = Math.floor((timeRemaining % (60 * 1000)) / 1000);
     
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    } else {
+    if (minutes > 0) {
       return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    } else {
+      return `0:${seconds.toString().padStart(2, '0')}`;
     }
-  }, [getTimeToRefill]);
+  }, [getTimeUntilRefill]);
 
-  // Функция проверки достаточности топлива
-  const hasFuel = useCallback((amount = 1) => {
-    return fuelCount >= amount;
-  }, [fuelCount]);
-
-  // Функция получения индикатора топлива для UI
-  const getFuelIndicator = useCallback(() => {
-    const tanks = [];
-    for (let i = 0; i < 5; i++) {
-      tanks.push({
-        id: i,
-        isFull: i < fuelCount,
-        isEmpty: i >= fuelCount
-      });
-    }
-    return tanks;
-  }, [fuelCount]);
-
-  // Автоматическая проверка восстановления топлива каждую минуту
-  useEffect(() => {
-    if (fuelCount >= 5) return;
-    
-    const checkInterval = setInterval(() => {
-      const refillType = canRefillFuel();
+  // ПРОВЕРКА 2: Функция потребления топлива (для гонок)
+  const consumeFuel = useCallback(() => {
+    if (fuelCount > 0) {
+      const newFuelCount = fuelCount - 1;
+      const now = Date.now();
       
-      if (refillType === 'natural') {
-        console.log('⛽ Автоматическое восстановление топлива');
-        const now = Date.now();
+      setFuelCount(newFuelCount);
+      setLastRaceTime(now);
+      
+      // Если топливо закончилось, устанавливаем время восстановления
+      if (newFuelCount === 0) {
+        const refillTime = now + (60 * 60 * 1000); // 1 час
+        setFuelRefillTime(refillTime);
         
-        setFuelCount(5);
-        setLastRaceTime(now);
-        setFuelRefillTime(null);
-        
-        saveFuelData({
-          fuel_count: 5,
-          last_race_time: new Date(now).toISOString(),
-          fuel_refill_time: null,
-        });
+        if (saveGameState) {
+          saveGameState({
+            fuel_count: newFuelCount,
+            last_race_time: new Date(now).toISOString(),
+            fuel_refill_time: new Date(refillTime).toISOString(),
+          });
+        }
+      } else {
+        if (saveGameState) {
+          saveGameState({
+            fuel_count: newFuelCount,
+            last_race_time: new Date(now).toISOString(),
+          });
+        }
       }
-    }, 60000); // Проверяем каждую минуту
+      
+      return true; // Топливо успешно потрачено
+    }
     
-    return () => clearInterval(checkInterval);
-  }, [fuelCount, canRefillFuel, saveFuelData]);
+    return false; // Топлива нет
+  }, [fuelCount, saveGameState]);
 
-  // Функция полного сброса топливной системы (для отладки)
-  const resetFuelSystem = useCallback(() => {
-    console.log('🔄 Сброс топливной системы');
+  // ПРОВЕРКА 2: Функция форсированного обновления состояния топлива
+  const updateFuelState = useCallback((newFuelCount, newLastRaceTime, newRefillTime) => {
+    // ПРОВЕРКА 3: Валидация параметров
+    const validFuelCount = Math.min(Math.max(Number(newFuelCount) || 0, 0), 5);
+    const validLastRaceTime = newLastRaceTime ? Number(newLastRaceTime) : null;
+    const validRefillTime = newRefillTime ? Number(newRefillTime) : null;
     
-    setFuelCount(5);
-    setLastRaceTime(null);
-    setFuelRefillTime(null);
-    
-    saveFuelData({
-      fuel_count: 5,
-      last_race_time: null,
-      fuel_refill_time: null,
-    });
-  }, [saveFuelData]);
+    setFuelCount(validFuelCount);
+    setLastRaceTime(validLastRaceTime);
+    setFuelRefillTime(validRefillTime);
+  }, []);
 
+  // ПРОВЕРКА 1: Возвращаемый объект - все состояния и функции
   return {
     // Состояния
     fuelCount,
-    lastRaceTime,
+    lastRaceTime, 
     fuelRefillTime,
-    fuelState, // Для передачи в другие хуки
     
-    // Основные функции
-    initializeFuelSystem,
-    handleFuelUpdate,
-    handleFuelRefillByAd,
-    consumeFuel,
-    checkAndRestoreFuel,
-    
-    // Проверочные функции
-    canRefillFuel,
-    hasFuel,
-    getTimeToRefill,
-    formatRefillTime,
-    getFuelIndicator,
-    
-    // Служебные функции
-    saveFuelData,
-    resetFuelSystem,
-    
-    // Сеттеры (для прямого управления, если нужно)
+    // Setters (для прямого управления из App.jsx если нужно)
     setFuelCount,
     setLastRaceTime,
     setFuelRefillTime,
+    
+    // Основные функции
+    handleFuelUpdate,
+    handleFuelRefillByAd,
+    loadFuelData,
+    
+    // Вспомогательные функции
+    checkAndRestoreFuel,
+    parseTimestamp,
+    
+    // Утилиты
+    canStartRace,
+    getTimeUntilRefill,
+    getRefillTimeText,
+    consumeFuel,
+    updateFuelState
   };
 };
