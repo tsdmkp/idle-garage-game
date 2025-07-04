@@ -11,10 +11,7 @@ import CarSelector from './components/CarSelector';
 import LeaderboardScreen from './components/LeaderboardScreen';
 import FriendsScreen from './components/FriendsScreen';
 import LoadingScreen from './components/LoadingScreen';
-import { useGameState } from './hooks/useGameState';
-import { useGameSave } from './hooks/useGameSave';
-import { useTelegram } from './hooks/useTelegram';
-import { useFuelSystem } from './hooks/useFuelSystem'; // ✅ ФИНАЛЬНЫЙ ИМПОРТ
+import { useGameState } from './hooks/useGameState'; // ✅ НОВЫЙ ИМПОРТ
 import {
   calculateStaffCost,
   CAR_CATALOG,
@@ -22,6 +19,7 @@ import {
   MAX_OFFLINE_HOURS,
   UPDATE_INTERVAL,
 } from './utils';
+import apiClient from './apiClient';
 import './App.css';
 
 function App() {
@@ -29,136 +27,286 @@ function App() {
   const initializationRef = useRef(false);
   const isInitializedRef = useRef(false);
   
-  // ✅ МИНИМАЛЬНЫЕ СОСТОЯНИЯ ПРИЛОЖЕНИЯ
+  // Основные состояния приложения
   const [isLoading, setIsLoading] = useState(true);
   const [hasLoadedData, setHasLoadedData] = useState(false);
   const [error, setError] = useState(null);
+  const [tgUserData, setTgUserData] = useState(null);
+  const [isTgApp, setIsTgApp] = useState(false);
   
   // UI состояния
   const [activeScreen, setActiveScreen] = useState('garage');
   const [isTuningVisible, setIsTuningVisible] = useState(false);
   const [isCarSelectorVisible, setIsCarSelectorVisible] = useState(false);
 
-  // ✅ ИСПОЛЬЗУЕМ ВСЕ КАСТОМНЫЕ ХУКИ
-  const telegram = useTelegram();
-  const saveHook = useGameSave(telegram.getUserId);
-  const fuelSystem = useFuelSystem(saveHook, telegram.sendHapticFeedback);
-  
-  // Создаем функцию сохранения для gameState
-  const saveGameState = useCallback((updates = {}) => {
-    return saveHook.saveGameState(gameState, fuelSystem.fuelState, updates);
-  }, [saveHook, fuelSystem.fuelState]);
+  // Топливная система (пока оставляем здесь, вынесем в следующий хук)
+  const [fuelCount, setFuelCount] = useState(5);
+  const [lastRaceTime, setLastRaceTime] = useState(null);
+  const [fuelRefillTime, setFuelRefillTime] = useState(null);
 
+  // Refs
+  const saveTimeoutRef = useRef(null);
+
+  // УПРОЩЕННАЯ функция получения userId
+  const getUserId = useCallback(() => {
+    if (isTgApp && tgUserData?.id) {
+      const userId = tgUserData.id.toString();
+      console.log('🆔 getUserId (Telegram):', userId);
+      return userId;
+    } else if (!isTgApp) {
+      console.log('🆔 getUserId (Standalone): default');
+      return 'default';
+    }
+    
+    console.log('🆔 getUserId: null (не готов)');
+    return null;
+  }, [isTgApp, tgUserData?.id]);
+
+  // Debounced save function
+  const debouncedSave = useCallback((data) => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    saveTimeoutRef.current = setTimeout(async () => {
+      const userId = getUserId();
+      if (!userId) {
+        console.warn('⚠️ Отмена сохранения: userId не готов');
+        return;
+      }
+
+      try {
+        console.log('📤 Сохранение состояния для userId:', userId);
+        await apiClient('/game_state', 'POST', { body: { userId, ...data } });
+        console.log('✅ Состояние успешно сохранено');
+      } catch (err) {
+        console.error('❌ Ошибка сохранения:', err.message);
+      }
+    }, 500);
+  }, [getUserId]);
+
+  // Основная функция сохранения состояния
+  const saveGameState = useCallback(async (updates = {}) => {
+    const userId = getUserId();
+    if (!userId) {
+      console.warn('⚠️ Отмена сохранения: userId не готов');
+      return;
+    }
+
+    const stateToSave = {
+      userId: userId,
+      player_level: gameState.playerLevel,
+      first_name: gameState.playerName,
+      game_coins: gameState.gameCoins,
+      jet_coins: gameState.jetCoins,
+      current_xp: gameState.currentXp,
+      xp_to_next_level: gameState.xpToNextLevel,
+      income_rate_per_hour: gameState.incomeRatePerHour,
+      last_collected_time: new Date(gameState.lastCollectedTimeRef.current).toISOString(),
+      buildings: gameState.buildings,
+      player_cars: gameState.playerCars,
+      selected_car_id: gameState.selectedCarId,
+      hired_staff: gameState.hiredStaff,
+      has_completed_tutorial: gameState.hasCompletedTutorial,
+      last_exit_time: new Date().toISOString(),
+      // Топливные данные (пока здесь)
+      fuel_count: fuelCount,
+      last_race_time: lastRaceTime ? new Date(lastRaceTime).toISOString() : null,
+      fuel_refill_time: fuelRefillTime ? new Date(fuelRefillTime).toISOString() : null,
+      ...updates
+    };
+
+    // Используем debounced save для неважных обновлений
+    if (updates && Object.keys(updates).length < 3) {
+      debouncedSave(stateToSave);
+      return;
+    }
+
+    // Мгновенное сохранение для важных действий
+    try {
+      console.log('📤 Мгновенное сохранение состояния для userId:', userId);
+      await apiClient('/game_state', 'POST', { body: stateToSave });
+      console.log('✅ Состояние успешно сохранено');
+    } catch (err) {
+      console.error('❌ Ошибка сохранения:', err.message);
+    }
+  }, [
+    fuelCount, lastRaceTime, fuelRefillTime,
+    getUserId, debouncedSave
+  ]);
+
+  // ✅ ИСПОЛЬЗУЕМ КАСТОМНЫЙ ХУК
   const gameState = useGameState(saveGameState);
 
-  // ✅ ОБРАБОТЧИК ЗАВЕРШЕНИЯ ЗАГРУЗКИ
+  // Обработчик завершения загрузки
   const handleLoadingComplete = useCallback(() => {
     console.log('🎮 Заставка завершена, показываем игру');
     setIsLoading(false);
   }, []);
 
-  // ✅ МАКСИМАЛЬНО УПРОЩЕННАЯ ИНИЦИАЛИЗАЦИЯ
-  useEffect(() => {
-    console.log('🔍 useEffect triggered. Состояние:', {
-      initializationRef: initializationRef.current,
-      telegramInitialized: telegram.isInitialized,
-      isTgApp: telegram.isTgApp,
-      tgUserData: telegram.tgUserData,
-      hasLoadedData
-    });
+  // Вспомогательная функция валидации дат
+  const parseTimestamp = (dateString) => {
+    if (!dateString) return null;
+    const timestamp = new Date(dateString).getTime();
+    return isNaN(timestamp) ? null : timestamp;
+  };
+
+  // Функция проверки и восстановления топлива
+  const checkAndRestoreFuel = useCallback((currentFuel, lastRace, refillTime) => {
+    if (currentFuel >= 5) return { fuel: currentFuel, shouldUpdate: false };
     
+    const now = Date.now();
+    const timeToCheck = refillTime || (lastRace ? lastRace + (60 * 60 * 1000) : null);
+    
+    if (timeToCheck && now >= timeToCheck) {
+      console.log('⛽ Топливо должно быть восстановлено');
+      return { 
+        fuel: 5, 
+        shouldUpdate: true, 
+        newLastRaceTime: now, 
+        newRefillTime: null 
+      };
+    }
+    
+    return { fuel: currentFuel, shouldUpdate: false };
+  }, []);
+
+  // ИСПРАВЛЕННАЯ инициализация приложения
+  useEffect(() => {
     if (initializationRef.current) {
       console.log('⚠️ Повторная инициализация заблокирована');
       return;
-    }
-    
-    // ✅ УСТАНАВЛИВАЕМ ИМЯ ИГРОКА ИЗ TELEGRAM СРАЗУ ПОСЛЕ ИНИЦИАЛИЗАЦИИ
-    if (telegram.isInitialized && telegram.tgUserData) {
-      const userName = telegram.getUserName();
-      console.log('📝 Пытаемся установить имя из Telegram:', userName);
-      if (userName && userName !== 'Игрок') {
-        gameState.setPlayerName(userName);
-        console.log('📝 Player name установлен из Telegram:', userName);
-      }
     }
     
     const initializeApp = async () => {
       console.log('🚀 Инициализация приложения...');
       initializationRef.current = true;
       
-      // Ждем инициализации Telegram
-      if (!telegram.isInitialized) {
-        console.log('⏳ Ожидание инициализации Telegram...');
-        return;
-      }
-      
-      // Получаем user ID и загружаем данные
-      const userId = telegram.getUserId();
-      console.log('🔍 Получен userId:', userId);
-      if (userId) {
-        await loadGameData(userId);
+      // Инициализация Telegram WebApp
+      const tg = window.Telegram?.WebApp;
+      if (tg) {
+        console.log('✅ Telegram WebApp найден');
+        
+        setIsTgApp(true);
+        const userData = tg.initDataUnsafe?.user || null;
+        setTgUserData(userData);
+        
+        if (userData && typeof userData === 'object') {
+          const firstName = userData.first_name || userData.firstName || userData.username || 'Игрок';
+          gameState.setPlayerName(firstName); // ✅ ИСПОЛЬЗУЕМ МЕТОД ИЗ ХУКА
+          console.log('📝 Player name установлен:', firstName);
+        }
+        
+        tg.ready();
+        tg.expand();
+        tg.BackButton.hide();
+        tg.MainButton.hide();
+        
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        if (userData?.id) {
+          await loadGameData(userData.id.toString());
+        } else {
+          console.error('❌ Нет userId в Telegram данных');
+          setError('Ошибка получения данных пользователя Telegram');
+          setIsLoading(false);
+        }
       } else {
-        console.error('❌ Не удалось получить userId');
-        setError('Ошибка получения данных пользователя');
-        setIsLoading(false);
+        console.log('⚠️ Telegram WebApp не найден, режим standalone');
+        setIsTgApp(false);
+        await loadGameData('default');
       }
     };
 
-    // ✅ УПРОЩЕННАЯ ЗАГРУЗКА С ИСПОЛЬЗОВАНИЕМ ХУКОВ
     const loadGameData = async (userId) => {
-      console.log('📥 loadGameData вызван с userId:', userId);
-      
       if (hasLoadedData || isInitializedRef.current) {
         console.log('⏭️ Данные уже загружены, пропускаем...');
         return;
       }
 
+      console.log('📥 Начинаем загрузку данных для userId:', userId);
       setHasLoadedData(true);
       isInitializedRef.current = true;
       
-      console.log('🔍 Состояние перед загрузкой:', {
-        userId,
-        telegramData: telegram.tgUserData,
-        isTgApp: telegram.isTgApp
-      });
-      
-      // Используем методы из хуков
-      const result = await saveHook.loadGameData(
-        userId, 
-        gameState, 
-        fuelSystem.fuelState, 
-        fuelSystem.checkAndRestoreFuel
-      );
-      
-      if (result.success) {
-        // Инициализируем топливную систему
-        fuelSystem.initializeFuelSystem(result.data);
-        console.log('✅ Приложение успешно инициализировано');
-      } else {
-        console.error('❌ Ошибка инициализации:', result.error);
-        setError(result.error);
+      try {
+        const initialState = await apiClient('/game_state', 'GET', { params: { userId } });
+        console.log('📦 Получено состояние с бэкенда:', initialState);
+
+        if (initialState && typeof initialState === 'object') {
+          // ✅ ИСПОЛЬЗУЕМ МЕТОД ИНИЦИАЛИЗАЦИИ ИЗ ХУКА
+          const { incomeRate } = gameState.initializeGameState(initialState);
+          
+          // Загрузка топливных данных с валидацией
+          const loadedFuelCount = Math.min(Math.max(Number(initialState.fuel_count) || 5, 0), 5);
+          const loadedLastRaceTime = parseTimestamp(initialState.last_race_time);
+          const loadedFuelRefillTime = parseTimestamp(initialState.fuel_refill_time);
+          
+          // Проверяем восстановление топлива
+          const fuelResult = checkAndRestoreFuel(loadedFuelCount, loadedLastRaceTime, loadedFuelRefillTime);
+          
+          setFuelCount(fuelResult.fuel);
+          setLastRaceTime(fuelResult.newLastRaceTime || loadedLastRaceTime);
+          setFuelRefillTime(fuelResult.newRefillTime !== undefined ? fuelResult.newRefillTime : loadedFuelRefillTime);
+          
+          // Туториал
+          const savedTutorial = Boolean(initialState.has_completed_tutorial);
+          if (!savedTutorial && (Number(initialState.player_level) === 1 || !initialState.player_level)) {
+            console.log('🎯 Запускаем туториал для нового игрока');
+            setTimeout(() => {
+              gameState.setIsTutorialActive(true);
+              gameState.setTutorialStep(0);
+              gameState.setAccumulatedIncome(25);
+            }, 1000);
+          }
+
+          // Время последнего сбора
+          const loadedLastCollectedTime = parseTimestamp(initialState.last_collected_time) || Date.now();
+          const loadedLastExitTime = parseTimestamp(initialState.last_exit_time) || loadedLastCollectedTime;
+          gameState.updateLastCollectedTime(loadedLastCollectedTime);
+
+          // Оффлайн доход
+          const now = Date.now();
+          const offlineTimeMs = Math.max(0, now - loadedLastExitTime);
+          
+          let offlineIncome = 0;
+          if (offlineTimeMs > 0 && incomeRate > 0) {
+            offlineIncome = (incomeRate / 3600) * Math.min(offlineTimeMs / 1000, MAX_OFFLINE_HOURS * 3600);
+          }
+          gameState.setAccumulatedIncome(Math.max(offlineIncome, 0));
+          
+        } else {
+          console.error('❌ Бэкенд вернул невалидные данные');
+          setError('Не удалось получить данные игрока');
+          setIsLoading(false);
+        }
+      } catch (err) {
+        console.error('❌ Ошибка загрузки данных:', err.message);
+        setError(`Ошибка загрузки: ${err.message}`);
         setIsLoading(false);
       }
     };
 
     initializeApp();
 
-    // ✅ УПРОЩЕННЫЙ CLEANUP
+    // Cleanup
     return () => {
-      saveHook.cleanupSaveTimers();
-      saveHook.saveExitTime();
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      
+      const userId = getUserId();
+      if (userId) {
+        apiClient('/game_state', 'POST', {
+          body: {
+            userId: userId,
+            last_exit_time: new Date().toISOString(),
+          }
+        }).catch(err => console.error('Failed to save last exit time:', err));
+      }
     };
-  }, [
-    telegram.isInitialized, 
-    telegram.tgUserData, // ✅ ДОБАВЛЕНО ДЛЯ ОТСЛЕЖИВАНИЯ ИЗМЕНЕНИЙ ДАННЫХ ПОЛЬЗОВАТЕЛЯ
-    telegram.getUserId, 
-    telegram.getUserName,
-    saveHook,
-    gameState,
-    fuelSystem
-  ]);
+  }, []);
 
-  // ✅ ТАЙМЕР ДОХОДА (БЕЗ ИЗМЕНЕНИЙ)
+  // Таймер дохода
   useEffect(() => {
     if (gameState.incomeRatePerHour <= 0 || isLoading) {
       return;
@@ -184,94 +332,94 @@ function App() {
     }, UPDATE_INTERVAL);
     
     return () => clearInterval(intervalId);
-  }, [gameState.incomeRatePerHour, isLoading, gameState]);
+  }, [gameState.incomeRatePerHour, isLoading]);
 
-  // ✅ UI ОБРАБОТЧИКИ С HAPTIC FEEDBACK
+  // Топливные обработчики (пока здесь, потом вынесем в отдельный хук)
+  const handleFuelUpdate = useCallback((newFuelCount, newLastRaceTime, newRefillTime = null) => {
+    console.log('⛽ Обновление топлива:', {
+      fuel: newFuelCount,
+      lastRace: newLastRaceTime ? new Date(newLastRaceTime).toLocaleString() : 'нет',
+      refillTime: newRefillTime ? new Date(newRefillTime).toLocaleString() : 'нет'
+    });
+    
+    const validFuelCount = Math.min(Math.max(Number(newFuelCount) || 0, 0), 5);
+    const validLastRaceTime = Number(newLastRaceTime) || Date.now();
+    
+    setFuelCount(validFuelCount);
+    setLastRaceTime(validLastRaceTime);
+    
+    if (newRefillTime !== undefined) {
+      setFuelRefillTime(newRefillTime ? Number(newRefillTime) : null);
+    }
+    
+    const updateData = {
+      fuel_count: validFuelCount,
+      last_race_time: new Date(validLastRaceTime).toISOString(),
+    };
+    
+    if (newRefillTime !== undefined) {
+      updateData.fuel_refill_time = newRefillTime ? new Date(newRefillTime).toISOString() : null;
+    }
+    
+    saveGameState(updateData);
+  }, [saveGameState]);
+
+  const handleFuelRefillByAd = useCallback(() => {
+    const now = Date.now();
+    console.log('📺 Топливо восстановлено за просмотр рекламы');
+    
+    setFuelCount(5);
+    setLastRaceTime(now);
+    setFuelRefillTime(null);
+    
+    saveGameState({
+      fuel_count: 5,
+      last_race_time: new Date(now).toISOString(),
+      fuel_refill_time: null,
+    });
+  }, [saveGameState]);
+
+  // UI обработчики
   const handleNavClick = useCallback((screenId) => {
     setIsTuningVisible(false);
     setIsCarSelectorVisible(false);
     setActiveScreen(screenId);
-    telegram.sendHapticFeedback('selection');
-  }, [telegram]);
+  }, []);
 
   const handleOpenTuning = useCallback(() => {
     setIsTuningVisible(true);
-    telegram.sendHapticFeedback('light');
-  }, [telegram]);
+  }, []);
 
   const handleCloseTuning = useCallback(() => {
     setIsTuningVisible(false);
-    telegram.sendHapticFeedback('light');
-  }, [telegram]);
+  }, []);
 
   const handleOpenCarSelector = useCallback(() => {
     setIsCarSelectorVisible(true);
-    telegram.sendHapticFeedback('light');
-  }, [telegram]);
+  }, []);
   
   const handleCloseCarSelector = useCallback(() => {
     setIsCarSelectorVisible(false);
-    telegram.sendHapticFeedback('light');
-  }, [telegram]);
+  }, []);
 
+  // Расширенные обработчики для UI
   const handleSelectCarAndClose = useCallback((carId) => {
     gameState.handleSelectCar(carId);
     setIsCarSelectorVisible(false);
-    telegram.sendHapticFeedback('medium');
-  }, [gameState, telegram]);
+  }, [gameState]);
 
   const handleTutorialAction = useCallback((action) => {
     if (action === 'close-tuning') {
       setIsTuningVisible(false);
-      telegram.sendHapticFeedback('light');
     }
-  }, [telegram]);
+  }, []);
 
-  // ✅ ОБЕРТКИ ДЛЯ ИГРОВЫХ ДЕЙСТВИЙ С HAPTIC FEEDBACK
-  const gameActionsWithHaptic = {
-    handleCollect: useCallback(() => {
-      const result = gameState.handleCollect();
-      if (gameState.accumulatedIncome > 0) {
-        telegram.sendHapticFeedback('success');
-      }
-      return result;
-    }, [gameState, telegram]),
-
-    handleBuildingClick: useCallback((buildingName) => {
-      return gameState.handleBuildingClick(buildingName);
-    }, [gameState]),
-
-    handleUpgradePart: useCallback((partId) => {
-      const result = gameState.handleUpgradePart(partId);
-      telegram.sendHapticFeedback('medium');
-      return result;
-    }, [gameState, telegram]),
-
-    handleBuyCar: useCallback((carId) => {
-      const result = gameState.handleBuyCar(carId);
-      telegram.sendHapticFeedback('success');
-      return result;
-    }, [gameState, telegram]),
-
-    handleHireOrUpgradeStaff: useCallback((staffId) => {
-      const result = gameState.handleHireOrUpgradeStaff(staffId);
-      telegram.sendHapticFeedback('medium');
-      return result;
-    }, [gameState, telegram]),
-
-    handleAdReward: useCallback((amount) => {
-      const result = gameState.handleAdReward(amount);
-      telegram.sendHapticFeedback('success');
-      return result;
-    }, [gameState, telegram]),
-  };
-
-  // ✅ ПОКАЗ ЗАСТАВКИ ЗАГРУЗКИ
+  // Показ заставки загрузки
   if (isLoading) {
     return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
   }
 
-  // ✅ РЕНДЕР ОШИБКИ
+  // Рендер ошибки
   if (error) {
     return (
       <div className="error-screen">
@@ -279,10 +427,7 @@ function App() {
           <div className="error-icon">❌</div>
           <div>Ошибка: {error}</div>
           <button 
-            onClick={() => {
-              telegram.sendHapticFeedback('light');
-              window.location.reload();
-            }} 
+            onClick={() => window.location.reload()} 
             className="retry-button"
           >
             Попробовать снова
@@ -292,7 +437,7 @@ function App() {
     );
   }
 
-  // ✅ ОСНОВНОЙ РЕНДЕР ПРИЛОЖЕНИЯ
+  // Основной рендер приложения
   return (
     <div className="App">
       <div className="header-container">
@@ -315,10 +460,10 @@ function App() {
             maxAccumulation={gameState.incomeRatePerHour * MAX_OFFLINE_HOURS}
             gameCoins={gameState.gameCoins}
             buildings={gameState.buildings}
-            onCollect={gameActionsWithHaptic.handleCollect}
+            onCollect={gameState.handleCollect}
             onTuneClick={handleOpenTuning}
             onOpenCarSelector={handleOpenCarSelector}
-            onBuildingClick={gameActionsWithHaptic.handleBuildingClick}
+            onBuildingClick={gameState.handleBuildingClick}
           />
         )}
 
@@ -326,12 +471,12 @@ function App() {
           <RaceScreen
             playerCar={gameState.currentCar}
             onStartRace={gameState.handleStartRace}
-            onAdReward={gameActionsWithHaptic.handleAdReward}
-            fuelCount={fuelSystem.fuelCount}
-            lastRaceTime={fuelSystem.lastRaceTime}
-            fuelRefillTime={fuelSystem.fuelRefillTime}
-            onFuelUpdate={fuelSystem.handleFuelUpdate}
-            onFuelRefillByAd={fuelSystem.handleFuelRefillByAd}
+            onAdReward={gameState.handleAdReward}
+            fuelCount={fuelCount}
+            lastRaceTime={lastRaceTime}
+            fuelRefillTime={fuelRefillTime}
+            onFuelUpdate={handleFuelUpdate}
+            onFuelRefillByAd={handleFuelRefillByAd}
           />
         )}
 
@@ -340,7 +485,7 @@ function App() {
             catalog={CAR_CATALOG}
             playerCars={gameState.playerCars}
             gameCoins={gameState.gameCoins}
-            onBuyCar={gameActionsWithHaptic.handleBuyCar}
+            onBuyCar={gameState.handleBuyCar}
           />
         )}
 
@@ -349,20 +494,20 @@ function App() {
             staffCatalog={STAFF_CATALOG}
             hiredStaff={gameState.hiredStaff}
             gameCoins={gameState.gameCoins}
-            onHireOrUpgrade={gameActionsWithHaptic.handleHireOrUpgradeStaff}
+            onHireOrUpgrade={gameState.handleHireOrUpgradeStaff}
             calculateCost={(staffId) => calculateStaffCost(staffId, gameState.hiredStaff)}
           />
         )}
 
         {activeScreen === 'leaderboard' && (
           <LeaderboardScreen
-            tgUserData={telegram.tgUserData}
+            tgUserData={tgUserData}
           />
         )}
 
         {activeScreen === 'friends' && (
           <FriendsScreen
-            tgUserData={telegram.tgUserData}
+            tgUserData={tgUserData}
             onBalanceUpdate={gameState.handleReferralRewardUpdate}
           />
         )}
@@ -386,7 +531,7 @@ function App() {
           car={gameState.currentCar}
           gameCoins={gameState.gameCoins}
           onClose={handleCloseTuning}
-          onUpgrade={gameActionsWithHaptic.handleUpgradePart}
+          onUpgrade={gameState.handleUpgradePart}
         />
       )}
 
