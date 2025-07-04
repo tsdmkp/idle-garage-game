@@ -13,7 +13,7 @@ function ShopScreen({ catalog = [], playerCars = [], gameCoins = 0, onBuyCar }) 
 
   return (
     <div className="shop-screen">
-      {/* Чистый заголовок без "Премиум автосалон" */}
+      {/* Чистый заголовок */}
       <div className="shop-header">
         <h2>🏪 Автосалон</h2>
         <div className="shop-balance">
@@ -35,110 +35,116 @@ function ShopScreen({ catalog = [], playerCars = [], gameCoins = 0, onBuyCar }) 
             const canAfford = gameCoins >= price;
             const canBuy = !isOwned && canAfford && price > 0;
 
+            // ИСПРАВЛЕННОЕ получение характеристик
             const currentBaseStats = car.baseStats || {};
             const displayPower = currentBaseStats.power ?? '?';
             const displaySpeed = currentBaseStats.speed ?? '?';
             const displayStyle = currentBaseStats.style ?? '?';
             const displayReliability = currentBaseStats.reliability ?? '?';
             const displayIncome = currentBaseStats.baseIncome ?? '?';
+            
+            // Логирование для отладки
+            if (!car.baseStats) {
+              console.warn(`ShopScreen: Нет baseStats для машины ${car.id}:`, car);
+            }
 
             return (
               <div 
                 key={car.id} 
-                className={`car-card ${isOwned ? 'owned' : ''} ${!canAfford && !isOwned ? 'unaffordable' : ''}`}
+                className={`shop-car-card ${isOwned ? 'owned' : ''} ${!canAfford && !isOwned ? 'unaffordable' : ''}`}
               >
                 {/* Статус машины */}
                 {isOwned && (
-                  <div className="ownership-badge">
+                  <div className="shop-ownership-badge">
                     ✅ В гараже
                   </div>
                 )}
 
                 {/* Изображение машины - ГЛАВНЫЙ АКЦЕНТ */}
-                <div className="car-image-container">
+                <div className="shop-car-image-container">
                   <img 
                     src={car.imageUrl || '/placeholder-car.png'} 
                     alt={car.name || 'Машина'} 
-                    className="car-image"
+                    className="shop-car-image"
                     onError={(e) => { 
                       e.target.onerror = null; 
                       e.target.src = '/placeholder-car.png'; 
                     }}
                   />
-                  <div className="car-overlay">
-                    <div className="income-indicator">
+                  <div className="shop-car-overlay">
+                    <div className="shop-income-indicator">
                       💰 {displayIncome}/час
                     </div>
                   </div>
                 </div>
 
                 {/* Информация о машине */}
-                <div className="car-info">
-                  <h3 className="car-name">{car.name || 'Без названия'}</h3>
+                <div className="shop-car-info">
+                  <h3 className="shop-car-name">{car.name || 'Без названия'}</h3>
                   
                   {/* Характеристики - УВЕЛИЧЕННЫЕ НО КОМПАКТНЫЕ */}
-                  <div className="car-stats">
-                    <div className="stat-item">
-                      <span className="stat-icon">⚡</span>
-                      <span className="stat-value">{displayPower}</span>
-                      <span className="stat-label">Мощность</span>
+                  <div className="shop-car-stats">
+                    <div className="shop-stat-item">
+                      <span className="shop-stat-icon">⚡</span>
+                      <span className="shop-stat-value">{displayPower}</span>
+                      <span className="shop-stat-label">Мощность</span>
                     </div>
-                    <div className="stat-item">
-                      <span className="stat-icon">🏎️</span>
-                      <span className="stat-value">{displaySpeed}</span>
-                      <span className="stat-label">Скорость</span>
+                    <div className="shop-stat-item">
+                      <span className="shop-stat-icon">🏎️</span>
+                      <span className="shop-stat-value">{displaySpeed}</span>
+                      <span className="shop-stat-label">Скорость</span>
                     </div>
-                    <div className="stat-item">
-                      <span className="stat-icon">✨</span>
-                      <span className="stat-value">{displayStyle}</span>
-                      <span className="stat-label">Стиль</span>
+                    <div className="shop-stat-item">
+                      <span className="shop-stat-icon">✨</span>
+                      <span className="shop-stat-value">{displayStyle}</span>
+                      <span className="shop-stat-label">Стиль</span>
                     </div>
-                    <div className="stat-item">
-                      <span className="stat-icon">🔧</span>
-                      <span className="stat-value">{displayReliability}</span>
-                      <span className="stat-label">Надежность</span>
+                    <div className="shop-stat-item">
+                      <span className="shop-stat-icon">🔧</span>
+                      <span className="shop-stat-value">{displayReliability}</span>
+                      <span className="shop-stat-label">Надежность</span>
                     </div>
                   </div>
 
                   {/* Цена и кнопка */}
-                  <div className="car-purchase">
-                    <div className="car-price">
+                  <div className="shop-car-purchase">
+                    <div className="shop-car-price">
                       {price === 0 ? (
-                        <span className="free-price">🎁 Бесплатно</span>
+                        <span className="shop-free-price">🎁 Бесплатно</span>
                       ) : price === Infinity ? (
-                        <span className="unknown-price">❓ Не продается</span>
+                        <span className="shop-unknown-price">❓ Не продается</span>
                       ) : (
                         <>
-                          <span className="price-amount">{formatPrice(price)}</span>
-                          <span className="price-currency">GC</span>
+                          <span className="shop-price-amount">{formatPrice(price)}</span>
+                          <span className="shop-price-currency">GC</span>
                         </>
                       )}
                     </div>
 
                     <button
-                      className={`purchase-button ${isOwned ? 'owned' : canAfford ? 'available' : 'unaffordable'}`}
+                      className={`shop-purchase-button ${isOwned ? 'owned' : canAfford ? 'available' : 'unaffordable'}`}
                       onClick={() => { if(canBuy) onBuyCar(car.id) }}
                       disabled={isOwned || !canAfford || price === 0}
                     >
                       {isOwned ? (
                         <>
-                          <span className="button-icon">✅</span>
-                          <span className="button-text">Куплена</span>
+                          <span className="shop-button-icon">✅</span>
+                          <span className="shop-button-text">Куплена</span>
                         </>
                       ) : canAfford && price > 0 ? (
                         <>
-                          <span className="button-icon">🛒</span>
-                          <span className="button-text">Купить</span>
+                          <span className="shop-button-icon">🛒</span>
+                          <span className="shop-button-text">Купить</span>
                         </>
                       ) : price === 0 ? (
                         <>
-                          <span className="button-icon">🎁</span>
-                          <span className="button-text">Получена</span>
+                          <span className="shop-button-icon">🎁</span>
+                          <span className="shop-button-text">Получена</span>
                         </>
                       ) : (
                         <>
-                          <span className="button-icon">💰</span>
-                          <span className="button-text">Копить</span>
+                          <span className="shop-button-icon">💰</span>
+                          <span className="shop-button-text">Копить</span>
                         </>
                       )}
                     </button>
