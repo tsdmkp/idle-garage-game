@@ -14,7 +14,7 @@ import LoadingScreen from './components/LoadingScreen';
 import { useGameState } from './hooks/useGameState';
 import { useGameSave } from './hooks/useGameSave';
 import { useTelegram } from './hooks/useTelegram';
-import { useFuelSystem } from './hooks/useFuelSystem';
+import { useFuelSystem } from './hooks/useFuelSystem'; // ✅ ФИНАЛЬНЫЙ ИМПОРТ
 import {
   calculateStaffCost,
   CAR_CATALOG,
@@ -25,7 +25,7 @@ import {
 import './App.css';
 
 function App() {
-  // ЗАЩИТА ОТ ДВОЙНОЙ ИНИЦИАЛИЗАЦИИ (более мягкая)
+  // ЗАЩИТА ОТ ДВОЙНОЙ ИНИЦИАЛИЗАЦИИ
   const initializationRef = useRef(false);
   const isInitializedRef = useRef(false);
   
@@ -57,16 +57,16 @@ function App() {
     setIsLoading(false);
   }, []);
 
-  // ✅ УЛУЧШЕННАЯ ИНИЦИАЛИЗАЦИЯ (минимальные изменения)
+  // ✅ МАКСИМАЛЬНО УПРОЩЕННАЯ ИНИЦИАЛИЗАЦИЯ
   useEffect(() => {
-    // УБИРАЕМ жесткую блокировку повторной инициализации
-    // if (initializationRef.current) {
-    //   console.log('⚠️ Повторная инициализация заблокирована');
-    //   return;
-    // }
+    if (initializationRef.current) {
+      console.log('⚠️ Повторная инициализация заблокирована');
+      return;
+    }
     
     const initializeApp = async () => {
       console.log('🚀 Инициализация приложения...');
+      initializationRef.current = true;
       
       // Ждем инициализации Telegram
       if (!telegram.isInitialized) {
@@ -92,16 +92,17 @@ function App() {
       }
     };
 
-    // ✅ УЛУЧШЕННАЯ загрузка с обработкой retry из хука
+    // ✅ УПРОЩЕННАЯ ЗАГРУЗКА С ИСПОЛЬЗОВАНИЕМ ХУКОВ
     const loadGameData = async (userId) => {
-      if (hasLoadedData && isInitializedRef.current) {
-        console.log('⏭️ Данные уже успешно загружены, пропускаем...');
+      if (hasLoadedData || isInitializedRef.current) {
+        console.log('⏭️ Данные уже загружены, пропускаем...');
         return;
       }
 
-      console.log('📥 Загрузка данных игрока...', userId);
+      setHasLoadedData(true);
+      isInitializedRef.current = true;
       
-      // Используем улучшенный метод из хука с retry логикой
+      // Используем методы из хуков
       const result = await saveHook.loadGameData(
         userId, 
         gameState, 
@@ -112,41 +113,11 @@ function App() {
       if (result.success) {
         // Инициализируем топливную систему
         fuelSystem.initializeFuelSystem(result.data);
-        
-        // Отмечаем как успешно загруженные
-        setHasLoadedData(true);
-        isInitializedRef.current = true;
-        initializationRef.current = true;
-        
         console.log('✅ Приложение успешно инициализировано');
       } else {
         console.error('❌ Ошибка инициализации:', result.error);
-        
-        // Если это сетевая ошибка и нужно использовать дефолты
-        if (result.isNetworkError && result.useDefaults) {
-          console.log('🔄 Запускаем с дефолтными данными из-за недоступности сервера');
-          
-          // Устанавливаем дефолтные данные
-          const userName = telegram.getUserName();
-          gameState.setPlayerLevel(1);
-          gameState.setPlayerName(userName || 'Игрок');
-          gameState.setGameCoins(500);
-          gameState.setJetCoins(0);
-          
-          setHasLoadedData(true);
-          isInitializedRef.current = true;
-          initializationRef.current = true;
-          
-          // Показываем предупреждение пользователю
-          setTimeout(() => {
-            if (telegram.showAlert) {
-              telegram.showAlert('⚠️ Сервер временно недоступен.\nИгра запущена в автономном режиме.');
-            }
-          }, 1000);
-        } else {
-          setError(result.error);
-          setIsLoading(false);
-        }
+        setError(result.error);
+        setIsLoading(false);
       }
     };
 
@@ -161,11 +132,9 @@ function App() {
     telegram.isInitialized, 
     telegram.getUserId, 
     telegram.getUserName,
-    telegram.showAlert,
     saveHook,
     gameState,
-    fuelSystem,
-    hasLoadedData
+    fuelSystem
   ]);
 
   // ✅ ТАЙМЕР ДОХОДА (БЕЗ ИЗМЕНЕНИЙ)
@@ -287,22 +256,15 @@ function App() {
       <div className="error-screen">
         <div className="error-content">
           <div className="error-icon">❌</div>
-          <div className="error-title">Ошибка загрузки</div>
-          <div className="error-message">{error}</div>
+          <div>Ошибка: {error}</div>
           <button 
             onClick={() => {
               telegram.sendHapticFeedback('light');
-              setError(null);
-              setIsLoading(true);
-              setHasLoadedData(false);
-              isInitializedRef.current = false;
-              initializationRef.current = false;
-              // Принудительно перезапускаем инициализацию
               window.location.reload();
             }} 
             className="retry-button"
           >
-            🔄 Попробовать снова
+            Попробовать снова
           </button>
         </div>
       </div>
