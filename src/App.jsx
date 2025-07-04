@@ -59,6 +59,14 @@ function App() {
 
   // ✅ МАКСИМАЛЬНО УПРОЩЕННАЯ ИНИЦИАЛИЗАЦИЯ
   useEffect(() => {
+    console.log('🔍 useEffect triggered. Состояние:', {
+      initializationRef: initializationRef.current,
+      telegramInitialized: telegram.isInitialized,
+      isTgApp: telegram.isTgApp,
+      tgUserData: telegram.tgUserData,
+      hasLoadedData
+    });
+    
     if (initializationRef.current) {
       console.log('⚠️ Повторная инициализация заблокирована');
       return;
@@ -67,6 +75,7 @@ function App() {
     // ✅ УСТАНАВЛИВАЕМ ИМЯ ИГРОКА ИЗ TELEGRAM СРАЗУ ПОСЛЕ ИНИЦИАЛИЗАЦИИ
     if (telegram.isInitialized && telegram.tgUserData) {
       const userName = telegram.getUserName();
+      console.log('📝 Пытаемся установить имя из Telegram:', userName);
       if (userName && userName !== 'Игрок') {
         gameState.setPlayerName(userName);
         console.log('📝 Player name установлен из Telegram:', userName);
@@ -85,6 +94,7 @@ function App() {
       
       // Получаем user ID и загружаем данные
       const userId = telegram.getUserId();
+      console.log('🔍 Получен userId:', userId);
       if (userId) {
         await loadGameData(userId);
       } else {
@@ -96,6 +106,8 @@ function App() {
 
     // ✅ УПРОЩЕННАЯ ЗАГРУЗКА С ИСПОЛЬЗОВАНИЕМ ХУКОВ
     const loadGameData = async (userId) => {
+      console.log('📥 loadGameData вызван с userId:', userId);
+      
       if (hasLoadedData || isInitializedRef.current) {
         console.log('⏭️ Данные уже загружены, пропускаем...');
         return;
@@ -103,6 +115,12 @@ function App() {
 
       setHasLoadedData(true);
       isInitializedRef.current = true;
+      
+      console.log('🔍 Состояние перед загрузкой:', {
+        userId,
+        telegramData: telegram.tgUserData,
+        isTgApp: telegram.isTgApp
+      });
       
       // Используем методы из хуков
       const result = await saveHook.loadGameData(

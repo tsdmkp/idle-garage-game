@@ -12,23 +12,26 @@ export const useTelegram = () => {
       const userId = tgUserData.id.toString();
       console.log('🆔 getUserId (Telegram):', userId);
       return userId;
-    } else if (!isTgApp) {
+    } else if (isInitialized && !isTgApp) {
       console.log('🆔 getUserId (Standalone): default');
       return 'default';
     }
     
     console.log('🆔 getUserId: null (не готов)');
     return null;
-  }, [isTgApp, tgUserData?.id]);
+  }, [isTgApp, tgUserData?.id, isInitialized]);
 
   // Функция получения имени пользователя
   const getUserName = useCallback(() => {
     if (tgUserData && typeof tgUserData === 'object') {
-      return tgUserData.first_name || 
+      const name = tgUserData.first_name || 
              tgUserData.firstName || 
              tgUserData.username || 
              'Игрок';
+      console.log('👤 getUserName:', name, 'из данных:', tgUserData);
+      return name;
     }
+    console.log('👤 getUserName: Игрок (нет данных)');
     return 'Игрок';
   }, [tgUserData]);
 
@@ -62,8 +65,10 @@ export const useTelegram = () => {
             username: userData.username,
             language_code: userData.language_code
           });
+          console.log('✅ tgUserData установлен:', userData);
         } else {
           console.warn('⚠️ Данные пользователя Telegram не найдены');
+          console.log('🔍 tg.initDataUnsafe:', tg.initDataUnsafe);
         }
         
         // Настраиваем Telegram WebApp
