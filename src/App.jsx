@@ -11,7 +11,8 @@ import CarSelector from './components/CarSelector';
 import LeaderboardScreen from './components/LeaderboardScreen';
 import FriendsScreen from './components/FriendsScreen';
 import LoadingScreen from './components/LoadingScreen';
-import { useGameState } from './hooks/useGameState'; // ✅ НОВЫЙ ИМПОРТ
+import { useGameState } from './hooks/useGameState';
+import { useGameSave } from './hooks/useGameSave'; // ✅ НОВЫЙ ИМПОРТ
 import {
   calculateStaffCost,
   CAR_CATALOG,
@@ -19,7 +20,6 @@ import {
   MAX_OFFLINE_HOURS,
   UPDATE_INTERVAL,
 } from './utils';
-import apiClient from './apiClient';
 import './App.css';
 
 function App() {
@@ -44,10 +44,7 @@ function App() {
   const [lastRaceTime, setLastRaceTime] = useState(null);
   const [fuelRefillTime, setFuelRefillTime] = useState(null);
 
-  // Refs
-  const saveTimeoutRef = useRef(null);
-
-  // УПРОЩЕННАЯ функция получения userId
+  // ✅ ФУНКЦИЯ ПОЛУЧЕНИЯ USER ID
   const getUserId = useCallback(() => {
     if (isTgApp && tgUserData?.id) {
       const userId = tgUserData.id.toString();
@@ -62,80 +59,24 @@ function App() {
     return null;
   }, [isTgApp, tgUserData?.id]);
 
-  // Debounced save function
-  const debouncedSave = useCallback((data) => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-    
-    saveTimeoutRef.current = setTimeout(async () => {
-      const userId = getUserId();
-      if (!userId) {
-        console.warn('⚠️ Отмена сохранения: userId не готов');
-        return;
-      }
+  // ✅ ИСПОЛЬЗУЕМ ХУКИ
+  const saveHook = useGameSave(getUserId);
+  
+  // Создаем объект состояния топлива для передачи в saveHook
+  const fuelState = {
+    fuelCount,
+    lastRaceTime,
+    fuelRefillTime,
+    setFuelCount,
+    setLastRaceTime,
+    setFuelRefillTime,
+  };
 
-      try {
-        console.log('📤 Сохранение состояния для userId:', userId);
-        await apiClient('/game_state', 'POST', { body: { userId, ...data } });
-        console.log('✅ Состояние успешно сохранено');
-      } catch (err) {
-        console.error('❌ Ошибка сохранения:', err.message);
-      }
-    }, 500);
-  }, [getUserId]);
+  // Создаем функцию сохранения для gameState
+  const saveGameState = useCallback((updates = {}) => {
+    return saveHook.saveGameState(gameState, fuelState, updates);
+  }, [saveHook, fuelState]);
 
-  // Основная функция сохранения состояния
-  const saveGameState = useCallback(async (updates = {}) => {
-    const userId = getUserId();
-    if (!userId) {
-      console.warn('⚠️ Отмена сохранения: userId не готов');
-      return;
-    }
-
-    const stateToSave = {
-      userId: userId,
-      player_level: gameState.playerLevel,
-      first_name: gameState.playerName,
-      game_coins: gameState.gameCoins,
-      jet_coins: gameState.jetCoins,
-      current_xp: gameState.currentXp,
-      xp_to_next_level: gameState.xpToNextLevel,
-      income_rate_per_hour: gameState.incomeRatePerHour,
-      last_collected_time: new Date(gameState.lastCollectedTimeRef.current).toISOString(),
-      buildings: gameState.buildings,
-      player_cars: gameState.playerCars,
-      selected_car_id: gameState.selectedCarId,
-      hired_staff: gameState.hiredStaff,
-      has_completed_tutorial: gameState.hasCompletedTutorial,
-      last_exit_time: new Date().toISOString(),
-      // Топливные данные (пока здесь)
-      fuel_count: fuelCount,
-      last_race_time: lastRaceTime ? new Date(lastRaceTime).toISOString() : null,
-      fuel_refill_time: fuelRefillTime ? new Date(fuelRefillTime).toISOString() : null,
-      ...updates
-    };
-
-    // Используем debounced save для неважных обновлений
-    if (updates && Object.keys(updates).length < 3) {
-      debouncedSave(stateToSave);
-      return;
-    }
-
-    // Мгновенное сохранение для важных действий
-    try {
-      console.log('📤 Мгновенное сохранение состояния для userId:', userId);
-      await apiClient('/game_state', 'POST', { body: stateToSave });
-      console.log('✅ Состояние успешно сохранено');
-    } catch (err) {
-      console.error('❌ Ошибка сохранения:', err.message);
-    }
-  }, [
-    fuelCount, lastRaceTime, fuelRefillTime,
-    getUserId, debouncedSave
-  ]);
-
-  // ✅ ИСПОЛЬЗУЕМ КАСТОМНЫЙ ХУК
   const gameState = useGameState(saveGameState);
 
   // Обработчик завершения загрузки
@@ -143,13 +84,6 @@ function App() {
     console.log('🎮 Заставка завершена, показываем игру');
     setIsLoading(false);
   }, []);
-
-  // Вспомогательная функция валидации дат
-  const parseTimestamp = (dateString) => {
-    if (!dateString) return null;
-    const timestamp = new Date(dateString).getTime();
-    return isNaN(timestamp) ? null : timestamp;
-  };
 
   // Функция проверки и восстановления топлива
   const checkAndRestoreFuel = useCallback((currentFuel, lastRace, refillTime) => {
@@ -171,7 +105,7 @@ function App() {
     return { fuel: currentFuel, shouldUpdate: false };
   }, []);
 
-  // ИСПРАВЛЕННАЯ инициализация приложения
+  // ✅ УПРОЩЕННАЯ инициализация приложения
   useEffect(() => {
     if (initializationRef.current) {
       console.log('⚠️ Повторная инициализация заблокирована');
@@ -193,7 +127,7 @@ function App() {
         
         if (userData && typeof userData === 'object') {
           const firstName = userData.first_name || userData.firstName || userData.username || 'Игрок';
-          gameState.setPlayerName(firstName); // ✅ ИСПОЛЬЗУЕМ МЕТОД ИЗ ХУКА
+          gameState.setPlayerName(firstName);
           console.log('📝 Player name установлен:', firstName);
         }
         
@@ -218,95 +152,38 @@ function App() {
       }
     };
 
+    // ✅ УПРОЩЕННАЯ загрузка данных
     const loadGameData = async (userId) => {
       if (hasLoadedData || isInitializedRef.current) {
         console.log('⏭️ Данные уже загружены, пропускаем...');
         return;
       }
 
-      console.log('📥 Начинаем загрузку данных для userId:', userId);
       setHasLoadedData(true);
       isInitializedRef.current = true;
       
-      try {
-        const initialState = await apiClient('/game_state', 'GET', { params: { userId } });
-        console.log('📦 Получено состояние с бэкенда:', initialState);
-
-        if (initialState && typeof initialState === 'object') {
-          // ✅ ИСПОЛЬЗУЕМ МЕТОД ИНИЦИАЛИЗАЦИИ ИЗ ХУКА
-          const { incomeRate } = gameState.initializeGameState(initialState);
-          
-          // Загрузка топливных данных с валидацией
-          const loadedFuelCount = Math.min(Math.max(Number(initialState.fuel_count) || 5, 0), 5);
-          const loadedLastRaceTime = parseTimestamp(initialState.last_race_time);
-          const loadedFuelRefillTime = parseTimestamp(initialState.fuel_refill_time);
-          
-          // Проверяем восстановление топлива
-          const fuelResult = checkAndRestoreFuel(loadedFuelCount, loadedLastRaceTime, loadedFuelRefillTime);
-          
-          setFuelCount(fuelResult.fuel);
-          setLastRaceTime(fuelResult.newLastRaceTime || loadedLastRaceTime);
-          setFuelRefillTime(fuelResult.newRefillTime !== undefined ? fuelResult.newRefillTime : loadedFuelRefillTime);
-          
-          // Туториал
-          const savedTutorial = Boolean(initialState.has_completed_tutorial);
-          if (!savedTutorial && (Number(initialState.player_level) === 1 || !initialState.player_level)) {
-            console.log('🎯 Запускаем туториал для нового игрока');
-            setTimeout(() => {
-              gameState.setIsTutorialActive(true);
-              gameState.setTutorialStep(0);
-              gameState.setAccumulatedIncome(25);
-            }, 1000);
-          }
-
-          // Время последнего сбора
-          const loadedLastCollectedTime = parseTimestamp(initialState.last_collected_time) || Date.now();
-          const loadedLastExitTime = parseTimestamp(initialState.last_exit_time) || loadedLastCollectedTime;
-          gameState.updateLastCollectedTime(loadedLastCollectedTime);
-
-          // Оффлайн доход
-          const now = Date.now();
-          const offlineTimeMs = Math.max(0, now - loadedLastExitTime);
-          
-          let offlineIncome = 0;
-          if (offlineTimeMs > 0 && incomeRate > 0) {
-            offlineIncome = (incomeRate / 3600) * Math.min(offlineTimeMs / 1000, MAX_OFFLINE_HOURS * 3600);
-          }
-          gameState.setAccumulatedIncome(Math.max(offlineIncome, 0));
-          
-        } else {
-          console.error('❌ Бэкенд вернул невалидные данные');
-          setError('Не удалось получить данные игрока');
-          setIsLoading(false);
-        }
-      } catch (err) {
-        console.error('❌ Ошибка загрузки данных:', err.message);
-        setError(`Ошибка загрузки: ${err.message}`);
+      // ✅ ИСПОЛЬЗУЕМ МЕТОД ИЗ ХУКА
+      const result = await saveHook.loadGameData(userId, gameState, fuelState, checkAndRestoreFuel);
+      
+      if (result.success) {
+        console.log('✅ Данные успешно загружены');
+      } else {
+        console.error('❌ Ошибка загрузки:', result.error);
+        setError(result.error);
         setIsLoading(false);
       }
     };
 
     initializeApp();
 
-    // Cleanup
+    // ✅ УПРОЩЕННЫЙ Cleanup
     return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-      
-      const userId = getUserId();
-      if (userId) {
-        apiClient('/game_state', 'POST', {
-          body: {
-            userId: userId,
-            last_exit_time: new Date().toISOString(),
-          }
-        }).catch(err => console.error('Failed to save last exit time:', err));
-      }
+      saveHook.cleanupSaveTimers();
+      saveHook.saveExitTime();
     };
-  }, []);
+  }, []); // Пустой массив зависимостей!
 
-  // Таймер дохода
+  // Таймер дохода (без изменений)
   useEffect(() => {
     if (gameState.incomeRatePerHour <= 0 || isLoading) {
       return;
@@ -334,7 +211,7 @@ function App() {
     return () => clearInterval(intervalId);
   }, [gameState.incomeRatePerHour, isLoading]);
 
-  // Топливные обработчики (пока здесь, потом вынесем в отдельный хук)
+  // ✅ УПРОЩЕННЫЕ топливные обработчики
   const handleFuelUpdate = useCallback((newFuelCount, newLastRaceTime, newRefillTime = null) => {
     console.log('⛽ Обновление топлива:', {
       fuel: newFuelCount,
@@ -352,6 +229,7 @@ function App() {
       setFuelRefillTime(newRefillTime ? Number(newRefillTime) : null);
     }
     
+    // ✅ ИСПОЛЬЗУЕМ МЕТОД ИЗ ХУКА
     const updateData = {
       fuel_count: validFuelCount,
       last_race_time: new Date(validLastRaceTime).toISOString(),
@@ -361,8 +239,8 @@ function App() {
       updateData.fuel_refill_time = newRefillTime ? new Date(newRefillTime).toISOString() : null;
     }
     
-    saveGameState(updateData);
-  }, [saveGameState]);
+    saveHook.saveFuelData(fuelState, updateData);
+  }, [saveHook, fuelState]);
 
   const handleFuelRefillByAd = useCallback(() => {
     const now = Date.now();
@@ -372,14 +250,15 @@ function App() {
     setLastRaceTime(now);
     setFuelRefillTime(null);
     
-    saveGameState({
+    // ✅ ИСПОЛЬЗУЕМ МЕТОД ИЗ ХУКА
+    saveHook.saveFuelData(fuelState, {
       fuel_count: 5,
       last_race_time: new Date(now).toISOString(),
       fuel_refill_time: null,
     });
-  }, [saveGameState]);
+  }, [saveHook, fuelState]);
 
-  // UI обработчики
+  // UI обработчики (без изменений)
   const handleNavClick = useCallback((screenId) => {
     setIsTuningVisible(false);
     setIsCarSelectorVisible(false);
@@ -402,7 +281,6 @@ function App() {
     setIsCarSelectorVisible(false);
   }, []);
 
-  // Расширенные обработчики для UI
   const handleSelectCarAndClose = useCallback((carId) => {
     gameState.handleSelectCar(carId);
     setIsCarSelectorVisible(false);
