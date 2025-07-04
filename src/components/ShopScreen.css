@@ -1,128 +1,296 @@
-/* src/components/ShopScreen.css */
+/* ShopScreen.css - Обновленный дизайн с группировкой по рарности */
 
 .shop-screen {
-  padding: 20px 15px;
-  color: #eee;
-  /* Можно добавить свой фон для магазина */
-  background-image: linear-gradient(rgba(50, 40, 60, 0.35), rgba(50, 40, 60, 0.35)), url('/shop-background.jpg'); /* Пример фона */
+  padding: 15px;
+  min-height: 100vh;
+  background-image: url('/staff-background.jpg');
   background-size: cover;
   background-position: center;
-  min-height: calc(100vh - 60px - 70px); /* Высота минус хедер и навбар */
-  box-sizing: border-box;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: #ffffff;
+  position: relative;
 }
 
-.shop-screen h2 {
+.shop-screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(rgba(20, 30, 50, 0.8) 0%, rgba(30, 20, 60, 0.7) 50%, rgba(40, 30, 70, 0.8) 100%);
+  z-index: 0;
+}
+
+.shop-header {
   text-align: center;
-  margin-top: 0;
-  margin-bottom: 15px;
-  color: #e1bee7; /* Лиловый акцент для магазина */
+  margin-bottom: 25px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.shop-header h2 {
+  margin: 0 0 15px 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  background: linear-gradient(45deg, #FF9800, #FFC107, #FFEB3B);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: goldShimmer 3s ease-in-out infinite;
+}
+
+@keyframes goldShimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 .shop-balance {
-    text-align: center;
-    margin-bottom: 25px;
-    font-size: 1.1em;
-    color: #ffd700; /* Золотой цвет баланса */
-    background-color: rgba(0,0,0,0.2);
-    padding: 5px 10px;
-    border-radius: 5px;
-    display: inline-block; /* Чтобы фон был только под текстом */
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.25) 0%, rgba(76, 175, 80, 0.15) 100%);
+  padding: 12px 20px;
+  border-radius: 25px;
+  border: 1px solid rgba(76, 175, 80, 0.4);
+  font-weight: 600;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
 }
 
-.car-catalog-list {
+.balance-amount {
+  color: #81C784;
+  font-weight: 700;
+}
+
+.shop-content {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Секции по рарности */
+.rarity-section {
+  margin-bottom: 30px;
+}
+
+.rarity-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+  padding: 0 10px;
+}
+
+.rarity-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 20px;
+  color: white;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.rarity-count {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Сетка машин */
+.cars-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* Карточка машины */
+.car-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  padding: 20px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.car-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.6s;
+}
+
+.car-card:hover::before {
+  left: 100%;
+}
+
+.car-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+}
+
+.car-card.owned {
+  border-color: rgba(76, 175, 80, 0.7);
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.2) 0%, rgba(76, 175, 80, 0.1) 100%);
+}
+
+.car-card.unaffordable {
+  opacity: 0.6;
+  border-color: rgba(244, 67, 54, 0.5);
+}
+
+/* Статус владения */
+.ownership-badge {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
+}
+
+/* Изображение машины */
+.car-image-container {
+  position: relative;
+  width: 100%;
+  height: 120px;
+  margin-bottom: 15px;
+  border-radius: 15px;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 100%);
+}
+
+.car-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.car-card:hover .car-image {
+  transform: scale(1.05);
+}
+
+.car-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+  padding: 10px;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+}
+
+.car-card:hover .car-overlay {
+  transform: translateY(0);
+}
+
+.income-indicator {
+  color: #FFC107;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Информация о машине */
+.car-info {
+  text-align: center;
+}
+
+.car-name {
+  margin: 0 0 15px 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Характеристики */
+.car-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.stat-item {
   display: flex;
   flex-direction: column;
-  gap: 15px; /* Отступ между машинами */
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.car-item {
+.stat-icon {
+  font-size: 1.2rem;
+}
+
+.stat-value {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #ffffff;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Покупка */
+.car-purchase {
   display: flex;
-  align-items: center; /* Выравниваем по центру вертикально */
-  gap: 15px; /* Отступ между картинкой, инфой и кнопкой */
-  background-color: rgba(255, 255, 255, 0.05);
-  padding: 15px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
 }
 
-.car-item.owned {
-  opacity: 0.6; /* Делаем купленные машины полупрозрачными */
-  border-color: rgba(76, 175, 80, 0.9); /* Зеленоватая рамка */
+.car-price {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-weight: 700;
 }
 
-.car-item-image {
-  width: 80px;
-  height: 60px; /* Задаем фиксированную высоту */
-  object-fit: contain; /* Масштабируем без искажений */
-  flex-shrink: 0; /* Не сжимаем картинку */
-  background-color: rgba(0,0,0,0.1); /* Легкий фон под картинкой */
-  border-radius: 4px;
+.price-amount {
+  font-size: 1.4rem;
+  color: #FFC107;
 }
 
-.car-item-info {
-  flex-grow: 1; /* Занимает доступное пространство */
-}
-
-.car-item-info h3 {
-  margin: 0 0 5px 0;
-  font-size: 1.1em;
-  color: #fff;
-}
-
-.car-item-stats {
-  margin: 0 0 8px 0;
-  font-size: 0.8em;
-  color: #bbb;
-}
-
-.car-item-price {
-  margin: 0;
-  font-size: 0.9em;
-  font-weight: bold;
-  color: #ffd700; /* Золотой цвет цены */
-}
-
-.car-item.owned .car-item-price {
-    color: #81c784; /* Зеленый цвет для "Куплено" */
-    font-weight: normal;
-}
-
-.buy-button {
-  padding: 8px 15px;
-  font-size: 0.9em;
-  font-weight: bold;
-  color: #333;
-  background: linear-gradient(145deg, #4caf50, #8bc34a); /* Зеленый */
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap; /* Чтобы текст не переносился */
-  flex-shrink: 0; /* Не сжимаем кнопку */
-}
-
-.buy-button:hover:not(:disabled) {
-  background: linear-gradient(145deg, #66bb6a, #9ccc65);
-  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
-}
-
-.buy-button:disabled {
-  background: linear-gradient(145deg, #777, #999);
-  color: #ccc;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-/* Стиль кнопки, если куплено */
-.car-item.owned .buy-button {
-    background: linear-gradient(145deg, #607d8b, #90a4ae); /* Серо-голубой */
-    color: #eee;
-    cursor: default;
-}
-
-/* Стиль кнопки, если не хватает средств */
-.buy-button:disabled:not(.car-item.owned .buy-button) { /* Применяем только если не куплено, но disabled */
-     background: linear-gradient(145deg, #e57373, #ef9a9a); /* Красный */
-     color: #fff;
-     opacity: 0.8;
+.price-currency {
+  font-size: 0.9rem;
+  color: #FFE082;
 }

@@ -64,13 +64,13 @@ export const recalculateStatsAndIncomeBonus = (carId, parts) => {
     };
 };
 
-// --- Каталог Машин для Магазина (НОВЫЕ ЦЕНЫ) ---
+// Обновленный CAR_CATALOG:
 export const CAR_CATALOG = [
   { 
     id: 'car_001', 
     name: 'Ржавая "Копейка"', 
     imageUrl: '/placeholder-car.png', 
-    price: 0, // Бесплатная стартовая
+    price: 0,
     baseStats: BASE_CAR_STATS['car_001'], 
     initialParts: { 
       engine: { level: 1, name: 'Двигатель' }, 
@@ -83,7 +83,7 @@ export const CAR_CATALOG = [
     id: 'car_002', 
     name: 'Бодрая "Девятка"', 
     imageUrl: '/placeholder-car-2.png', 
-    price: 5000, // ✅ Доступна после ~5-10 часов игры
+    price: 5000,
     baseStats: BASE_CAR_STATS['car_002'], 
     initialParts: { 
       engine: { level: 1, name: 'Двигатель' }, 
@@ -96,13 +96,53 @@ export const CAR_CATALOG = [
     id: 'car_003', 
     name: 'Старый "Японец"', 
     imageUrl: '/placeholder-car-3.png', 
-    price: 20000, // ✅ Цель для продвинутых игроков
+    price: 20000,
     baseStats: BASE_CAR_STATS['car_003'], 
     initialParts: { 
       engine: { level: 2, name: 'Двигатель' }, 
       tires: { level: 1, name: 'Шины' }, 
       style_body: { level: 1, name: 'Кузов (Стиль)' }, 
       reliability_base: { level: 2, name: 'Надежность (База)' }
+    }
+  },
+  // ✨ НОВЫЕ МАШИНЫ:
+  { 
+    id: 'car_004', 
+    name: 'Легендарный "Мерс"', 
+    imageUrl: '/placeholder-car-4.png', 
+    price: 45000, // Улучшенная цена
+    baseStats: BASE_CAR_STATS['car_004'], 
+    initialParts: { 
+      engine: { level: 3, name: 'Двигатель' }, 
+      tires: { level: 2, name: 'Шины' }, 
+      style_body: { level: 2, name: 'Кузов (Стиль)' }, 
+      reliability_base: { level: 3, name: 'Надежность (База)' }
+    }
+  },
+  { 
+    id: 'car_005', 
+    name: 'Заряженный "Баварец"', 
+    imageUrl: '/placeholder-car-5.png', 
+    price: 100000, // Улучшенная цена
+    baseStats: BASE_CAR_STATS['car_005'], 
+    initialParts: { 
+      engine: { level: 4, name: 'Двигатель' }, 
+      tires: { level: 3, name: 'Шины' }, 
+      style_body: { level: 3, name: 'Кузов (Стиль)' }, 
+      reliability_base: { level: 4, name: 'Надежность (База)' }
+    }
+  },
+  { 
+    id: 'car_006', 
+    name: 'Безумный "Скайлайн"', 
+    imageUrl: '/placeholder-car-6.png', 
+    price: 200000, // Улучшенная цена
+    baseStats: BASE_CAR_STATS['car_006'], 
+    initialParts: { 
+      engine: { level: 5, name: 'Двигатель' }, 
+      tires: { level: 4, name: 'Шины' }, 
+      style_body: { level: 4, name: 'Кузов (Стиль)' }, 
+      reliability_base: { level: 5, name: 'Надежность (База)' }
     }
   }
 ];
