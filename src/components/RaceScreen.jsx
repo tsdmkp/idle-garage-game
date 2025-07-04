@@ -95,7 +95,7 @@ const RaceScreen = ({
               const isProduction = window.location.hostname !== 'localhost' && 
                                  !window.location.hostname.includes('vercel.app');
               
-              const debugMode = !isProduction;
+              const debugMode = false;
               console.log('🔧 Debug mode:', debugMode);
               
               const adsgramController = window.Adsgram.init({
