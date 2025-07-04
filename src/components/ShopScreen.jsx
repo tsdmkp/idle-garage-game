@@ -1,392 +1,162 @@
-/* ShopScreen.css - Брутальный мужской дизайн с уникальными классами */
-.shop-screen {
-  width: 100%;
-  height: 100vh;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
-  background-attachment: fixed;
-  padding: 15px;
-  overflow-y: auto;
-  position: relative;
+import React from 'react';
+import './ShopScreen.css';
+
+function ShopScreen({ catalog = [], playerCars = [], gameCoins = 0, onBuyCar }) {
+  const ownedCarIds = new Set(playerCars.map(car => car.id));
+
+  // Функция для форматирования больших чисел
+  const formatPrice = (price) => {
+    if (price >= 1000000) return `${(price / 1000000).toFixed(1)}M`;
+    if (price >= 1000) return `${(price / 1000).toFixed(0)}K`;
+    return price.toString();
+  };
+
+  return (
+    <div className="shop-screen">
+      {/* Чистый заголовок */}
+      <div className="shop-header">
+        <h2>🏪 Автосалон</h2>
+        <div className="shop-balance">
+          💰 Баланс: <span className="balance-amount">{gameCoins.toLocaleString()}</span> GC
+        </div>
+      </div>
+
+      <div className="shop-content">
+        {/* Убираем группировку по рарности - просто показываем все машины */}
+        <div className="cars-grid">
+          {catalog.map((car) => {
+            if (!car || !car.id) {
+              console.warn("ShopScreen: Skipping invalid car data:", car);
+              return null;
+            }
+
+            const isOwned = ownedCarIds.has(car.id);
+            const price = typeof car.price === 'number' ? car.price : Infinity;
+            const canAfford = gameCoins >= price;
+            const canBuy = !isOwned && canAfford && price > 0;
+
+            // ИСПРАВЛЕННОЕ получение характеристик
+            const currentBaseStats = car.baseStats || {};
+            const displayPower = currentBaseStats.power ?? '?';
+            const displaySpeed = currentBaseStats.speed ?? '?';
+            const displayStyle = currentBaseStats.style ?? '?';
+            const displayReliability = currentBaseStats.reliability ?? '?';
+            const displayIncome = currentBaseStats.baseIncome ?? '?';
+            
+            // Логирование для отладки
+            if (!car.baseStats) {
+              console.warn(`ShopScreen: Нет baseStats для машины ${car.id}:`, car);
+            }
+
+            return (
+              <div 
+                key={car.id} 
+                className={`shop-car-card ${isOwned ? 'owned' : ''} ${!canAfford && !isOwned ? 'unaffordable' : ''}`}
+              >
+                {/* Статус машины */}
+                {isOwned && (
+                  <div className="shop-ownership-badge">
+                    ✅ В гараже
+                  </div>
+                )}
+
+                {/* Изображение машины - ГЛАВНЫЙ АКЦЕНТ */}
+                <div className="shop-car-image-container">
+                  <img 
+                    src={car.imageUrl || '/placeholder-car.png'} 
+                    alt={car.name || 'Машина'} 
+                    className="shop-car-image"
+                    onError={(e) => { 
+                      e.target.onerror = null; 
+                      e.target.src = '/placeholder-car.png'; 
+                    }}
+                  />
+                  <div className="shop-car-overlay">
+                    <div className="shop-income-indicator">
+                      💰 {displayIncome}/час
+                    </div>
+                  </div>
+                </div>
+
+                {/* Информация о машине */}
+                <div className="shop-car-info">
+                  <h3 className="shop-car-name">{car.name || 'Без названия'}</h3>
+                  
+                  {/* Характеристики - УВЕЛИЧЕННЫЕ НО КОМПАКТНЫЕ */}
+                  <div className="shop-car-stats">
+                    <div className="shop-stat-item">
+                      <span className="shop-stat-icon">⚡</span>
+                      <span className="shop-stat-value">{displayPower}</span>
+                      <span className="shop-stat-label">Мощность</span>
+                    </div>
+                    <div className="shop-stat-item">
+                      <span className="shop-stat-icon">🏎️</span>
+                      <span className="shop-stat-value">{displaySpeed}</span>
+                      <span className="shop-stat-label">Скорость</span>
+                    </div>
+                    <div className="shop-stat-item">
+                      <span className="shop-stat-icon">✨</span>
+                      <span className="shop-stat-value">{displayStyle}</span>
+                      <span className="shop-stat-label">Стиль</span>
+                    </div>
+                    <div className="shop-stat-item">
+                      <span className="shop-stat-icon">🔧</span>
+                      <span className="shop-stat-value">{displayReliability}</span>
+                      <span className="shop-stat-label">Надежность</span>
+                    </div>
+                  </div>
+
+                  {/* Цена и кнопка */}
+                  <div className="shop-car-purchase">
+                    <div className="shop-car-price">
+                      {price === 0 ? (
+                        <span className="shop-free-price">🎁 Бесплатно</span>
+                      ) : price === Infinity ? (
+                        <span className="shop-unknown-price">❓ Не продается</span>
+                      ) : (
+                        <>
+                          <span className="shop-price-amount">{formatPrice(price)}</span>
+                          <span className="shop-price-currency">GC</span>
+                        </>
+                      )}
+                    </div>
+
+                    <button
+                      className={`shop-purchase-button ${isOwned ? 'owned' : canAfford ? 'available' : 'unaffordable'}`}
+                      onClick={() => { if(canBuy) onBuyCar(car.id) }}
+                      disabled={isOwned || !canAfford || price === 0}
+                    >
+                      {isOwned ? (
+                        <>
+                          <span className="shop-button-icon">✅</span>
+                          <span className="shop-button-text">Куплена</span>
+                        </>
+                      ) : canAfford && price > 0 ? (
+                        <>
+                          <span className="shop-button-icon">🛒</span>
+                          <span className="shop-button-text">Купить</span>
+                        </>
+                      ) : price === 0 ? (
+                        <>
+                          <span className="shop-button-icon">🎁</span>
+                          <span className="shop-button-text">Получена</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="shop-button-icon">💰</span>
+                          <span className="shop-button-text">Копить</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
 }
 
-/* Брутальный заголовок */
-.shop-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding: 15px 20px;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-}
-
-.shop-header h2 {
-  margin: 0;
-  color: #fff;
-  font-size: 1.6em;
-  font-weight: 700;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.shop-balance {
-  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-  color: white;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 1em;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-  box-shadow: 0 3px 12px rgba(255, 107, 53, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.balance-amount {
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
-
-/* Контент магазина */
-.shop-content {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* Сетка машин */
-.cars-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 15px;
-  padding: 0;
-}
-
-/* Карточка машины - УНИКАЛЬНЫЕ КЛАССЫ */
-.shop-car-card {
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-  padding: 15px;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.shop-car-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
-  border-color: rgba(255, 107, 53, 0.5);
-}
-
-.shop-car-card.owned {
-  border-color: rgba(76, 175, 80, 0.6);
-  background: rgba(76, 175, 80, 0.1);
-}
-
-.shop-car-card.unaffordable {
-  /* УБРАНО затемнение недоступных машин */
-}
-
-/* Значок владения */
-.shop-ownership-badge {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
-  color: white;
-  padding: 6px 10px;
-  border-radius: 12px;
-  font-size: 0.8em;
-  font-weight: 600;
-  z-index: 10;
-  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
-}
-
-/* Контейнер изображения - ИСПРАВЛЕННЫЙ */
-.shop-car-image-container {
-  position: relative;
-  margin-bottom: 15px;
-  text-align: center;
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.shop-car-image {
-  width: 100%;
-  max-width: 280px;
-  height: auto;
-  max-height: 160px;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-  object-fit: contain;
-  transition: all 0.3s ease;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.shop-car-image:hover {
-  transform: scale(1.02);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
-}
-
-/* ИСПРАВЛЕННЫЙ overlay для доходности - ЛЕВЫЙ НИЖНИЙ УГОЛ */
-.shop-car-overlay {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  background: rgba(0, 0, 0, 0.9);
-  backdrop-filter: blur(8px);
-  padding: 3px 6px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 107, 53, 0.5);
-  max-width: 60px;
-  text-align: center;
-}
-
-.shop-income-indicator {
-  color: #ff6b35;
-  font-weight: 600;
-  font-size: 0.65em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-  white-space: nowrap;
-  line-height: 1.2;
-}
-
-/* Информация о машине */
-.shop-car-info {
-  text-align: center;
-}
-
-.shop-car-name {
-  margin: 0 0 12px 0;
-  color: #fff;
-  font-size: 1.2em;
-  font-weight: 700;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* Характеристики - БРУТАЛЬНЫЙ СТИЛЬ */
-.shop-car-stats {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-  margin-bottom: 15px;
-  padding: 0;
-}
-
-.shop-stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 6px;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(5px);
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
-  min-height: 55px;
-}
-
-.shop-stat-item:hover {
-  transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 107, 53, 0.3);
-}
-
-.shop-stat-icon {
-  font-size: 1.3em;
-  margin-bottom: 3px;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
-}
-
-.shop-stat-value {
-  font-size: 1em;
-  font-weight: 700;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-  margin-bottom: 1px;
-}
-
-.shop-stat-label {
-  font-size: 0.7em;
-  color: rgba(255, 255, 255, 0.6);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* Покупка */
-.shop-car-purchase {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: center;
-}
-
-.shop-car-price {
-  padding: 8px 16px;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  text-align: center;
-}
-
-.shop-price-amount {
-  font-size: 1.2em;
-  font-weight: 700;
-  color: #ff6b35;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-}
-
-.shop-price-currency {
-  font-size: 0.9em;
-  color: rgba(255, 255, 255, 0.7);
-  margin-left: 4px;
-}
-
-.shop-free-price {
-  color: #4CAF50;
-  font-weight: 600;
-  font-size: 1em;
-}
-
-.shop-unknown-price {
-  color: #9E9E9E;
-  font-weight: 600;
-  font-size: 1em;
-}
-
-/* Кнопка покупки - БРУТАЛЬНАЯ */
-.shop-purchase-button {
-  width: 100%;
-  padding: 12px 16px;
-  border: none;
-  border-radius: 8px;
-  font-size: 1em;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.shop-purchase-button.available {
-  background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
-  color: white;
-  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
-}
-
-.shop-purchase-button.available:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
-}
-
-.shop-purchase-button.owned {
-  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-  color: white;
-  cursor: default;
-  box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
-}
-
-.shop-purchase-button.unaffordable {
-  background: linear-gradient(135deg, #666 0%, #444 100%);
-  color: rgba(255, 255, 255, 0.7);
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-.shop-button-icon {
-  font-size: 1.1em;
-}
-
-.shop-button-text {
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .cars-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  
-  .shop-header {
-    flex-direction: column;
-    gap: 12px;
-    text-align: center;
-    padding: 12px 16px;
-  }
-  
-  .shop-car-image {
-    max-width: 260px;
-    max-height: 140px;
-  }
-  
-  .shop-car-overlay {
-    bottom: 15px;
-    left: 15px;
-    padding: 2px 4px;
-    max-width: 50px;
-    border-radius: 4px;
-  }
-  
-  .shop-income-indicator {
-    font-size: 0.6em;
-  }
-  
-  .shop-car-stats {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-  }
-  
-  .shop-stat-item {
-    padding: 6px 4px;
-    min-height: 50px;
-  }
-  
-  .shop-stat-icon {
-    font-size: 1.1em;
-  }
-  
-  .shop-stat-value {
-    font-size: 0.9em;
-  }
-  
-  .shop-stat-label {
-    font-size: 0.6em;
-  }
-}
-
-/* Анимации - ПРОСТЫЕ */
-.shop-car-card {
-  animation: fadeInUp 0.4s ease-out;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+export default ShopScreen;
