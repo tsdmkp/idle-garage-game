@@ -85,7 +85,7 @@ function App() {
     }, 500);
   }, [getUserId]);
 
-  // Основная функция сохранения состояния
+  // Основная функция сохранения состояния - ИСПРАВЛЕНА
   const saveGameState = useCallback(async (updates = {}) => {
     const userId = getUserId();
     if (!userId) {
@@ -93,28 +93,36 @@ function App() {
       return;
     }
 
+    // ✅ ИСПРАВЛЕНО: Получаем актуальные значения через аргументы
     const stateToSave = {
       userId: userId,
-      player_level: gameState.playerLevel,
-      first_name: gameState.playerName,
-      game_coins: gameState.gameCoins,
-      jet_coins: gameState.jetCoins,
-      current_xp: gameState.currentXp,
-      xp_to_next_level: gameState.xpToNextLevel,
-      income_rate_per_hour: gameState.incomeRatePerHour,
-      last_collected_time: new Date(gameState.lastCollectedTimeRef.current).toISOString(),
-      buildings: gameState.buildings,
-      player_cars: gameState.playerCars,
-      selected_car_id: gameState.selectedCarId,
-      hired_staff: gameState.hiredStaff,
-      has_completed_tutorial: gameState.hasCompletedTutorial,
-      last_exit_time: new Date().toISOString(),
-      // Топливные данные (пока здесь)
-      fuel_count: fuelCount,
-      last_race_time: lastRaceTime ? new Date(lastRaceTime).toISOString() : null,
-      fuel_refill_time: fuelRefillTime ? new Date(fuelRefillTime).toISOString() : null,
+      player_level: updates.player_level || gameState.playerLevel,
+      first_name: updates.first_name || gameState.playerName,
+      game_coins: updates.game_coins || gameState.gameCoins,
+      jet_coins: updates.jet_coins || gameState.jetCoins,
+      current_xp: updates.current_xp || gameState.currentXp,
+      xp_to_next_level: updates.xp_to_next_level || gameState.xpToNextLevel,
+      income_rate_per_hour: updates.income_rate_per_hour || gameState.incomeRatePerHour,
+      last_collected_time: updates.last_collected_time || new Date(gameState.lastCollectedTimeRef.current).toISOString(),
+      buildings: updates.buildings || gameState.buildings,
+      player_cars: updates.player_cars || gameState.playerCars,
+      selected_car_id: updates.selected_car_id || gameState.selectedCarId,
+      hired_staff: updates.hired_staff || gameState.hiredStaff,
+      has_completed_tutorial: updates.has_completed_tutorial !== undefined ? updates.has_completed_tutorial : gameState.hasCompletedTutorial,
+      last_exit_time: updates.last_exit_time || new Date().toISOString(),
+      // Топливные данные
+      fuel_count: updates.fuel_count !== undefined ? updates.fuel_count : fuelCount,
+      last_race_time: updates.last_race_time || (lastRaceTime ? new Date(lastRaceTime).toISOString() : null),
+      fuel_refill_time: updates.fuel_refill_time !== undefined ? (updates.fuel_refill_time ? new Date(updates.fuel_refill_time).toISOString() : null) : (fuelRefillTime ? new Date(fuelRefillTime).toISOString() : null),
       ...updates
     };
+
+    console.log('📤 Сохраняем состояние:', {
+      buildings: stateToSave.buildings?.length || 0,
+      staff: Object.keys(stateToSave.hired_staff || {}).length,
+      cars: stateToSave.player_cars?.length || 0,
+      coins: stateToSave.game_coins
+    });
 
     // Используем debounced save для неважных обновлений
     if (updates && Object.keys(updates).length < 3) {
@@ -131,7 +139,10 @@ function App() {
       console.error('❌ Ошибка сохранения:', err.message);
     }
   }, [
-    fuelCount, lastRaceTime, fuelRefillTime,
+    gameState.playerLevel, gameState.playerName, gameState.gameCoins, gameState.jetCoins, 
+    gameState.currentXp, gameState.xpToNextLevel, gameState.incomeRatePerHour, 
+    gameState.buildings, gameState.playerCars, gameState.selectedCarId, gameState.hiredStaff, 
+    gameState.hasCompletedTutorial, fuelCount, lastRaceTime, fuelRefillTime,
     getUserId, debouncedSave
   ]);
 
