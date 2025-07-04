@@ -10,7 +10,7 @@ import StaffScreen from './components/StaffScreen';
 import CarSelector from './components/CarSelector';
 import LeaderboardScreen from './components/LeaderboardScreen';
 import FriendsScreen from './components/FriendsScreen';
-import LoadingScreen from './components/LoadingScreen';
+import LoadingScreen from './components/LoadingScreen'; // ✅ ДОБАВЛЕН ИМПОРТ
 import {
   calculateUpgradeCost,
   calculateBuildingCost,
@@ -46,6 +46,7 @@ function App() {
   
   // Основные состояния игры
   const [isLoading, setIsLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0); // ✅ ДОБАВЛЕНО
   const [hasLoadedData, setHasLoadedData] = useState(false);
   const [error, setError] = useState(null);
   const [tgUserData, setTgUserData] = useState(null);
@@ -88,7 +89,7 @@ function App() {
 
   const currentCar = playerCars.find(car => car.id === selectedCarId) || playerCars[0] || null;
 
-  // Обработчик завершения загрузки
+  // ✅ ОБРАБОТЧИК ЗАВЕРШЕНИЯ ЗАГРУЗКИ
   const handleLoadingComplete = useCallback(() => {
     console.log('🎮 Заставка завершена, показываем игру');
     setIsLoading(false);
@@ -211,7 +212,7 @@ function App() {
     return { fuel: currentFuel, shouldUpdate: false };
   }, []);
 
-  // ИСПРАВЛЕННАЯ инициализация приложения
+  // ✅ ИСПРАВЛЕННАЯ инициализация приложения с прогрессом
   useEffect(() => {
     // ЗАЩИТА ОТ ДВОЙНОЙ ИНИЦИАЛИЗАЦИИ
     if (initializationRef.current) {
@@ -222,6 +223,9 @@ function App() {
     const initializeApp = async () => {
       console.log('🚀 Инициализация приложения...');
       initializationRef.current = true; // Устанавливаем флаг сразу
+      
+      // ✅ Симуляция прогресса загрузки
+      setLoadingProgress(10);
       
       // Инициализация Telegram WebApp
       const tg = window.Telegram?.WebApp;
@@ -243,7 +247,9 @@ function App() {
         tg.BackButton.hide();
         tg.MainButton.hide();
         
-        await new Promise(resolve => setTimeout(resolve, 100));
+        setLoadingProgress(30); // ✅ Обновляем прогресс
+        
+        await new Promise(resolve => setTimeout(resolve, 200));
         
         if (userData?.id) {
           await loadGameData(userData.id.toString());
@@ -255,6 +261,7 @@ function App() {
       } else {
         console.log('⚠️ Telegram WebApp не найден, режим standalone');
         setIsTgApp(false);
+        setLoadingProgress(30); // ✅ Обновляем прогресс
         await loadGameData('default');
       }
     };
@@ -270,9 +277,13 @@ function App() {
       setHasLoadedData(true);
       isInitializedRef.current = true;
       
+      setLoadingProgress(50); // ✅ Обновляем прогресс
+      
       try {
         const initialState = await apiClient('/game_state', 'GET', { params: { userId } });
         console.log('📦 Получено состояние с бэкенда:', initialState);
+
+        setLoadingProgress(70); // ✅ Обновляем прогресс
 
         if (initialState && typeof initialState === 'object') {
           // Основные данные игрока
@@ -290,6 +301,8 @@ function App() {
           setCurrentXp(Number(initialState.current_xp) || 10);
           setXpToNextLevel(Number(initialState.xp_to_next_level) || 100);
           setHasCompletedTutorial(Boolean(initialState.has_completed_tutorial));
+          
+          setLoadingProgress(80); // ✅ Обновляем прогресс
           
           // Загрузка топливных данных с валидацией
           const loadedFuelCount = Math.min(Math.max(Number(initialState.fuel_count) || 5, 0), 5);
@@ -342,6 +355,8 @@ function App() {
           // Оффлайн доход
           const now = Date.now();
           const offlineTimeMs = Math.max(0, now - loadedLastExitTime);
+
+          setLoadingProgress(90); // ✅ Обновляем прогресс
 
           // Здания
           let loadedBuildings = INITIAL_BUILDINGS;
@@ -398,6 +413,10 @@ function App() {
           }
           setAccumulatedIncome(Math.max(offlineIncome, 0));
           
+          setLoadingProgress(100); // ✅ Завершаем прогресс
+          
+          // ✅ Небольшая задержка для показа 100%, потом LoadingScreen сам завершится
+          
         } else {
           console.error('❌ Бэкенд вернул невалидные данные');
           setError('Не удалось получить данные игрока');
@@ -408,7 +427,7 @@ function App() {
         setError(`Ошибка загрузки: ${err.message}`);
         setIsLoading(false);
       }
-      // НЕ устанавливаем setIsLoading(false) здесь - это сделает LoadingScreen
+      // ✅ НЕ устанавливаем setIsLoading(false) здесь - это сделает LoadingScreen
     };
 
     initializeApp();
@@ -459,7 +478,20 @@ function App() {
     return () => clearInterval(intervalId);
   }, [incomeRatePerHour, isLoading]);
 
-  // Обработчики игровых действий
+  // ✅ ДОБАВЛЕННЫЙ обработчик клавиши ESC для пропуска заставки (для отладки)
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === 'Escape' && isLoading) {
+        console.log('🔧 Заставка пропущена (ESC)');
+        setIsLoading(false);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [isLoading]);
+
+  // [Все остальные обработчики остаются без изменений]
   const handleCollect = useCallback(() => {
     const incomeToAdd = Math.floor(accumulatedIncome);
     if (incomeToAdd > 0) {
@@ -644,6 +676,10 @@ function App() {
     setFuelCount(validFuelCount);
     setLastRaceTime(validLastRaceTime);
     
+    if (newRefillTime !== undefined) {
+      setFuelRefillTime(newRefillTime ? Number(newRefillTime) : null);
+    }
+    
     const updateData = {
       fuel_count: validFuelCount,
       last_race_time: new Date(validLastRaceTime).toISOString(),
@@ -751,7 +787,7 @@ function App() {
   // Вычисляемые значения
   const xpPercentage = xpToNextLevel > 0 ? Math.min((currentXp / xpToNextLevel) * 100, 100) : 0;
 
-  // ПОКАЗ ЗАСТАВКИ ЗАГРУЗКИ
+  // ✅ ПОКАЗ ЗАСТАВКИ ЗАГРУЗКИ
   if (isLoading) {
     return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
   }
@@ -904,13 +940,4 @@ function App() {
   );
 }
 
-export default App; undefined) {
-      setFuelRefillTime(newRefillTime ? Number(newRefillTime) : null);
-    }
-    
-    const updateData = {
-      fuel_count: validFuelCount,
-      last_race_time: new Date(validLastRaceTime).toISOString(),
-    };
-    
-    if (newRefillTime !==
+export default App;
