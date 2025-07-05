@@ -53,6 +53,9 @@ const RaceScreen = ({
   const [adsgramReady, setAdsgramReady] = useState(false);
   const [isAdLoading, setIsAdLoading] = useState(false);
   
+  // Состояние для модального окна результатов (ЭТАП 3)
+  const [showResultModal, setShowResultModal] = useState(false);
+  
   const playerCarRef = useRef(null);
   const opponentCarRef = useRef(null);
 
@@ -432,6 +435,7 @@ const RaceScreen = ({
           }
           setRaceState('ready');
           setRaceResult(null);
+          setShowResultModal(false); // Убеждаемся что модалка закрыта
         }, 2500);
       }, 3000);
     }, 2500);
@@ -519,7 +523,7 @@ const RaceScreen = ({
             <div className="race-car-display">
               <div className="race-car-image-container">
                 <img 
-                  src={playerCar?.imageUrl || '/car_001.png'} 
+                  src={playerCar?.imageUrl || '/placeholder-car.png'} 
                   alt={playerCar?.name || 'Ваша машина'}
                   className="race-car-image"
                 />
@@ -601,12 +605,25 @@ const RaceScreen = ({
             {buttonText()}
           </button>
 
-          {raceResult && raceState === 'finished' && (
-            <div className={`race-result ${raceResult.result}`}>
+          {/* УБИРАЕМ старый inline результат - заменен модальным окном */}
+        </div>
+      </div>
+
+      {/* НОВОЕ МОДАЛЬНОЕ ОКНО РЕЗУЛЬТАТОВ - ЭТАП 3 */}
+      {showResultModal && raceResult && (
+        <div className="result-modal-overlay">
+          <div className={`result-modal result-modal-${raceResult.result}`}>
+            <div className="result-modal-header">
+              <div className="result-modal-icon">
+                {raceResult.result === 'win' ? '🏆' : 
+                 raceResult.result === 'lose' ? '💔' : '❌'}
+              </div>
               <h3>
-                {raceResult.result === 'win' ? '🏆 Победа!' : 
-                 raceResult.result === 'lose' ? '💔 Поражение!' : '❌ Ошибка!'}
+                {raceResult.result === 'win' ? 'Победа!' : 
+                 raceResult.result === 'lose' ? 'Поражение!' : 'Ошибка!'}
               </h3>
+            </div>
+            <div className="result-modal-content">
               <p>
                 {raceResult.result === 'win' 
                   ? `Вы выиграли ${raceResult.reward?.coins} монет и ${raceResult.reward?.xp} XP!`
@@ -616,14 +633,17 @@ const RaceScreen = ({
                 }
               </p>
               {raceResult.result === 'lose' && (
-                <div className="race-tip">
+                <div className="result-modal-tip">
                   💡 Совет: Улучшите свою машину в тюнинге для лучших результатов!
                 </div>
               )}
             </div>
-          )}
+            <div className="result-modal-close" onClick={() => setShowResultModal(false)}>
+              ✕
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Модалка топлива */}
       {showFuelModal && (
