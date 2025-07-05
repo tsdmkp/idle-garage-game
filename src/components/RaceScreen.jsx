@@ -56,6 +56,11 @@ const RaceScreen = ({
   // Состояние для модального окна результатов (ЭТАП 3)
   const [showResultModal, setShowResultModal] = useState(false);
   
+  // Система топлива - используем пропсы от App.jsx
+  const [fuelCount, setFuelCount] = useState(propsFuelCount || 5);
+  const [lastRaceTime, setLastRaceTime] = useState(propsLastRaceTime);
+  const [fuelRefillTime, setFuelRefillTime] = useState(propsFuelRefillTime);
+  
   const playerCarRef = useRef(null);
   const opponentCarRef = useRef(null);
 
@@ -66,11 +71,11 @@ const RaceScreen = ({
   // Список всех доступных машин для соперника
   const availableOpponentCars = [
     '/placeholder-car.png',
-    '/placeholder-car2.png', 
-    '/placeholder-car3.png',
-    '/placeholder-car4.png',
-    '/placeholder-car5.png',
-    '/placeholder-car6.png'
+    '/placeholder-car-2.png',  // исправлено с car2 на car-2
+    '/placeholder-car-3.png',  // исправлено с car3 на car-3
+    '/placeholder-car-4.png',  // исправлено с car4 на car-4
+    '/placeholder-car-5.png',  // исправлено с car5 на car-5
+    '/placeholder-car-6.png'   // исправлено с car6 на car-6
   ];
 
   // Функция для получения случайной машины соперника
@@ -640,55 +645,6 @@ const RaceScreen = ({
             </div>
             <div className="result-modal-close" onClick={() => setShowResultModal(false)}>
               ✕
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Модалка топлива */}
-      {showFuelModal && (
-        <div className="fuel-modal-overlay">
-          <div className="fuel-modal">
-            <div className="fuel-modal-header">
-              <h3>⛽ Топливо закончилось!</h3>
-            </div>
-            <div className="fuel-modal-content">
-              <div className="fuel-modal-icon">🚗💨</div>
-              <p>Ваш автомобиль нуждается в заправке!</p>
-              <div className="fuel-options">
-                <div className="fuel-option">
-                  <strong>⏰ Подождать час</strong>
-                  <div>Топливо восстановится автоматически</div>
-                  {timeUntilRefill && (
-                    <div className="time-remaining">
-                      Осталось: {timeUntilRefill}
-                    </div>
-                  )}
-                </div>
-                <div className="fuel-option-or">ИЛИ</div>
-                <div className="fuel-option">
-                  <strong>📺 Посмотреть рекламу</strong>
-                  <div>Мгновенная заправка бака</div>
-                </div>
-              </div>
-              {isAdLoading && (
-                <div className="ad-loading">⏳ Загрузка рекламы...</div>
-              )}
-            </div>
-            <div className="fuel-modal-actions">
-              <button 
-                className="fuel-modal-button wait"
-                onClick={() => setShowFuelModal(false)}
-              >
-                ⏰ Подождать
-              </button>
-              <button 
-                className="fuel-modal-button watch"
-                onClick={showAdForFuel}
-                disabled={isAdLoading}
-              >
-                📺 Заправиться (реклама)
-              </button>
             </div>
           </div>
         </div>
