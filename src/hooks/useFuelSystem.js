@@ -84,8 +84,11 @@ export const useFuelSystem = (saveGameState) => {
       fuel_refill_time: initialState.fuel_refill_time
     });
 
-    // ПРОВЕРКА 3: Загрузка топливных данных с валидацией - точно как в useGameState.js
-    const loadedFuelCount = Math.min(Math.max(Number(initialState.fuel_count) || 5, 0), 5);
+    // 🔥 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Правильная загрузка fuel_count (включая 0!)
+    const loadedFuelCount = Math.min(Math.max(
+      initialState.fuel_count !== undefined ? Number(initialState.fuel_count) : 5, 
+      0
+    ), 5);
     const loadedLastRaceTime = parseTimestamp(initialState.last_race_time);
     const loadedFuelRefillTime = parseTimestamp(initialState.fuel_refill_time);
     
