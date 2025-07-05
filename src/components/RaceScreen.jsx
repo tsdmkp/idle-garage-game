@@ -62,12 +62,12 @@ const RaceScreen = ({
 
   // Список всех доступных машин для соперника
   const availableOpponentCars = [
-    '/car_001.png',
-    '/car_002.png', 
-    '/car_003.png',
-    '/car_004.png',
-    '/car_005.png',
-    '/car_006.png'
+    '/placeholder-car.png',
+    '/placeholder-car2.png', 
+    '/placeholder-car3.png',
+    '/placeholder-car4.png',
+    '/placeholder-car5.png',
+    '/placeholder-car6.png'
   ];
 
   // Функция для получения случайной машины соперника
