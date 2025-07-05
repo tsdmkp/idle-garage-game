@@ -1,4 +1,4 @@
-/* src/components/RaceScreen.css - с ФОНОМ и ТОПЛИВНОЙ СИСТЕМОЙ */
+/* src/components/RaceScreen.css - с УПРОЩЕННОЙ ТОПЛИВНОЙ СИСТЕМОЙ */
 
 /* --- Базовые стили для страницы --- */
 html, body, #root {
@@ -106,15 +106,15 @@ body {
   text-shadow: 0 0 30px rgba(255, 107, 107, 0.5);
 }
 
-/* ⛽ ТОПЛИВНАЯ СИСТЕМА - НАЧАЛО */
+/* ⛽ УПРОЩЕННАЯ ТОПЛИВНАЯ СИСТЕМА - ЭТАП 1 */
 
-/* Индикатор топлива */
+/* Основной контейнер топлива - УПРОЩЕННЫЙ */
 .fuel-indicator {
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
   backdrop-filter: blur(15px);
   border: 2px solid rgba(255, 255, 255, 0.25);
   border-radius: 18px;
-  padding: 16px;
+  padding: 12px 16px;
   margin: 12px 0;
   text-align: center;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
@@ -139,29 +139,30 @@ body {
   50% { left: 100%; }
 }
 
+/* Упрощенная строка топлива - только иконка и шарики */
 .fuel-bar {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  flex-wrap: wrap;
   position: relative;
   z-index: 1;
 }
 
-.fuel-label {
-  font-weight: 700;
-  color: #fff;
-  font-size: 16px;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+/* Иконка топлива вместо слова */
+.fuel-icon {
+  font-size: 24px;
+  filter: brightness(1.2) saturate(1.1);
 }
 
+/* Контейнер шариков */
 .fuel-tanks {
   display: flex;
   gap: 8px;
   align-items: center;
 }
 
+/* Стили шариков топлива */
 .fuel-tank {
   font-size: 24px;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -191,18 +192,13 @@ body {
   }
 }
 
+/* УБИРАЕМ ненужные элементы */
+.fuel-label,
 .fuel-count {
-  font-weight: 800;
-  color: #fff;
-  font-size: 18px;
-  background: linear-gradient(145deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.3));
-  padding: 6px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(10px);
+  display: none !important;
 }
 
+/* Таймер - показываем ТОЛЬКО при пустом топливе */
 .fuel-refill-timer {
   margin-top: 10px;
   font-size: 15px;
@@ -214,6 +210,12 @@ body {
   padding: 8px 12px;
   border-radius: 10px;
   border: 1px solid rgba(255, 215, 0, 0.4);
+  display: none; /* По умолчанию скрыт */
+}
+
+/* Показываем таймер только при пустом топливе */
+.fuel-indicator.empty .fuel-refill-timer {
+  display: block;
 }
 
 @keyframes timerPulse {
@@ -227,29 +229,57 @@ body {
   }
 }
 
+/* Сообщение о пустом топливе - СКРЫВАЕМ, заменим кнопкой */
 .fuel-empty-message {
-  margin-top: 10px;
-  font-size: 14px;
-  color: #ff6b6b;
-  font-weight: 700;
-  text-shadow: 0 0 15px rgba(255, 107, 107, 0.8);
-  animation: warningPulse 1.5s ease-in-out infinite;
-  background: linear-gradient(145deg, rgba(255, 107, 107, 0.2), rgba(255, 107, 107, 0.1));
-  padding: 10px 14px;
-  border-radius: 12px;
-  border: 2px solid rgba(255, 107, 107, 0.5);
-  position: relative;
+  display: none !important;
 }
 
-@keyframes warningPulse {
-  0%, 100% { 
-    opacity: 1;
-    border-color: rgba(255, 107, 107, 0.5);
-  }
-  50% { 
-    opacity: 0.7;
-    border-color: rgba(255, 107, 107, 0.8);
-  }
+/* НОВАЯ кнопка ускорения заправки */
+.fuel-accelerate-button {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background: linear-gradient(145deg, #ff6b6b, #ffd93d);
+  color: #333;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+  display: none; /* По умолчанию скрыта */
+}
+
+/* Показываем кнопку только при пустом топливе */
+.fuel-indicator.empty .fuel-accelerate-button {
+  display: block;
+}
+
+.fuel-accelerate-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.6s;
+}
+
+.fuel-accelerate-button:hover::before {
+  left: 100%;
+}
+
+.fuel-accelerate-button:hover {
+  background: linear-gradient(145deg, #ff5252, #ffeb3b);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+}
+
+.fuel-accelerate-button:active {
+  transform: translateY(0);
 }
 
 /* Модалка топлива */
@@ -1051,30 +1081,20 @@ body {
   
   /* ⛽ Адаптивность топливной системы */
   .fuel-indicator {
-    padding: 14px;
+    padding: 10px 14px;
     margin: 10px 0;
   }
   
   .fuel-bar {
-    flex-direction: column;
-    gap: 8px;
+    gap: 10px;
   }
   
-  .fuel-label {
-    font-size: 15px;
-  }
-  
-  .fuel-tanks {
-    justify-content: center;
+  .fuel-icon {
+    font-size: 22px;
   }
   
   .fuel-tank {
     font-size: 22px;
-  }
-  
-  .fuel-count {
-    font-size: 16px;
-    padding: 5px 10px;
   }
   
   .fuel-refill-timer {
@@ -1082,9 +1102,9 @@ body {
     padding: 6px 10px;
   }
   
-  .fuel-empty-message {
+  .fuel-accelerate-button {
+    padding: 6px 12px;
     font-size: 13px;
-    padding: 8px 12px;
   }
   
   .fuel-modal {
@@ -1196,21 +1216,20 @@ body {
   
   /* ⛽ Очень маленькие экраны - топливо */
   .fuel-indicator {
-    padding: 12px;
+    padding: 8px 12px;
     margin: 8px 0;
   }
   
-  .fuel-label {
-    font-size: 14px;
+  .fuel-bar {
+    gap: 8px;
+  }
+  
+  .fuel-icon {
+    font-size: 20px;
   }
   
   .fuel-tank {
     font-size: 20px;
-  }
-  
-  .fuel-count {
-    font-size: 15px;
-    padding: 4px 8px;
   }
   
   .fuel-refill-timer {
@@ -1218,9 +1237,9 @@ body {
     padding: 5px 8px;
   }
   
-  .fuel-empty-message {
+  .fuel-accelerate-button {
+    padding: 5px 10px;
     font-size: 12px;
-    padding: 6px 10px;
   }
   
   .fuel-modal {
