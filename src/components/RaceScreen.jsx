@@ -159,7 +159,127 @@ const RaceScreen = ({
       setLastRaceTime(newLastRaceTime);
       setFuelRefillTime(null);
       
-      // Уведомление пользователю
+      // Уведомляем App.jsx об обновлении
+      if (onFuelUpdate) {
+        onFuelUpdate(newFuelCount, newLastRaceTime, null);
+      }
+    }
+  };
+
+  // Таймер для проверки восстановления топлива
+  useEffect(() => {
+    const interval = setInterval(() => {
+      checkFuelRefill();
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [fuelCount, lastRaceTime, fuelRefillTime, onFuelUpdate]);
+
+  // Сохранение данных топлива через App.jsx
+  const saveFuelData = (newFuelCount, newLastRaceTime, newRefillTime = null) => {
+    console.log('💾 Обновляем данные топлива через App.jsx:', {
+      fuel: newFuelCount,
+      lastRace: new Date(newLastRaceTime).toLocaleString(),
+      refillTime: newRefillTime ? new Date(newRefillTime).toLocaleString() : 'нет'
+    });
+    
+    // Уведомляем App.jsx об обновлении
+    if (onFuelUpdate) {
+      onFuelUpdate(newFuelCount, newLastRaceTime, newRefillTime);
+    }
+  };
+
+  // Получение времени до восстановления топлива
+  const getTimeUntilRefill = () => {
+    if (fuelCount >= MAX_FUEL) return null;
+    
+    const now = Date.now();
+    const refillTime = fuelRefillTime || (lastRaceTime ? lastRaceTime + FUEL_REFILL_HOUR : null);
+    
+    if (!refillTime) return null;
+    
+    const timeLeft = refillTime - now;
+    if (timeLeft <= 0) return null;
+    
+    const minutes = Math.floor(timeLeft / (60 * 1000));
+    const seconds = Math.floor((timeLeft % (60 * 1000)) / 1000);
+    
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  // Показ рекламы для восстановления топлива
+  const showAdForFuel = async () => {
+    console.log('⛽ Попытка показать рекламу для восстановления топлива...');
+    
+    setIsAdLoading(true);
+
+    try {
+      if (!window.adsgramController) {
+        console.warn('❌ AdController не найден, используем мок');
+        // Fallback на моковую рекламу
+        showMockAd();
+        return;
+      }
+      
+      console.log('🎬 Показываем настоящую Adsgram рекламу...');
+      
+      const result = await window.adsgramController.show();
+      
+      console.log('✅ Adsgram реклама успешно просмотрена!', result);
+      
+      // Восстанавливаем топливо
+      handleFuelRestore();
+      
+    } catch (error) {
+      console.log('⏭️ Adsgram реклама была пропущена или ошибка:', error);
+      
+      // Fallback на моковую рекламу
+      showMockAd();
+    } finally {
+      setIsAdLoading(false);
+    }
+  };
+
+  // Моковая реклама для тестирования
+  const showMockAd = () => {
+    console.log('🎭 Показываем моковую рекламу...');
+    
+    setTimeout(() => {
+      const watchAd = window.confirm('🎥 [ТЕСТ] Реклама загружена!\n\nПросмотреть рекламу за восстановление топлива?');
+      
+      if (watchAd) {
+        setTimeout(() => {
+          console.log('✅ Моковая реклама просмотрена');
+          handleFuelRestore();
+        }, 1500);
+      } else {
+        console.log('⏭️ Моковая реклама пропущена');
+        alert('📺 Для заправки нужно досмотреть рекламу до конца');
+      }
+      
+      setIsAdLoading(false);
+    }, 800);
+  };
+
+  // Восстановление топлива после рекламы
+  const handleFuelRestore = () => {
+    const now = Date.now();
+    const newFuelCount = MAX_FUEL;
+    const newLastRaceTime = now;
+    
+    setFuelCount(newFuelCount);
+    setLastRaceTime(newLastRaceTime);
+    setFuelRefillTime(null);
+    
+    // Уведомляем App.jsx
+    if (onFuelRefillByAd) {
+      onFuelRefillByAd();
+    }
+    
+    // Закрываем модалку
+    setShowFuelModal(false);
+    
+    // Уведомление пользователю
     alert('⛽ Топливный бак заправлен!\nМожете продолжать гонки!');
     
     // Тактильная обратная связь
@@ -543,124 +663,4 @@ const RaceScreen = ({
   );
 };
 
-export default RaceScreen;ведомляем App.jsx об обновлении
-      if (onFuelUpdate) {
-        onFuelUpdate(newFuelCount, newLastRaceTime, null);
-      }
-    }
-  };
-
-  // Таймер для проверки восстановления топлива
-  useEffect(() => {
-    const interval = setInterval(() => {
-      checkFuelRefill();
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [fuelCount, lastRaceTime, fuelRefillTime, onFuelUpdate]);
-
-  // Сохранение данных топлива через App.jsx
-  const saveFuelData = (newFuelCount, newLastRaceTime, newRefillTime = null) => {
-    console.log('💾 Обновляем данные топлива через App.jsx:', {
-      fuel: newFuelCount,
-      lastRace: new Date(newLastRaceTime).toLocaleString(),
-      refillTime: newRefillTime ? new Date(newRefillTime).toLocaleString() : 'нет'
-    });
-    
-    // Уведомляем App.jsx об обновлении
-    if (onFuelUpdate) {
-      onFuelUpdate(newFuelCount, newLastRaceTime, newRefillTime);
-    }
-  };
-
-  // Получение времени до восстановления топлива
-  const getTimeUntilRefill = () => {
-    if (fuelCount >= MAX_FUEL) return null;
-    
-    const now = Date.now();
-    const refillTime = fuelRefillTime || (lastRaceTime ? lastRaceTime + FUEL_REFILL_HOUR : null);
-    
-    if (!refillTime) return null;
-    
-    const timeLeft = refillTime - now;
-    if (timeLeft <= 0) return null;
-    
-    const minutes = Math.floor(timeLeft / (60 * 1000));
-    const seconds = Math.floor((timeLeft % (60 * 1000)) / 1000);
-    
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  // Показ рекламы для восстановления топлива
-  const showAdForFuel = async () => {
-    console.log('⛽ Попытка показать рекламу для восстановления топлива...');
-    
-    setIsAdLoading(true);
-
-    try {
-      if (!window.adsgramController) {
-        console.warn('❌ AdController не найден, используем мок');
-        // Fallback на моковую рекламу
-        showMockAd();
-        return;
-      }
-      
-      console.log('🎬 Показываем настоящую Adsgram рекламу...');
-      
-      const result = await window.adsgramController.show();
-      
-      console.log('✅ Adsgram реклама успешно просмотрена!', result);
-      
-      // Восстанавливаем топливо
-      handleFuelRestore();
-      
-    } catch (error) {
-      console.log('⏭️ Adsgram реклама была пропущена или ошибка:', error);
-      
-      // Fallback на моковую рекламу
-      showMockAd();
-    } finally {
-      setIsAdLoading(false);
-    }
-  };
-
-  // Моковая реклама для тестирования
-  const showMockAd = () => {
-    console.log('🎭 Показываем моковую рекламу...');
-    
-    setTimeout(() => {
-      const watchAd = window.confirm('🎥 [ТЕСТ] Реклама загружена!\n\nПросмотреть рекламу за восстановление топлива?');
-      
-      if (watchAd) {
-        setTimeout(() => {
-          console.log('✅ Моковая реклама просмотрена');
-          handleFuelRestore();
-        }, 1500);
-      } else {
-        console.log('⏭️ Моковая реклама пропущена');
-        alert('📺 Для заправки нужно досмотреть рекламу до конца');
-      }
-      
-      setIsAdLoading(false);
-    }, 800);
-  };
-
-  // Восстановление топлива после рекламы
-  const handleFuelRestore = () => {
-    const now = Date.now();
-    const newFuelCount = MAX_FUEL;
-    const newLastRaceTime = now;
-    
-    setFuelCount(newFuelCount);
-    setLastRaceTime(newLastRaceTime);
-    setFuelRefillTime(null);
-    
-    // Уведомляем App.jsx
-    if (onFuelRefillByAd) {
-      onFuelRefillByAd();
-    }
-    
-    // Закрываем модалку
-    setShowFuelModal(false);
-    
-    // У
+export default RaceScreen;
