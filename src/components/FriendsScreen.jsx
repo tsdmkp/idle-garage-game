@@ -2,6 +2,73 @@ import React, { useState, useEffect } from 'react';
 import apiClient from '../apiClient';
 import './FriendsScreen.css';
 
+// 🔥 НОВЫЙ КОМПОНЕНТ: Аватарка друга
+const FriendAvatar = ({ photoUrl, firstName, size = 40 }) => {
+  const [imageError, setImageError] = useState(false);
+  
+  // Если есть фото и нет ошибки загрузки
+  if (photoUrl && !imageError) {
+    return (
+      <div 
+        className="friend-avatar friend-avatar-photo"
+        style={{
+          width: size,
+          height: size,
+          borderRadius: '50%',
+          overflow: 'hidden',
+          background: 'linear-gradient(135deg, #ff6b6b, #ffd93d)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          border: '2px solid rgba(255, 255, 255, 0.3)',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
+        }}
+      >
+        <img
+          src={photoUrl}
+          alt={`Аватар ${firstName}`}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover'
+          }}
+          onError={() => {
+            console.log('❌ Ошибка загрузки аватарки друга, показываем fallback');
+            setImageError(true);
+          }}
+        />
+      </div>
+    );
+  }
+  
+  // Fallback - первая буква имени или иконка
+  const firstLetter = firstName ? firstName.charAt(0).toUpperCase() : '?';
+  
+  return (
+    <div 
+      className="friend-avatar friend-avatar-fallback"
+      style={{
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        background: 'linear-gradient(135deg, #ff6b6b, #ffd93d)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        font: 'weight: 700',
+        fontSize: size * 0.4,
+        color: 'white',
+        flexShrink: 0,
+        border: '2px solid rgba(255, 255, 255, 0.3)',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
+      }}
+    >
+      {firstLetter}
+    </div>
+  );
+};
+
 const FriendsScreen = ({ tgUserData, onBalanceUpdate }) => {
   const [friendsData, setFriendsData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -38,6 +105,17 @@ const FriendsScreen = ({ tgUserData, onBalanceUpdate }) => {
         console.log('📊 Total invites:', response?.total_invites);
         console.log('💰 Total earned:', response?.total_earned);
         console.log('🎁 Pending rewards:', response?.pending_rewards);
+        
+        // 🔥 НОВОЕ: Логируем данные друзей с аватарками
+        if (response?.friends && Array.isArray(response.friends)) {
+          response.friends.forEach((friend, index) => {
+            console.log(`👤 Friend ${index + 1}:`, {
+              name: friend.first_name,
+              photo_url: friend.photo_url ? 'есть' : 'нет',
+              joined: friend.joined_at
+            });
+          });
+        }
         
         setFriendsData(response);
         
@@ -327,16 +405,19 @@ ${referralLink}
           </div>
         </div>
 
-        {/* Список друзей */}
+        {/* ✅ ОБНОВЛЕННЫЙ список друзей с аватарками */}
         {friendsData?.friends && friendsData.friends.length > 0 && (
           <div className="friends-list">
             <h3>👥 Ваши друзья ({friendsData.friends.length})</h3>
             <div className="friends-grid">
               {friendsData.friends.map((friend, index) => (
                 <div key={friend.user_id || index} className="friend-card">
-                  <div className="friend-avatar">
-                    {friend.first_name ? friend.first_name[0].toUpperCase() : '?'}
-                  </div>
+                  {/* 🔥 НОВОЕ: Используем компонент FriendAvatar */}
+                  <FriendAvatar 
+                    photoUrl={friend.photo_url}
+                    firstName={friend.first_name}
+                    size={40}
+                  />
                   <div className="friend-info">
                     <div className="friend-name">{friend.first_name || 'Аноним'}</div>
                     <div className="friend-date">
