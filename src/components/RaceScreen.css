@@ -274,8 +274,8 @@ body {
   transform: translateY(0);
 }
 
-/* === НОВЫЙ БЛОК УЧАСТНИКОВ === */
-.participants-info {
+/* === НОВЫЙ БЛОК УЧАСТНИКОВ (уникальные классы для гонок) === */
+.race-participants-info {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -289,7 +289,7 @@ body {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
-.participant {
+.race-participant {
   flex: 1;
   text-align: center;
   display: flex;
@@ -298,7 +298,7 @@ body {
   gap: 8px;
 }
 
-.participant-header {
+.race-participant-header {
   font-size: 0.75rem;
   color: #ffd93d;
   font-weight: 600;
@@ -306,14 +306,14 @@ body {
   margin-bottom: 5px;
 }
 
-.car-display {
+.race-car-display {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
 }
 
-.car-image-container {
+.race-car-image-container {
   width: 80px;
   height: 50px;
   border-radius: 12px;
@@ -325,13 +325,13 @@ body {
   position: relative;
 }
 
-.car-image-container:hover {
+.race-car-image-container:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
   border-color: rgba(255, 255, 255, 0.4);
 }
 
-.car-image {
+.race-car-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -339,11 +339,11 @@ body {
   transition: transform 0.3s ease;
 }
 
-.car-image-container:hover .car-image {
+.race-car-image-container:hover .race-car-image {
   transform: scale(1.05);
 }
 
-.car-name {
+.race-car-name {
   font-weight: 700;
   color: #ffffff;
   font-size: 0.8rem;
@@ -353,7 +353,7 @@ body {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
-.opponent-name {
+.race-opponent-name {
   font-weight: 700;
   color: #ff6b6b;
   font-size: 0.8rem;
@@ -361,10 +361,10 @@ body {
   text-align: center;
   line-height: 1.2;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-  animation: opponentGlow 2s ease-in-out infinite alternate;
+  animation: raceOpponentGlow 2s ease-in-out infinite alternate;
 }
 
-@keyframes opponentGlow {
+@keyframes raceOpponentGlow {
   0% { 
     color: #ff6b6b;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
@@ -375,17 +375,17 @@ body {
   }
 }
 
-.vs-divider {
+.race-vs-divider {
   font-size: 1.4rem;
   font-weight: 900;
   color: #ff6b6b;
   margin: 0 15px;
   text-shadow: 0 0 15px rgba(255, 107, 107, 0.6);
-  animation: vsGlow 1.5s ease-in-out infinite alternate;
+  animation: raceVsGlow 1.5s ease-in-out infinite alternate;
   position: relative;
 }
 
-@keyframes vsGlow {
+@keyframes raceVsGlow {
   0% { 
     transform: scale(1);
     text-shadow: 0 0 15px rgba(255, 107, 107, 0.6);
@@ -396,11 +396,11 @@ body {
   }
 }
 
-.opponent-car-container {
+.race-opponent-car-container {
   position: relative;
 }
 
-.opponent-car-container::before {
+.race-opponent-car-container::before {
   content: '';
   position: absolute;
   top: -3px;
@@ -412,10 +412,10 @@ body {
   border-radius: 15px;
   z-index: -1;
   opacity: 0.3;
-  animation: enemyBorder 3s linear infinite;
+  animation: raceEnemyBorder 3s linear infinite;
 }
 
-@keyframes enemyBorder {
+@keyframes raceEnemyBorder {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
@@ -1162,26 +1162,26 @@ body {
     font-size: 13px;
   }
   
-  .participants-info {
+  .race-participants-info {
     padding: 12px 8px;
     max-width: 320px;
   }
   
-  .participant-header {
+  .race-participant-header {
     font-size: 0.7rem;
   }
   
-  .car-image-container {
+  .race-car-image-container {
     width: 70px;
     height: 45px;
   }
   
-  .car-name,
-  .opponent-name {
+  .race-car-name,
+  .race-opponent-name {
     font-size: 0.75rem;
   }
   
-  .vs-divider {
+  .race-vs-divider {
     font-size: 1.2rem;
     margin: 0 10px;
   }
@@ -1303,26 +1303,26 @@ body {
     font-size: 12px;
   }
   
-  .participants-info {
+  .race-participants-info {
     padding: 10px 6px;
     max-width: 280px;
   }
   
-  .participant-header {
+  .race-participant-header {
     font-size: 0.65rem;
   }
   
-  .car-image-container {
+  .race-car-image-container {
     width: 60px;
     height: 40px;
   }
   
-  .car-name,
-  .opponent-name {
+  .race-car-name,
+  .race-opponent-name {
     font-size: 0.7rem;
   }
   
-  .vs-divider {
+  .race-vs-divider {
     font-size: 1rem;
     margin: 0 8px;
   }
@@ -1446,8 +1446,8 @@ button, .fuel-tank, .fuel-modal-button {
   
   .fuel-tank.full,
   .fuel-refill-timer,
-  .opponent-name,
-  .vs-divider {
+  .race-opponent-name,
+  .race-vs-divider {
     animation: none !important;
   }
 }
@@ -1455,8 +1455,8 @@ button, .fuel-tank, .fuel-modal-button {
 @media (prefers-contrast: high) {
   .fuel-modal,
   .fuel-indicator,
-  .participants-info,
-  .car-image-container {
+  .race-participants-info,
+  .race-car-image-container {
     border-width: 3px;
     border-color: #ffffff;
   }

@@ -60,19 +60,29 @@ const RaceScreen = ({
   const MAX_FUEL = 5;
   const FUEL_REFILL_HOUR = 60 * 60 * 1000; // 1 час в миллисекундах
 
-  // Функция для получения изображения машины соперника по сложности
-  const getOpponentCarImage = (difficulty) => {
-    const opponentCars = {
-      easy: '/car_001.png',    // Простая машина для легкого уровня
-      medium: '/car_003.png',  // Средняя машина для среднего уровня  
-      hard: '/car_005.png'     // Мощная машина для сложного уровня
-    };
-    return opponentCars[difficulty] || '/car_001.png';
+  // Список всех доступных машин для соперника
+  const availableOpponentCars = [
+    '/car_001.png',
+    '/car_002.png', 
+    '/car_003.png',
+    '/car_004.png',
+    '/car_005.png',
+    '/car_006.png'
+  ];
+
+  // Функция для получения случайной машины соперника
+  const getRandomOpponentCar = () => {
+    const randomIndex = Math.floor(Math.random() * availableOpponentCars.length);
+    return availableOpponentCars[randomIndex];
   };
 
-  // Обновление имени соперника при смене сложности
+  // Состояние для изображения машины соперника
+  const [opponentCarImage, setOpponentCarImage] = useState(getRandomOpponentCar());
+
+  // Обновление имени соперника и машины при смене сложности
   useEffect(() => {
     setOpponentName(getRandomOpponentName());
+    setOpponentCarImage(getRandomOpponentCar());
   }, [selectedDifficulty]);
 
   // Синхронизация с пропсами от App.jsx
@@ -363,8 +373,9 @@ const RaceScreen = ({
     setRaceState('countdown');
     setCountdown(3);
     
-    // Генерируем нового соперника перед стартом
+    // Генерируем нового соперника и новую машину перед стартом
     setOpponentName(getRandomOpponentName());
+    setOpponentCarImage(getRandomOpponentCar());
     
     const countdownInterval = setInterval(() => {
       setCountdown(prev => {
@@ -501,35 +512,35 @@ const RaceScreen = ({
           </div>
         </div>
 
-        {/* НОВЫЙ БЛОК УЧАСТНИКОВ */}
-        <div className="participants-info">
-          <div className="participant">
-            <div className="participant-header">Ваша машина</div>
-            <div className="car-display">
-              <div className="car-image-container">
+        {/* НОВЫЙ БЛОК УЧАСТНИКОВ - с уникальными классами */}
+        <div className="race-participants-info">
+          <div className="race-participant">
+            <div className="race-participant-header">Ваша машина</div>
+            <div className="race-car-display">
+              <div className="race-car-image-container">
                 <img 
                   src={playerCar?.imageUrl || '/car_001.png'} 
                   alt={playerCar?.name || 'Ваша машина'}
-                  className="car-image"
+                  className="race-car-image"
                 />
               </div>
-              <div className="car-name">{playerCar?.name || 'Копейка'}</div>
+              <div className="race-car-name">{playerCar?.name || 'Копейка'}</div>
             </div>
           </div>
           
-          <div className="vs-divider">VS</div>
+          <div className="race-vs-divider">VS</div>
           
-          <div className="participant">
-            <div className="participant-header">Соперник</div>
-            <div className="car-display">
-              <div className="car-image-container opponent-car-container">
+          <div className="race-participant">
+            <div className="race-participant-header">Соперник</div>
+            <div className="race-car-display">
+              <div className="race-car-image-container race-opponent-car-container">
                 <img 
-                  src={getOpponentCarImage(selectedDifficulty)} 
+                  src={opponentCarImage} 
                   alt="Машина соперника"
-                  className="car-image"
+                  className="race-car-image"
                 />
               </div>
-              <div className="opponent-name">{opponentName}</div>
+              <div className="race-opponent-name">{opponentName}</div>
             </div>
           </div>
         </div>
@@ -574,7 +585,7 @@ const RaceScreen = ({
             </div>
             
             <div className="race-car opponent-car" ref={opponentCarRef}>
-              <img src={getOpponentCarImage(selectedDifficulty)} alt="Opponent car" />
+              <img src={opponentCarImage} alt="Opponent car" />
             </div>
             
             <div className="finish-line"></div>
