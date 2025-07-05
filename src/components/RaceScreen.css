@@ -1,6 +1,6 @@
-/* src/components/RaceScreen.css - с УПРОЩЕННОЙ ТОПЛИВНОЙ СИСТЕМОЙ */
+/* RaceScreen.css - Компактная версия с новым блоком участников */
 
-/* --- Базовые стили для страницы --- */
+/* === БАЗОВЫЕ СТИЛИ === */
 html, body, #root {
   margin: 0;
   padding: 0;
@@ -12,11 +12,10 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* --- Основной контейнер экрана гонок С ФОНОМ --- */
+/* === ГЛАВНЫЙ КОНТЕЙНЕР === */
 .race-screen {
   margin: 0;
   padding: 0;
-  /* ФОНОВОЕ ИЗОБРАЖЕНИЕ */
   background-image: url('/race-background.jpg');
   background-size: cover;
   background-position: center;
@@ -30,7 +29,6 @@ body {
   position: relative;
 }
 
-/* Затемнение для читаемости */
 .race-screen::after {
   content: '';
   position: absolute;
@@ -46,7 +44,6 @@ body {
   z-index: -1;
 }
 
-/* Анимированные звездочки на фон */
 .race-screen::before {
   content: '';
   position: fixed;
@@ -57,9 +54,7 @@ body {
   background-image: 
     radial-gradient(2px 2px at 20px 30px, #ffffff40, transparent),
     radial-gradient(2px 2px at 40px 70px, #ffffff20, transparent),
-    radial-gradient(1px 1px at 90px 40px, #ffffff60, transparent),
-    radial-gradient(1px 1px at 130px 80px, #ffffff40, transparent),
-    radial-gradient(2px 2px at 160px 30px, #ffffff20, transparent);
+    radial-gradient(1px 1px at 90px 40px, #ffffff60, transparent);
   background-repeat: repeat;
   background-size: 200px 100px;
   animation: twinkle 4s ease-in-out infinite alternate;
@@ -72,7 +67,6 @@ body {
   100% { opacity: 0.8; }
 }
 
-/* Контейнер для контента */
 .race-screen__content {
   position: relative;
   z-index: 1;
@@ -87,7 +81,7 @@ body {
   gap: 15px;
 }
 
-/* Заголовок и статистика */
+/* === ЗАГОЛОВОК === */
 .race-header {
   text-align: center;
   margin-bottom: 8px;
@@ -106,9 +100,26 @@ body {
   text-shadow: 0 0 30px rgba(255, 107, 107, 0.5);
 }
 
-/* ⛽ УПРОЩЕННАЯ ТОПЛИВНАЯ СИСТЕМА - ЭТАП 1 */
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
 
-/* Основной контейнер топлива - УПРОЩЕННЫЙ */
+.win-streak {
+  font-size: 0.9rem;
+  color: #ff6b6b;
+  font-weight: 600;
+  margin: 2px 0;
+  text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+}
+
+.race-stats {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin: 2px 0;
+}
+
+/* === ТОПЛИВНАЯ СИСТЕМА (УПРОЩЕННАЯ) === */
 .fuel-indicator {
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
   backdrop-filter: blur(15px);
@@ -139,7 +150,6 @@ body {
   50% { left: 100%; }
 }
 
-/* Упрощенная строка топлива - только иконка и шарики */
 .fuel-bar {
   display: flex;
   align-items: center;
@@ -149,20 +159,17 @@ body {
   z-index: 1;
 }
 
-/* Иконка топлива вместо слова */
 .fuel-icon {
   font-size: 24px;
   filter: brightness(1.2) saturate(1.1);
 }
 
-/* Контейнер шариков */
 .fuel-tanks {
   display: flex;
   gap: 8px;
   align-items: center;
 }
 
-/* Стили шариков топлива */
 .fuel-tank {
   font-size: 24px;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -192,13 +199,6 @@ body {
   }
 }
 
-/* УБИРАЕМ ненужные элементы */
-.fuel-label,
-.fuel-count {
-  display: none !important;
-}
-
-/* Таймер - показываем ТОЛЬКО при пустом топливе */
 .fuel-refill-timer {
   margin-top: 10px;
   font-size: 15px;
@@ -210,10 +210,9 @@ body {
   padding: 8px 12px;
   border-radius: 10px;
   border: 1px solid rgba(255, 215, 0, 0.4);
-  display: none; /* По умолчанию скрыт */
+  display: none;
 }
 
-/* Показываем таймер только при пустом топливе */
 .fuel-indicator.empty .fuel-refill-timer {
   display: block;
 }
@@ -229,12 +228,6 @@ body {
   }
 }
 
-/* Сообщение о пустом топливе - СКРЫВАЕМ, заменим кнопкой */
-.fuel-empty-message {
-  display: none !important;
-}
-
-/* НОВАЯ кнопка ускорения заправки */
 .fuel-accelerate-button {
   margin-top: 10px;
   padding: 8px 16px;
@@ -249,10 +242,9 @@ body {
   position: relative;
   overflow: hidden;
   box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
-  display: none; /* По умолчанию скрыта */
+  display: none;
 }
 
-/* Показываем кнопку только при пустом топливе */
 .fuel-indicator.empty .fuel-accelerate-button {
   display: block;
 }
@@ -282,7 +274,571 @@ body {
   transform: translateY(0);
 }
 
-/* Модалка топлива */
+/* === НОВЫЙ БЛОК УЧАСТНИКОВ === */
+.participants-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 350px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 15px;
+  padding: 15px 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.participant {
+  flex: 1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.participant-header {
+  font-size: 0.75rem;
+  color: #ffd93d;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.car-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.car-image-container {
+  width: 80px;
+  height: 50px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.car-image-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.car-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+  transition: transform 0.3s ease;
+}
+
+.car-image-container:hover .car-image {
+  transform: scale(1.05);
+}
+
+.car-name {
+  font-weight: 700;
+  color: #ffffff;
+  font-size: 0.8rem;
+  margin: 0;
+  text-align: center;
+  line-height: 1.2;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.opponent-name {
+  font-weight: 700;
+  color: #ff6b6b;
+  font-size: 0.8rem;
+  margin: 0;
+  text-align: center;
+  line-height: 1.2;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  animation: opponentGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes opponentGlow {
+  0% { 
+    color: #ff6b6b;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  }
+  100% { 
+    color: #ff8a80;
+    text-shadow: 0 0 10px rgba(255, 107, 107, 0.6);
+  }
+}
+
+.vs-divider {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #ff6b6b;
+  margin: 0 15px;
+  text-shadow: 0 0 15px rgba(255, 107, 107, 0.6);
+  animation: vsGlow 1.5s ease-in-out infinite alternate;
+  position: relative;
+}
+
+@keyframes vsGlow {
+  0% { 
+    transform: scale(1);
+    text-shadow: 0 0 15px rgba(255, 107, 107, 0.6);
+  }
+  100% { 
+    transform: scale(1.1);
+    text-shadow: 0 0 25px rgba(255, 107, 107, 0.8);
+  }
+}
+
+.opponent-car-container {
+  position: relative;
+}
+
+.opponent-car-container::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  background: linear-gradient(45deg, #ff6b6b, #ffd93d, #ff6b6b);
+  background-size: 300% 300%;
+  border-radius: 15px;
+  z-index: -1;
+  opacity: 0.3;
+  animation: enemyBorder 3s linear infinite;
+}
+
+@keyframes enemyBorder {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* === ВЫБОР СЛОЖНОСТИ === */
+.difficulty-selector {
+  width: 100%;
+  max-width: 350px;
+}
+
+.difficulty-selector h4 {
+  margin: 0 0 10px 0;
+  font-weight: 600;
+  color: #ffffff;
+  font-size: 1rem;
+}
+
+.difficulty-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.difficulty-selector button {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
+  backdrop-filter: blur(15px);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  padding: 8px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.8rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  flex: 1;
+  text-align: center;
+}
+
+.difficulty-name {
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.difficulty-reward {
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+.difficulty-selector button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.difficulty-selector button:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.difficulty-selector button:hover:not(:disabled) {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.15));
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.difficulty-selector button.active {
+  background: linear-gradient(145deg, #ff6b6b, #ee5a52);
+  color: #ffffff;
+  border-color: #ff8a80;
+  box-shadow: 0 0 25px rgba(255, 107, 107, 0.6);
+  transform: scale(1.05);
+}
+
+.difficulty-selector button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* === ГОНОЧНАЯ ТРАССА === */
+.race-animation-area {
+  width: 100%;
+  padding: 12px 0;
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.race-track {
+  width: 95%;
+  max-width: 400px;
+  height: 100px;
+  background: linear-gradient(to bottom, #2c2c2c 0%, #1a1a1a 50%, #2c2c2c 100%);
+  border: 3px solid #444;
+  border-radius: 15px;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  box-shadow: 
+    inset 0 0 20px rgba(0, 0, 0, 0.8),
+    0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+.race-track::before {
+  content: '';
+  position: absolute;
+  top: 48%;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: repeating-linear-gradient(
+    to right,
+    #ffffff 0px,
+    #ffffff 20px,
+    transparent 20px,
+    transparent 40px
+  );
+  animation: roadMarkings 2s linear infinite;
+}
+
+@keyframes roadMarkings {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(40px); }
+}
+
+.countdown-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  z-index: 10;
+}
+
+.countdown-number {
+  font-size: 3rem;
+  font-weight: 900;
+  color: #ffd93d;
+  text-shadow: 0 0 30px rgba(255, 217, 61, 0.8);
+  animation: countdownPulse 0.8s ease-in-out;
+}
+
+@keyframes countdownPulse {
+  0% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.speed-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.speed-line {
+  position: absolute;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, #ffffff60, transparent);
+  animation: speedEffect 0.3s linear infinite;
+}
+
+.speed-line-1 { left: 20%; animation-delay: 0s; }
+.speed-line-2 { left: 40%; animation-delay: 0.1s; }
+.speed-line-3 { left: 60%; animation-delay: 0.2s; }
+.speed-line-4 { left: 80%; animation-delay: 0.3s; }
+.speed-line-5 { left: 90%; animation-delay: 0.4s; }
+
+@keyframes speedEffect {
+  0% { transform: translateX(0); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateX(-200px); opacity: 0; }
+}
+
+.race-car {
+  position: absolute;
+  width: 70px;
+  height: 45px;
+  transition: transform 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform: translateX(0);
+  filter: drop-shadow(0 4px 15px rgba(0, 0, 0, 0.7));
+}
+
+.race-car img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.player-car {
+  bottom: 8px;
+  left: 3%;
+  z-index: 3;
+}
+
+.opponent-car {
+  bottom: 45px;
+  left: 5%;
+  z-index: 2;
+}
+
+.race-car.animate {
+  transform: translateX(calc(520% - 70px));
+}
+
+.race-car.returning {
+  transform: translateX(0);
+  transition: transform 2.5s cubic-bezier(0.55, 0.055, 0.675, 0.19);
+}
+
+.finish-line {
+  position: absolute;
+  right: 15px;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: repeating-linear-gradient(
+    0deg,
+    #ffffff,
+    #ffffff 8px,
+    #000000,
+    #000000 16px
+  );
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+  border-radius: 3px;
+}
+
+/* === КОНТРОЛЫ ГОНКИ === */
+.race-controls-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+  max-width: 350px;
+}
+
+.start-race-button {
+  padding: 14px 35px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(145deg, #4caf50, #66bb6a);
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  min-width: 180px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.start-race-button.countdown {
+  background: linear-gradient(145deg, #ff9800, #ffb74d);
+  box-shadow: 0 8px 25px rgba(255, 152, 0, 0.5);
+  font-size: 2rem;
+  animation: countdownButtonPulse 0.8s ease-in-out;
+}
+
+.start-race-button.racing {
+  background: linear-gradient(145deg, #2196f3, #42a5f5);
+  box-shadow: 0 8px 25px rgba(33, 150, 243, 0.5);
+  animation: racingButtonPulse 1s ease-in-out infinite alternate;
+}
+
+.start-race-button.disabled {
+  background: linear-gradient(145deg, #666, #888) !important;
+  color: #aaa !important;
+  cursor: not-allowed !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+  transform: none !important;
+  opacity: 0.6;
+}
+
+.start-race-button.disabled:hover {
+  background: linear-gradient(145deg, #666, #888) !important;
+  transform: none !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+}
+
+@keyframes countdownButtonPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes racingButtonPulse {
+  0% { box-shadow: 0 8px 25px rgba(33, 150, 243, 0.4); }
+  100% { box-shadow: 0 8px 35px rgba(33, 150, 243, 0.8); }
+}
+
+.start-race-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s;
+}
+
+.start-race-button:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.start-race-button:hover:not(:disabled) {
+  background: linear-gradient(145deg, #66bb6a, #81c784);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(76, 175, 80, 0.7);
+}
+
+.start-race-button:active:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.start-race-button:disabled {
+  background: linear-gradient(145deg, #666, #888);
+  color: #aaa;
+  cursor: not-allowed;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  transform: none;
+}
+
+.race-result {
+  padding: 18px;
+  border-radius: 15px;
+  background: linear-gradient(145deg, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.7));
+  backdrop-filter: blur(20px);
+  border: 2px solid;
+  width: 100%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  animation: resultAppear 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes resultAppear {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.race-result.win {
+  border-color: #4caf50;
+  box-shadow: 0 0 30px rgba(76, 175, 80, 0.5);
+}
+
+.race-result.win h3 {
+  color: #81c784;
+  margin: 0 0 10px 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  text-shadow: 0 0 20px rgba(129, 199, 132, 0.7);
+}
+
+.race-result.lose {
+  border-color: #f44336;
+  box-shadow: 0 0 30px rgba(244, 67, 54, 0.5);
+}
+
+.race-result.lose h3 {
+  color: #e57373;
+  margin: 0 0 10px 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  text-shadow: 0 0 20px rgba(229, 115, 115, 0.7);
+}
+
+.race-result.error {
+  border-color: #ff9800;
+  box-shadow: 0 0 30px rgba(255, 152, 0, 0.5);
+}
+
+.race-result.error h3 {
+  color: #ffb74d;
+  margin: 0 0 10px 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  text-shadow: 0 0 20px rgba(255, 183, 77, 0.7);
+}
+
+.race-result p {
+  margin: 0 0 10px 0;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.race-tip {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #ffd93d;
+  border-left: 3px solid #ffd93d;
+}
+
+/* === МОДАЛКА ТОПЛИВА === */
 .fuel-modal-overlay {
   position: fixed;
   top: 0;
@@ -566,507 +1122,7 @@ body {
   50% { opacity: 0.6; }
 }
 
-/* ⛽ ТОПЛИВНАЯ СИСТЕМА - КОНЕЦ */
-
-.win-streak {
-  font-size: 0.9rem;
-  color: #ff6b6b;
-  font-weight: 600;
-  margin: 2px 0;
-  text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
-}
-
-.race-stats {
-  font-size: 0.8rem;
-  color: #aaa;
-  margin: 2px 0;
-}
-
-@keyframes gradientShift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-/* Информация об участниках */
-.participants-info {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  max-width: 350px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 15px;
-  padding: 15px 10px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-}
-
-.participant {
-  flex: 1;
-  text-align: center;
-}
-
-.participant-header {
-  font-size: 0.8rem;
-  color: #ffd93d;
-  font-weight: 600;
-  margin-bottom: 5px;
-  text-transform: uppercase;
-}
-
-.car-info {
-  font-size: 0.85rem;
-}
-
-.car-name {
-  font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 3px;
-}
-
-.car-stats {
-  font-size: 0.75rem;
-  color: #ccc;
-  line-height: 1.2;
-}
-
-.vs-divider {
-  font-size: 1.2rem;
-  font-weight: 800;
-  color: #ff6b6b;
-  margin: 0 10px;
-  text-shadow: 0 0 15px rgba(255, 107, 107, 0.6);
-}
-
-/* Блок выбора сложности */
-.difficulty-selector {
-  width: 100%;
-  max-width: 350px;
-}
-
-.difficulty-selector h4 {
-  margin: 0 0 10px 0;
-  font-weight: 600;
-  color: #ffffff;
-  font-size: 1rem;
-}
-
-.difficulty-buttons {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-}
-
-.difficulty-selector button {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
-  backdrop-filter: blur(15px);
-  border: 2px solid rgba(255, 255, 255, 0.25);
-  color: #ffffff;
-  padding: 8px 12px;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.8rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-  flex: 1;
-  text-align: center;
-}
-
-.difficulty-name {
-  font-weight: 700;
-  margin-bottom: 2px;
-}
-
-.difficulty-reward {
-  font-size: 0.7rem;
-  opacity: 0.8;
-}
-
-.difficulty-selector button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
-}
-
-.difficulty-selector button:hover:not(:disabled)::before {
-  left: 100%;
-}
-
-.difficulty-selector button:hover:not(:disabled) {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.15));
-  border-color: rgba(255, 255, 255, 0.4);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-}
-
-.difficulty-selector button.active {
-  background: linear-gradient(145deg, #ff6b6b, #ee5a52);
-  color: #ffffff;
-  border-color: #ff8a80;
-  box-shadow: 0 0 25px rgba(255, 107, 107, 0.6);
-  transform: scale(1.05);
-}
-
-.difficulty-selector button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Зона анимации гонки */
-.race-animation-area {
-  width: 100%;
-  padding: 12px 0;
-  display: flex;
-  justify-content: center;
-  box-sizing: border-box;
-}
-
-/* Дорожка */
-.race-track {
-  width: 95%;
-  max-width: 400px;
-  height: 100px;
-  background: linear-gradient(to bottom, #2c2c2c 0%, #1a1a1a 50%, #2c2c2c 100%);
-  border: 3px solid #444;
-  border-radius: 15px;
-  position: relative;
-  overflow: hidden;
-  box-sizing: border-box;
-  box-shadow: 
-    inset 0 0 20px rgba(0, 0, 0, 0.8),
-    0 10px 30px rgba(0, 0, 0, 0.6);
-}
-
-/* Дорожная разметка */
-.race-track::before {
-  content: '';
-  position: absolute;
-  top: 48%;
-  left: 0;
-  width: 100%;
-  height: 4px;
-  background: repeating-linear-gradient(
-    to right,
-    #ffffff 0px,
-    #ffffff 20px,
-    transparent 20px,
-    transparent 40px
-  );
-  animation: roadMarkings 2s linear infinite;
-}
-
-@keyframes roadMarkings {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(40px); }
-}
-
-/* Обратный отсчет */
-.countdown-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
-  z-index: 10;
-}
-
-.countdown-number {
-  font-size: 3rem;
-  font-weight: 900;
-  color: #ffd93d;
-  text-shadow: 0 0 30px rgba(255, 217, 61, 0.8);
-  animation: countdownPulse 0.8s ease-in-out;
-}
-
-@keyframes countdownPulse {
-  0% { transform: scale(0.5); opacity: 0; }
-  50% { transform: scale(1.2); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-/* Эффекты скорости */
-.speed-lines {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-}
-
-.speed-line {
-  position: absolute;
-  width: 2px;
-  height: 100%;
-  background: linear-gradient(to bottom, transparent, #ffffff60, transparent);
-  animation: speedEffect 0.3s linear infinite;
-}
-
-.speed-line-1 { left: 20%; animation-delay: 0s; }
-.speed-line-2 { left: 40%; animation-delay: 0.1s; }
-.speed-line-3 { left: 60%; animation-delay: 0.2s; }
-.speed-line-4 { left: 80%; animation-delay: 0.3s; }
-.speed-line-5 { left: 90%; animation-delay: 0.4s; }
-
-@keyframes speedEffect {
-  0% { transform: translateX(0); opacity: 0; }
-  50% { opacity: 1; }
-  100% { transform: translateX(-200px); opacity: 0; }
-}
-
-/* Машинки */
-.race-car {
-  position: absolute;
-  width: 70px;
-  height: 45px;
-  transition: transform 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  transform: translateX(0);
-  filter: drop-shadow(0 4px 15px rgba(0, 0, 0, 0.7));
-}
-
-.race-car img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  border-radius: 8px;
-}
-
-.player-car {
-  bottom: 8px;
-  left: 3%;
-  z-index: 3;
-}
-
-.opponent-car {
-  bottom: 45px;
-  left: 5%;
-  z-index: 2;
-}
-
-/* Анимации движения */
-.race-car.animate {
-  transform: translateX(calc(520% - 70px));
-}
-
-.race-car.returning {
-  transform: translateX(0);
-  transition: transform 2.5s cubic-bezier(0.55, 0.055, 0.675, 0.19);
-}
-
-/* Финишная линия */
-.finish-line {
-  position: absolute;
-  right: 15px;
-  top: 0;
-  bottom: 0;
-  width: 6px;
-  background: repeating-linear-gradient(
-    0deg,
-    #ffffff,
-    #ffffff 8px,
-    #000000,
-    #000000 16px
-  );
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
-  border-radius: 3px;
-}
-
-/* Контейнер для кнопки и результата */
-.race-controls-area {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 15px;
-  width: 100%;
-  max-width: 350px;
-}
-
-/* Кнопка "Начать Заезд!" */
-.start-race-button {
-  padding: 14px 35px;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #ffffff;
-  background: linear-gradient(145deg, #4caf50, #66bb6a);
-  border: none;
-  border-radius: 20px;
-  cursor: pointer;
-  min-width: 180px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.5);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.start-race-button.countdown {
-  background: linear-gradient(145deg, #ff9800, #ffb74d);
-  box-shadow: 0 8px 25px rgba(255, 152, 0, 0.5);
-  font-size: 2rem;
-  animation: countdownButtonPulse 0.8s ease-in-out;
-}
-
-.start-race-button.racing {
-  background: linear-gradient(145deg, #2196f3, #42a5f5);
-  box-shadow: 0 8px 25px rgba(33, 150, 243, 0.5);
-  animation: racingButtonPulse 1s ease-in-out infinite alternate;
-}
-
-/* ⛽ Стили для отключенной кнопки при пустом топливе */
-.start-race-button.disabled {
-  background: linear-gradient(145deg, #666, #888) !important;
-  color: #aaa !important;
-  cursor: not-allowed !important;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
-  transform: none !important;
-  opacity: 0.6;
-}
-
-.start-race-button.disabled:hover {
-  background: linear-gradient(145deg, #666, #888) !important;
-  transform: none !important;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
-}
-
-@keyframes countdownButtonPulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
-}
-
-@keyframes racingButtonPulse {
-  0% { box-shadow: 0 8px 25px rgba(33, 150, 243, 0.4); }
-  100% { box-shadow: 0 8px 35px rgba(33, 150, 243, 0.8); }
-}
-
-.start-race-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: left 0.6s;
-}
-
-.start-race-button:hover:not(:disabled)::before {
-  left: 100%;
-}
-
-.start-race-button:hover:not(:disabled) {
-  background: linear-gradient(145deg, #66bb6a, #81c784);
-  transform: translateY(-3px);
-  box-shadow: 0 12px 35px rgba(76, 175, 80, 0.7);
-}
-
-.start-race-button:active:not(:disabled) {
-  transform: translateY(-1px);
-}
-
-.start-race-button:disabled {
-  background: linear-gradient(145deg, #666, #888);
-  color: #aaa;
-  cursor: not-allowed;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  transform: none;
-}
-
-/* Блок результата гонки */
-.race-result {
-  padding: 18px;
-  border-radius: 15px;
-  background: linear-gradient(145deg, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.7));
-  backdrop-filter: blur(20px);
-  border: 2px solid;
-  width: 100%;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-  animation: resultAppear 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes resultAppear {
-  0% {
-    opacity: 0;
-    transform: translateY(20px) scale(0.9);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.race-result.win {
-  border-color: #4caf50;
-  box-shadow: 0 0 30px rgba(76, 175, 80, 0.5);
-}
-
-.race-result.win h3 {
-  color: #81c784;
-  margin: 0 0 10px 0;
-  font-size: 1.4rem;
-  font-weight: 800;
-  text-shadow: 0 0 20px rgba(129, 199, 132, 0.7);
-}
-
-.race-result.lose {
-  border-color: #f44336;
-  box-shadow: 0 0 30px rgba(244, 67, 54, 0.5);
-}
-
-.race-result.lose h3 {
-  color: #e57373;
-  margin: 0 0 10px 0;
-  font-size: 1.4rem;
-  font-weight: 800;
-  text-shadow: 0 0 20px rgba(229, 115, 115, 0.7);
-}
-
-.race-result.error {
-  border-color: #ff9800;
-  box-shadow: 0 0 30px rgba(255, 152, 0, 0.5);
-}
-
-.race-result.error h3 {
-  color: #ffb74d;
-  margin: 0 0 10px 0;
-  font-size: 1.4rem;
-  font-weight: 800;
-  text-shadow: 0 0 20px rgba(255, 183, 77, 0.7);
-}
-
-.race-result p {
-  margin: 0 0 10px 0;
-  color: #ffffff;
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1.4;
-}
-
-.race-tip {
-  margin-top: 10px;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
-  font-size: 0.9rem;
-  color: #ffd93d;
-  border-left: 3px solid #ffd93d;
-}
-
-/* --- Адаптация для маленьких экранов --- */
+/* === АДАПТИВНОСТЬ === */
 @media (max-width: 480px) {
   .race-screen__content {
     padding: 10px;
@@ -1079,7 +1135,6 @@ body {
     font-size: 1.5rem;
   }
   
-  /* ⛽ Адаптивность топливной системы */
   .fuel-indicator {
     padding: 10px 14px;
     margin: 10px 0;
@@ -1107,6 +1162,30 @@ body {
     font-size: 13px;
   }
   
+  .participants-info {
+    padding: 12px 8px;
+    max-width: 320px;
+  }
+  
+  .participant-header {
+    font-size: 0.7rem;
+  }
+  
+  .car-image-container {
+    width: 70px;
+    height: 45px;
+  }
+  
+  .car-name,
+  .opponent-name {
+    font-size: 0.75rem;
+  }
+  
+  .vs-divider {
+    font-size: 1.2rem;
+    margin: 0 10px;
+  }
+  
   .fuel-modal {
     width: 95vw;
     padding: 24px;
@@ -1132,22 +1211,6 @@ body {
     width: 100%;
     padding: 14px;
     font-size: 15px;
-  }
-  
-  .participants-info {
-    padding: 12px 8px;
-  }
-  
-  .participant-header {
-    font-size: 0.75rem;
-  }
-  
-  .car-info {
-    font-size: 0.8rem;
-  }
-  
-  .car-stats {
-    font-size: 0.7rem;
   }
   
   .difficulty-selector button {
@@ -1201,7 +1264,6 @@ body {
   }
 }
 
-/* Дополнительные улучшения для очень маленьких экранов */
 @media (max-width: 320px) {
   .race-screen__content {
     padding: 8px;
@@ -1214,7 +1276,6 @@ body {
     font-size: 1.4rem;
   }
   
-  /* ⛽ Очень маленькие экраны - топливо */
   .fuel-indicator {
     padding: 8px 12px;
     margin: 8px 0;
@@ -1242,6 +1303,30 @@ body {
     font-size: 12px;
   }
   
+  .participants-info {
+    padding: 10px 6px;
+    max-width: 280px;
+  }
+  
+  .participant-header {
+    font-size: 0.65rem;
+  }
+  
+  .car-image-container {
+    width: 60px;
+    height: 40px;
+  }
+  
+  .car-name,
+  .opponent-name {
+    font-size: 0.7rem;
+  }
+  
+  .vs-divider {
+    font-size: 1rem;
+    margin: 0 8px;
+  }
+  
   .fuel-modal {
     width: 98vw;
     padding: 20px;
@@ -1262,10 +1347,6 @@ body {
   .fuel-modal-button {
     padding: 12px;
     font-size: 14px;
-  }
-  
-  .participants-info {
-    padding: 10px 6px;
   }
   
   .difficulty-selector button {
@@ -1298,12 +1379,11 @@ body {
   }
 }
 
-/* Дополнительные анимации для машинок */
+/* === ДОПОЛНИТЕЛЬНЫЕ ЭФФЕКТЫ === */
 .race-car:hover {
   filter: drop-shadow(0 6px 20px rgba(255, 255, 255, 0.4));
 }
 
-/* Анимация победителя */
 .race-car.winner {
   animation: winnerBounce 0.5s ease-in-out 3;
 }
@@ -1313,9 +1393,10 @@ body {
   50% { transform: translateY(-10px); }
 }
 
-/* ⛽ Дополнительные эффекты для топливной системы */
+.fuel-tank.restoring {
+  animation: fuelRestore 0.8s ease-in-out;
+}
 
-/* Анимация восстановления топлива */
 @keyframes fuelRestore {
   0% { 
     transform: scale(1);
@@ -1331,11 +1412,6 @@ body {
   }
 }
 
-.fuel-tank.restoring {
-  animation: fuelRestore 0.8s ease-in-out;
-}
-
-/* Эффект мигания при критически низком топливе */
 .fuel-indicator.critical {
   animation: criticalFuel 1s ease-in-out infinite;
 }
@@ -1351,44 +1427,7 @@ body {
   }
 }
 
-/* Стили для уведомлений о топливе */
-.fuel-notification {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: linear-gradient(145deg, rgba(255, 107, 107, 0.95), rgba(255, 107, 107, 0.85));
-  color: white;
-  padding: 12px 18px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 14px;
-  z-index: 1001;
-  animation: slideInRight 0.5s ease-out;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-}
-
-@keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.fuel-notification.success {
-  background: linear-gradient(145deg, rgba(76, 175, 80, 0.95), rgba(76, 175, 80, 0.85));
-}
-
-.fuel-notification.warning {
-  background: linear-gradient(145deg, rgba(255, 152, 0, 0.95), rgba(255, 152, 0, 0.85));
-}
-
-/* Улучшенные переходы для всех интерактивных элементов */
+/* === УЛУЧШЕННЫЕ ПЕРЕХОДЫ === */
 * {
   box-sizing: border-box;
 }
@@ -1397,7 +1436,7 @@ button, .fuel-tank, .fuel-modal-button {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Accessibility improvements */
+/* === ACCESSIBILITY === */
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
@@ -1407,20 +1446,17 @@ button, .fuel-tank, .fuel-modal-button {
   
   .fuel-tank.full,
   .fuel-refill-timer,
-  .fuel-empty-message,
-  .time-remaining {
+  .opponent-name,
+  .vs-divider {
     animation: none !important;
   }
 }
 
-/* Высокий контраст для лучшей читаемости */
 @media (prefers-contrast: high) {
-  .fuel-modal {
-    border-width: 3px;
-    border-color: #ffffff;
-  }
-  
-  .fuel-indicator {
+  .fuel-modal,
+  .fuel-indicator,
+  .participants-info,
+  .car-image-container {
     border-width: 3px;
     border-color: #ffffff;
   }

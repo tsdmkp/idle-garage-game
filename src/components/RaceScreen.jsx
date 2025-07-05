@@ -21,6 +21,19 @@ const RaceScreen = ({
     onFuelRefillByAd: typeof onFuelRefillByAd === 'function'
   });
 
+  // Список рандомных имен соперников
+  const opponentNames = [
+    'Дрифт-Кинг', 'Нитро-Нарк', 'Скорость-Демон', 'Турбо-Тайфун', 'Пламя-Дорог',
+    'Асфальт-Ас', 'Резина-Рев', 'Мотор-Маньяк', 'Педаль-Призрак', 'Карбон-Кайф',
+    'Вираж-Воин', 'Старт-Сталкер', 'Финиш-Фантом', 'Трасса-Титан', 'Гонка-Гений',
+    'Шина-Шторм', 'Поршень-Принц', 'Выхлоп-Вампир', 'Руль-Рейдер', 'Спидометр-Сатана'
+  ];
+
+  // Получение рандомного имени соперника
+  const getRandomOpponentName = () => {
+    return opponentNames[Math.floor(Math.random() * opponentNames.length)];
+  };
+
   const [selectedDifficulty, setSelectedDifficulty] = useState('easy');
   const [raceState, setRaceState] = useState('ready');
   const [countdown, setCountdown] = useState(0);
@@ -28,6 +41,9 @@ const RaceScreen = ({
   const [winStreak, setWinStreak] = useState(0);
   const [totalRaces, setTotalRaces] = useState(0);
   const [wins, setWins] = useState(0);
+  
+  // Состояние для имени соперника
+  const [opponentName, setOpponentName] = useState(getRandomOpponentName());
   
   // Система топлива - используем пропсы от App.jsx
   const [fuelCount, setFuelCount] = useState(propsFuelCount || 5);
@@ -43,6 +59,21 @@ const RaceScreen = ({
   // Константы топливной системы
   const MAX_FUEL = 5;
   const FUEL_REFILL_HOUR = 60 * 60 * 1000; // 1 час в миллисекундах
+
+  // Функция для получения изображения машины соперника по сложности
+  const getOpponentCarImage = (difficulty) => {
+    const opponentCars = {
+      easy: '/car_001.png',    // Простая машина для легкого уровня
+      medium: '/car_003.png',  // Средняя машина для среднего уровня  
+      hard: '/car_005.png'     // Мощная машина для сложного уровня
+    };
+    return opponentCars[difficulty] || '/car_001.png';
+  };
+
+  // Обновление имени соперника при смене сложности
+  useEffect(() => {
+    setOpponentName(getRandomOpponentName());
+  }, [selectedDifficulty]);
 
   // Синхронизация с пропсами от App.jsx
   useEffect(() => {
@@ -92,9 +123,6 @@ const RaceScreen = ({
             if (window.Adsgram && typeof window.Adsgram.init === 'function') {
               console.log('🚀 Инициализируем Adsgram...');
               
-              const isProduction = window.location.hostname !== 'localhost' && 
-                                 !window.location.hostname.includes('vercel.app');
-              
               const debugMode = false;
               console.log('🔧 Debug mode:', debugMode);
               
@@ -106,7 +134,6 @@ const RaceScreen = ({
               
               window.adsgramController = adsgramController;
               
-              // Добавляем обработчики событий
               if (adsgramController && typeof adsgramController.addEventListener === 'function') {
                 adsgramController.addEventListener('onReward', () => {
                   console.log('🎁 Adsgram onReward event');
@@ -159,7 +186,6 @@ const RaceScreen = ({
       setLastRaceTime(newLastRaceTime);
       setFuelRefillTime(null);
       
-      // Уведомляем App.jsx об обновлении
       if (onFuelUpdate) {
         onFuelUpdate(newFuelCount, newLastRaceTime, null);
       }
@@ -183,7 +209,6 @@ const RaceScreen = ({
       refillTime: newRefillTime ? new Date(newRefillTime).toLocaleString() : 'нет'
     });
     
-    // Уведомляем App.jsx об обновлении
     if (onFuelUpdate) {
       onFuelUpdate(newFuelCount, newLastRaceTime, newRefillTime);
     }
@@ -216,7 +241,6 @@ const RaceScreen = ({
     try {
       if (!window.adsgramController) {
         console.warn('❌ AdController не найден, используем мок');
-        // Fallback на моковую рекламу
         showMockAd();
         return;
       }
@@ -227,13 +251,11 @@ const RaceScreen = ({
       
       console.log('✅ Adsgram реклама успешно просмотрена!', result);
       
-      // Восстанавливаем топливо
       handleFuelRestore();
       
     } catch (error) {
       console.log('⏭️ Adsgram реклама была пропущена или ошибка:', error);
       
-      // Fallback на моковую рекламу
       showMockAd();
     } finally {
       setIsAdLoading(false);
@@ -271,34 +293,17 @@ const RaceScreen = ({
     setLastRaceTime(newLastRaceTime);
     setFuelRefillTime(null);
     
-    // Уведомляем App.jsx
     if (onFuelRefillByAd) {
       onFuelRefillByAd();
     }
     
-    // Закрываем модалку
     setShowFuelModal(false);
     
-    // Уведомление пользователю
     alert('⛽ Топливный бак заправлен!\nМожете продолжать гонки!');
     
-    // Тактильная обратная связь
     if (window.Telegram?.WebApp?.HapticFeedback) {
       window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
     }
-  };
-
-  // Проверка топлива перед гонкой
-  const checkFuelBeforeRace = () => {
-    console.log('⛽ Проверка топлива перед гонкой. Текущий уровень:', fuelCount);
-    
-    if (fuelCount <= 0) {
-      console.log('⛽ Топливо закончилось, показываем модалку');
-      setShowFuelModal(true);
-      return false;
-    }
-    
-    return true;
   };
 
   // Расход топлива после гонки
@@ -311,14 +316,12 @@ const RaceScreen = ({
     
     console.log(`⛽ Потрачено топливо. Было: ${fuelCount}, стало: ${newFuelCount}`);
     
-    // Если топливо закончилось, устанавливаем время восстановления
     if (newFuelCount <= 0) {
       console.log('🚨 ТОПЛИВО ЗАКОНЧИЛОСЬ! Устанавливаем время восстановления');
       const refillTime = now + FUEL_REFILL_HOUR;
       setFuelRefillTime(refillTime);
       saveFuelData(newFuelCount, now, refillTime);
       
-      // ПОКАЗЫВАЕМ МОДАЛКУ СРАЗУ ПОСЛЕ ЗАВЕРШЕНИЯ ГОНКИ
       setTimeout(() => {
         console.log('⛽ Показываем модалку через 2 секунды после завершения гонки');
         setShowFuelModal(true);
@@ -332,20 +335,17 @@ const RaceScreen = ({
     easy: { 
       name: 'Легкий', 
       reward: '+50 GC', 
-      penalty: '-5%',
-      description: 'Новичок' 
+      penalty: '-5%'
     },
     medium: { 
       name: 'Средний', 
       reward: '+150 GC', 
-      penalty: '-10%',
-      description: 'Опытный' 
+      penalty: '-10%'
     },
     hard: { 
       name: 'Сложный', 
       reward: '+300 GC', 
-      penalty: '-15%',
-      description: 'Профи' 
+      penalty: '-15%'
     }
   };
 
@@ -353,7 +353,6 @@ const RaceScreen = ({
     console.log('🚀 Попытка начать обратный отсчет...');
     console.log('⛽ Проверяем топливо перед стартом. Уровень:', fuelCount);
     
-    // Проверяем топливо перед стартом
     if (fuelCount <= 0) {
       console.log('❌ Топливо закончилось! Показываем модалку');
       setShowFuelModal(true);
@@ -363,6 +362,9 @@ const RaceScreen = ({
     console.log('✅ Топливо есть, начинаем гонку');
     setRaceState('countdown');
     setCountdown(3);
+    
+    // Генерируем нового соперника перед стартом
+    setOpponentName(getRandomOpponentName());
     
     const countdownInterval = setInterval(() => {
       setCountdown(prev => {
@@ -401,7 +403,6 @@ const RaceScreen = ({
       
       setRaceState('finished');
       
-      // Тратим топливо после завершения гонки
       consumeFuel();
       
       // Возвращаем машины на старт
@@ -446,11 +447,11 @@ const RaceScreen = ({
 
   const timeUntilRefill = getTimeUntilRefill();
 
-  // Отладочная информация (минимальная)
   console.log('🔍 RaceScreen состояние:', {
     fuelCount,
     showFuelModal,
-    canStartRace
+    canStartRace,
+    opponentName
   });
 
   return (
@@ -460,13 +461,10 @@ const RaceScreen = ({
         <div className="race-header">
           <h2>🏁 Гонки</h2>
           
-          {/* УПРОЩЕННЫЙ индикатор топлива - ЭТАП 1 */}
+          {/* УПРОЩЕННЫЙ индикатор топлива */}
           <div className={`fuel-indicator ${fuelCount <= 0 ? 'empty' : ''}`}>
             <div className="fuel-bar">
-              {/* Иконка топлива вместо слова */}
               <div className="fuel-icon">⛽</div>
-              
-              {/* Только шарики топлива */}
               <div className="fuel-tanks">
                 {[...Array(MAX_FUEL)].map((_, i) => (
                   <div 
@@ -479,14 +477,12 @@ const RaceScreen = ({
               </div>
             </div>
             
-            {/* Таймер - показываем ТОЛЬКО при пустом топливе */}
             {fuelCount <= 0 && timeUntilRefill && (
               <div className="fuel-refill-timer">
                 ⏰ Восстановление через: {timeUntilRefill}
               </div>
             )}
             
-            {/* НОВАЯ кнопка ускорения заправки - показываем при пустом топливе */}
             {fuelCount <= 0 && (
               <button 
                 className="fuel-accelerate-button"
@@ -505,15 +501,19 @@ const RaceScreen = ({
           </div>
         </div>
 
+        {/* НОВЫЙ БЛОК УЧАСТНИКОВ */}
         <div className="participants-info">
           <div className="participant">
             <div className="participant-header">Ваша машина</div>
-            <div className="car-info">
-              <div className="car-name">{playerCar?.name}</div>
-              <div className="car-stats">
-                ⚡{playerCar?.stats?.power} 🏎️{playerCar?.stats?.speed}<br/>
-                ✨{playerCar?.stats?.style} 🔧{playerCar?.stats?.reliability}
+            <div className="car-display">
+              <div className="car-image-container">
+                <img 
+                  src={playerCar?.imageUrl || '/car_001.png'} 
+                  alt={playerCar?.name || 'Ваша машина'}
+                  className="car-image"
+                />
               </div>
+              <div className="car-name">{playerCar?.name || 'Копейка'}</div>
             </div>
           </div>
           
@@ -521,12 +521,15 @@ const RaceScreen = ({
           
           <div className="participant">
             <div className="participant-header">Соперник</div>
-            <div className="car-info">
-              <div className="car-name">Противник</div>
-              <div className="car-stats">
-                {difficulties[selectedDifficulty].description}<br/>
-                {difficulties[selectedDifficulty].name}
+            <div className="car-display">
+              <div className="car-image-container opponent-car-container">
+                <img 
+                  src={getOpponentCarImage(selectedDifficulty)} 
+                  alt="Машина соперника"
+                  className="car-image"
+                />
               </div>
+              <div className="opponent-name">{opponentName}</div>
             </div>
           </div>
         </div>
@@ -571,7 +574,7 @@ const RaceScreen = ({
             </div>
             
             <div className="race-car opponent-car" ref={opponentCarRef}>
-              <img src="/placeholder-car-2.png" alt="Opponent car" />
+              <img src={getOpponentCarImage(selectedDifficulty)} alt="Opponent car" />
             </div>
             
             <div className="finish-line"></div>
@@ -611,7 +614,7 @@ const RaceScreen = ({
         </div>
       </div>
 
-      {/* Модалка топлива - ОБНОВЛЕННАЯ с возможностью всегда посмотреть рекламу */}
+      {/* Модалка топлива */}
       {showFuelModal && (
         <div className="fuel-modal-overlay">
           <div className="fuel-modal">
