@@ -1,6 +1,6 @@
-// hooks/useGameState.js - Управление состоянием игры с useFuelSystem
+// hooks/useGameState.js - Управление состоянием игры с useFuelSystem и аватаркой
 import { useState, useRef, useCallback } from 'react';
-import { useFuelSystem } from './useFuelSystem'; // ✅ НОВЫЙ ИМПОРТ
+import { useFuelSystem } from './useFuelSystem';
 import {
   recalculateStatsAndIncomeBonus,
   calculateTotalIncomeRate,
@@ -24,6 +24,7 @@ export const useGameState = (getUserId) => {
   // ПРОВЕРКА 1: Основные состояния игрока - точно как раньше
   const [playerLevel, setPlayerLevel] = useState(1);
   const [playerName, setPlayerName] = useState('Игрок');
+  const [playerPhoto, setPlayerPhoto] = useState(null); // ✅ НОВОЕ: аватарка пользователя
   const [gameCoins, setGameCoins] = useState(STARTING_COINS);
   const [jetCoins, setJetCoins] = useState(0);
   const [currentXp, setCurrentXp] = useState(10);
@@ -42,11 +43,6 @@ export const useGameState = (getUserId) => {
   const [isTutorialActive, setIsTutorialActive] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
   const [hasCompletedTutorial, setHasCompletedTutorial] = useState(false);
-
-  // ❌ УБИРАЕМ топливные состояния - теперь они в useFuelSystem
-  // const [fuelCount, setFuelCount] = useState(5);
-  // const [lastRaceTime, setLastRaceTime] = useState(null);
-  // const [fuelRefillTime, setFuelRefillTime] = useState(null);
 
   // ПРОВЕРКА 1: Refs - точно как раньше
   const saveTimeoutRef = useRef(null);
@@ -77,7 +73,39 @@ export const useGameState = (getUserId) => {
   // ✅ ИСПОЛЬЗУЕМ useFuelSystem хук - передаем функцию сохранения
   const fuelSystem = useFuelSystem(debouncedSave);
 
-  // ПРОВЕРКА 2: Основная функция сохранения - КРИТИЧЕСКИ ВАЖНО, обновлена для работы с топливным хуком
+  // 🔥 НОВАЯ ФУНКЦИЯ: Загрузка данных пользователя из Telegram
+  const loadTelegramUserData = useCallback(() => {
+    try {
+      const telegramUserData = window.Telegram?.WebApp?.initDataUnsafe?.user;
+      
+      if (telegramUserData) {
+        console.log('👤 Данные пользователя Telegram:', telegramUserData);
+        
+        // ✅ Устанавливаем аватарку если есть
+        if (telegramUserData.photo_url) {
+          setPlayerPhoto(telegramUserData.photo_url);
+          console.log('📸 Аватарка пользователя загружена:', telegramUserData.photo_url);
+        }
+        
+        // ✅ Можем также обновить имя пользователя если оно дефолтное
+        if (telegramUserData.first_name && (!playerName || playerName === 'Игрок')) {
+          const newName = telegramUserData.first_name;
+          setPlayerName(newName);
+          console.log('👤 Имя пользователя обновлено из Telegram:', newName);
+        }
+        
+        return telegramUserData;
+      } else {
+        console.log('⚠️ Данные пользователя Telegram не доступны');
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ Ошибка загрузки данных Telegram:', error);
+      return null;
+    }
+  }, [playerName]);
+
+  // ПРОВЕРКА 2: Основная функция сохранения - КРИТИЧЕСКИ ВАЖНО, обновлена для работы с топливным хуком и аватаркой
   const saveGameState = useCallback(async (updates = {}) => {
     const userId = getUserId();
     if (!userId) {
@@ -85,11 +113,12 @@ export const useGameState = (getUserId) => {
       return;
     }
 
-    // ПРОВЕРКА 3: Структура stateToSave - ОБНОВЛЕНА для использования топливного хука
+    // ПРОВЕРКА 3: Структура stateToSave - ОБНОВЛЕНА для использования топливного хука и аватарки
     const stateToSave = {
       userId: userId,
       player_level: playerLevel,
       first_name: playerName,
+      player_photo: playerPhoto, // ✅ НОВОЕ: сохраняем аватарку
       game_coins: gameCoins,
       jet_coins: jetCoins,
       current_xp: currentXp,
@@ -124,8 +153,8 @@ export const useGameState = (getUserId) => {
       console.error('❌ Ошибка сохранения:', err.message);
     }
   }, [
-    // ПРОВЕРКА 3: Массив зависимостей - ОБНОВЛЕН для работы с топливным хуком
-    playerLevel, playerName, gameCoins, jetCoins, currentXp, xpToNextLevel,
+    // ПРОВЕРКА 3: Массив зависимостей - ОБНОВЛЕН для работы с топливным хуком и аватаркой
+    playerLevel, playerName, playerPhoto, gameCoins, jetCoins, currentXp, xpToNextLevel,
     incomeRatePerHour, buildings, playerCars, selectedCarId, hiredStaff, 
     hasCompletedTutorial, 
     fuelSystem.fuelCount, fuelSystem.lastRaceTime, fuelSystem.fuelRefillTime, // ✅ Топливные зависимости из хука
@@ -142,23 +171,41 @@ export const useGameState = (getUserId) => {
     return isNaN(timestamp) ? null : timestamp;
   };
 
-  // ❌ УБИРАЕМ checkAndRestoreFuel - теперь в useFuelSystem
-
-  // ПРОВЕРКА 2: Функция загрузки данных игры - ОБНОВЛЕНА для работы с топливным хуком
+  // ПРОВЕРКА 2: Функция загрузки данных игры - ОБНОВЛЕНА для работы с топливным хуком и аватаркой
   const loadGameData = useCallback(async (userId) => {
     console.log('📥 Начинаем загрузку данных для userId:', userId);
+    
+    // 🔥 НОВОЕ: Загружаем данные пользователя из Telegram
+    const telegramUserData = loadTelegramUserData();
     
     try {
       const initialState = await apiClient('/game_state', 'GET', { params: { userId } });
       console.log('📦 Получено состояние с бэкенда:', initialState);
 
       if (initialState && typeof initialState === 'object') {
-        // ПРОВЕРКА 3: Установка основных данных игрока - без изменений
+        // ПРОВЕРКА 3: Установка основных данных игрока - ОБНОВЛЕНА для аватарки
         setPlayerLevel(Number(initialState.player_level) || 1);
         
-        if (initialState.first_name) {
-          setPlayerName(initialState.first_name);
+        // ✅ НОВОЕ: Приоритет Telegram данным, потом БД, потом дефолт
+        let finalName = playerName;
+        let finalPhoto = playerPhoto;
+        
+        if (telegramUserData?.first_name) {
+          finalName = telegramUserData.first_name;
+        } else if (initialState.first_name) {
+          finalName = initialState.first_name;
         }
+        
+        if (telegramUserData?.photo_url) {
+          finalPhoto = telegramUserData.photo_url;
+        } else if (initialState.player_photo) {
+          finalPhoto = initialState.player_photo;
+        }
+        
+        setPlayerName(finalName);
+        setPlayerPhoto(finalPhoto);
+        
+        console.log('👤 Финальные данные пользователя:', { name: finalName, photo: finalPhoto });
         
         const coinsToSet = Number(initialState.game_coins) || STARTING_COINS;
         setGameCoins(coinsToSet);
@@ -247,6 +294,16 @@ export const useGameState = (getUserId) => {
         }
         setAccumulatedIncome(Math.max(offlineIncome, 0));
         
+        // 🔥 НОВОЕ: Сохраняем данные Telegram если они есть
+        if (telegramUserData && (telegramUserData.photo_url || telegramUserData.first_name)) {
+          setTimeout(() => {
+            saveGameState({ 
+              player_photo: finalPhoto,
+              first_name: finalName 
+            });
+          }, 2000);
+        }
+        
         return { success: true };
         
       } else {
@@ -257,7 +314,7 @@ export const useGameState = (getUserId) => {
       console.error('❌ Ошибка загрузки данных:', err.message);
       return { success: false, error: `Ошибка загрузки: ${err.message}` };
     }
-  }, [fuelSystem, debouncedSave]); // ✅ Добавили fuelSystem в зависимости
+  }, [fuelSystem, debouncedSave, loadTelegramUserData, playerName, playerPhoto, saveGameState]);
 
   // ПРОВЕРКА 2: Cleanup функция - без изменений
   const cleanup = useCallback(() => {
@@ -276,11 +333,12 @@ export const useGameState = (getUserId) => {
     }
   }, [getUserId]);
 
-  // ПРОВЕРКА 1: Возвращаемый объект - ОБНОВЛЕН для работы с топливным хуком
+  // ПРОВЕРКА 1: Возвращаемый объект - ОБНОВЛЕН для работы с топливным хуком и аватаркой
   return {
     // Состояния игрока
     playerLevel, setPlayerLevel,
     playerName, setPlayerName,
+    playerPhoto, setPlayerPhoto, // ✅ НОВОЕ: аватарка
     gameCoins, setGameCoins,
     jetCoins, setJetCoins,
     currentXp, setCurrentXp,
@@ -307,6 +365,7 @@ export const useGameState = (getUserId) => {
     // Функции
     saveGameState,
     loadGameData,
+    loadTelegramUserData, // ✅ НОВОЕ: загрузка данных Telegram
     parseTimestamp,
     cleanup
   };

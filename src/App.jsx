@@ -290,6 +290,7 @@ function App() {
         <Header
           level={gameState.playerLevel}
           playerName={gameState.playerName}
+          playerPhoto={gameState.playerPhoto} // ✅ ДОБАВИТЬ ЭТУ СТРОКУ!
           gameCoins={gameState.gameCoins}
           jetCoins={gameState.jetCoins}
           xpPercentage={xpPercentage}

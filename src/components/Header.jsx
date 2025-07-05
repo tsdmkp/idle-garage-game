@@ -1,9 +1,78 @@
 import React, { useState } from 'react';
 import './Header.css';
 
+// 🔥 НОВЫЙ КОМПОНЕНТ: Аватарка пользователя
+const UserAvatar = ({ photoUrl, playerName, size = 40 }) => {
+  const [imageError, setImageError] = useState(false);
+  
+  // Если есть фото и нет ошибки загрузки
+  if (photoUrl && !imageError) {
+    return (
+      <div 
+        className="user-avatar"
+        style={{
+          width: size,
+          height: size,
+          borderRadius: '50%',
+          overflow: 'hidden',
+          border: '2px solid #3b82f6',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+          boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
+          flexShrink: 0
+        }}
+      >
+        <img
+          src={photoUrl}
+          alt={`Аватар ${playerName}`}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover'
+          }}
+          onError={() => {
+            console.log('❌ Ошибка загрузки аватарки, показываем fallback');
+            setImageError(true);
+          }}
+        />
+      </div>
+    );
+  }
+  
+  // Fallback - первая буква имени
+  const firstLetter = playerName ? playerName.charAt(0).toUpperCase() : '?';
+  
+  return (
+    <div 
+      className="user-avatar user-avatar-fallback"
+      style={{
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        border: '2px solid #3b82f6',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+        color: 'white',
+        fontSize: size * 0.4,
+        fontWeight: 'bold',
+        fontFamily: 'Arial, sans-serif',
+        boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
+        flexShrink: 0
+      }}
+    >
+      {firstLetter}
+    </div>
+  );
+};
+
 const Header = ({ 
   level, 
   playerName, 
+  playerPhoto, // ✅ НОВЫЙ ПРОП: аватарка пользователя
   gameCoins, 
   jetCoins, 
   xpPercentage, 
@@ -24,23 +93,36 @@ const Header = ({
     return number.toString();
   };
 
-  console.log('Header rendering with playerName:', playerName);
+  console.log('Header rendering with playerName:', playerName, 'playerPhoto:', playerPhoto);
 
   return (
     <div className="header">
       <div className="player-info">
-        <div className="player-level">Lv.{level}</div>
-        <div 
-          className="player-name" 
-          onClick={onChangeName}
-          title="Нажмите, чтобы изменить имя"
-        >
-          {playerName || 'DefaultPlayer'}
+        {/* ✅ ЗАМЕНИЛИ уровень на аватарку */}
+        <UserAvatar 
+          photoUrl={playerPhoto} 
+          playerName={playerName} 
+          size={42} 
+        />
+        
+        <div className="player-details">
+          <div 
+            className="player-name" 
+            onClick={onChangeName}
+            title="Нажмите, чтобы изменить имя"
+          >
+            {playerName || 'DefaultPlayer'}
+          </div>
+          {/* ✅ Уровень теперь под именем */}
+          <div className="player-level-text">Уровень {level}</div>
         </div>
+        
+        {/* XP бар остается */}
         <div className="xp-bar-container">
           <div className="xp-bar-fill" style={{ width: `${xpPercentage}%` }}></div>
         </div>
       </div>
+      
       <div className="resources">
         <div className="resource-item game-coins">
           <span>💰</span>
@@ -51,6 +133,7 @@ const Header = ({
           <span>{formatNumber(jetCoins)}</span>
         </div>
       </div>
+      
       <div className="header-actions">
         <div 
           className="header-icon" 

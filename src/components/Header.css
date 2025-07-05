@@ -1,4 +1,4 @@
-/* src/components/Header.css - Полная версия с исправлениями */
+/* src/components/Header.css - Полная версия с аватаркой */
 
 .header {
   display: flex;
@@ -13,40 +13,77 @@
   gap: 10px;
 }
 
-/* Информация об игроке - компактная */
+/* ✅ ОБНОВЛЕННАЯ информация об игроке с аватаркой */
 .player-info {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   flex: 0 1 auto;
   min-width: 0;
 }
 
-.player-level {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: white;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 0.85em;
-  white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+/* ✅ НОВОЕ: Контейнер для текстовых данных игрока */
+.player-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
 }
 
+/* ✅ ОБНОВЛЕНО: Стили для имени игрока */
 .player-name {
   color: #e2e8f0;
-  font-weight: 500;
-  font-size: 0.9em;
+  font-weight: 600;
+  font-size: 1em;
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100px;
+  max-width: 120px;
   transition: color 0.2s ease;
+  line-height: 1.2;
 }
 
 .player-name:hover {
   color: #f8fafc;
+  text-shadow: 0 1px 3px rgba(255, 255, 255, 0.3);
+}
+
+/* ✅ НОВОЕ: Текст уровня под именем */
+.player-level-text {
+  color: #94a3b8;
+  font-weight: 500;
+  font-size: 0.75em;
+  line-height: 1;
+}
+
+/* ✅ УБРАНО: старый .player-level - теперь не нужен */
+
+/* ✅ НОВОЕ: Стили для аватарки */
+.user-avatar {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.user-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.5) !important;
+}
+
+.user-avatar-fallback {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  animation: subtle-glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes subtle-glow {
+  0% {
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  }
+  100% {
+    box-shadow: 0 2px 15px rgba(59, 130, 246, 0.6);
+  }
 }
 
 /* XP бар - скрыт на мобильных для экономии места */
@@ -57,6 +94,7 @@
   border-radius: 2px;
   overflow: hidden;
   display: none; /* Скрываем по умолчанию */
+  flex-shrink: 0;
 }
 
 @media (min-width: 480px) {
@@ -193,7 +231,7 @@
   text-align: center;
 }
 
-/* Адаптивность для маленьких экранов */
+/* ✅ ОБНОВЛЕННАЯ адаптивность для маленьких экранов */
 @media (max-width: 350px) {
   .header {
     padding: 8px 10px;
@@ -201,17 +239,26 @@
   }
   
   .player-info {
-    gap: 5px;
-  }
-  
-  .player-level {
-    padding: 3px 8px;
-    font-size: 0.8em;
+    gap: 8px;
   }
   
   .player-name {
-    font-size: 0.85em;
+    font-size: 0.9em;
     max-width: 80px;
+  }
+  
+  .player-level-text {
+    font-size: 0.7em;
+  }
+  
+  /* ✅ Уменьшаем аватарку на очень маленьких экранах */
+  .user-avatar {
+    width: 36px !important;
+    height: 36px !important;
+  }
+  
+  .user-avatar .user-avatar-fallback {
+    font-size: 14px !important;
   }
   
   .resources {
@@ -226,5 +273,33 @@
     width: 28px;
     height: 28px;
     font-size: 1.1em;
+  }
+}
+
+/* ✅ НОВОЕ: Дополнительные стили для планшетов */
+@media (min-width: 768px) {
+  .header {
+    padding: 12px 20px;
+  }
+  
+  .player-info {
+    gap: 15px;
+  }
+  
+  .player-name {
+    font-size: 1.1em;
+    max-width: 200px;
+  }
+  
+  .player-level-text {
+    font-size: 0.8em;
+  }
+  
+  .resources {
+    gap: 20px;
+  }
+  
+  .resource-item {
+    font-size: 1em;
   }
 }
