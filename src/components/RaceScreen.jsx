@@ -305,4 +305,341 @@ const RaceScreen = ({
     alert('⛽ Топливный бак заправлен!\nМожете продолжать гонки!');
     
     if (window.Telegram?.WebApp?.HapticFeedback) {
-      window.Telegram.WebApp.HapticFeedback.no
+      window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    }
+  };
+
+  // Расход топлива после гонки
+  const consumeFuel = () => {
+    const now = Date.now();
+    const newFuelCount = fuelCount - 1;
+    
+    setFuelCount(newFuelCount);
+    setLastRaceTime(now);
+    
+    console.log(`⛽ Потрачено топливо. Было: ${fuelCount}, стало: ${newFuelCount}`);
+    
+    if (newFuelCount <= 0) {
+      console.log('🚨 ТОПЛИВО ЗАКОНЧИЛОСЬ! Устанавливаем время восстановления');
+      const refillTime = now + FUEL_REFILL_HOUR;
+      setFuelRefillTime(refillTime);
+      saveFuelData(newFuelCount, now, refillTime);
+    } else {
+      saveFuelData(newFuelCount, now);
+    }
+  };
+
+  const difficulties = {
+    easy: { 
+      name: 'Легкий', 
+      reward: '+50 GC', 
+      penalty: '-5%'
+    },
+    medium: { 
+      name: 'Средний', 
+      reward: '+150 GC', 
+      penalty: '-10%'
+    },
+    hard: { 
+      name: 'Сложный', 
+      reward: '+300 GC', 
+      penalty: '-15%'
+    }
+  };
+
+  const startCountdown = () => {
+    console.log('🚀 Попытка начать обратный отсчет...');
+    console.log('⛽ Проверяем топливо перед стартом. Уровень:', fuelCount);
+    
+    if (fuelCount <= 0) {
+      console.log('❌ Топливо закончилось! Нужно заправиться');
+      return;
+    }
+    
+    console.log('✅ Топливо есть, начинаем гонку');
+    setRaceState('countdown');
+    setCountdown(3);
+    
+    setOpponentName(getRandomOpponentName());
+    setOpponentCarImage(getRandomOpponentCar());
+    
+    const countdownInterval = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(countdownInterval);
+          startRaceAnimation();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const startRaceAnimation = () => {
+    console.log('🏎️ Запускаем анимацию гонки...');
+    setRaceState('racing');
+    
+    if (playerCarRef.current && opponentCarRef.current) {
+      playerCarRef.current.classList.add('animate');
+      opponentCarRef.current.classList.add('animate');
+    }
+    
+    setTimeout(async () => {
+      console.log('🏁 Обрабатываем результат гонки...');
+      
+      const result = await onStartRace(selectedDifficulty);
+      setRaceResult(result);
+      setTotalRaces(prev => prev + 1);
+      
+      if (result.result === 'win') {
+        setWins(prev => prev + 1);
+        setWinStreak(prev => prev + 1);
+      } else {
+        setWinStreak(0);
+      }
+      
+      setRaceState('finished');
+      
+      console.log('🎯 Показываем модальное окно результатов. Результат:', result);
+      setShowResultModal(true);
+      
+      setTimeout(() => {
+        console.log('⏰ Автозакрытие модального окна результатов');
+        setShowResultModal(false);
+      }, 4000);
+      
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        if (result.result === 'win') {
+          window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        } else {
+          window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+        }
+      }
+      
+      consumeFuel();
+      
+      setTimeout(() => {
+        if (playerCarRef.current && opponentCarRef.current) {
+          playerCarRef.current.classList.remove('animate');
+          playerCarRef.current.classList.add('returning');
+          opponentCarRef.current.classList.remove('animate');
+          opponentCarRef.current.classList.add('returning');
+        }
+        
+        setTimeout(() => {
+          if (playerCarRef.current && opponentCarRef.current) {
+            playerCarRef.current.classList.remove('returning');
+            opponentCarRef.current.classList.remove('returning');
+          }
+          setRaceState('ready');
+          setRaceResult(null);
+          setShowResultModal(false);
+        }, 2500);
+      }, 3000);
+    }, 2500);
+  };
+
+  const canStartRace = raceState === 'ready' && fuelCount > 0;
+  
+  const buttonText = () => {
+    if (fuelCount <= 0) {
+      return '⛽ Нет топлива';
+    }
+    
+    switch (raceState) {
+      case 'countdown':
+        return countdown.toString();
+      case 'racing':
+        return 'Гонка!';
+      case 'finished':
+        return raceResult?.result === 'win' ? 'Победа!' : 'Поражение!';
+      default:
+        return 'Начать Заезд!';
+    }
+  };
+
+  const timeUntilRefill = getTimeUntilRefill();
+
+  console.log('🔍 RaceScreen состояние:', {
+    fuelCount,
+    showResultModal,
+    canStartRace,
+    opponentName
+  });
+
+  return (
+    <div className="race-screen">
+      <div className="race-screen__content">
+        
+        <div className="race-header">
+          <h2>🏁 Гонки</h2>
+          
+          <div className={`fuel-indicator ${fuelCount <= 0 ? 'empty' : ''}`}>
+            <div className="fuel-bar">
+              <div className="fuel-icon">⛽</div>
+              <div className="fuel-tanks">
+                {[...Array(MAX_FUEL)].map((_, i) => (
+                  <div 
+                    key={i} 
+                    className={`fuel-tank ${i < fuelCount ? 'full' : 'empty'}`}
+                  >
+                    {i < fuelCount ? '🟢' : '⚫'}
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {fuelCount <= 0 && timeUntilRefill && (
+              <div className="fuel-refill-timer">
+                ⏰ Восстановление через: {timeUntilRefill}
+              </div>
+            )}
+            
+            {fuelCount <= 0 && (
+              <button 
+                className="fuel-accelerate-button"
+                onClick={showAdForFuelDirect}
+                disabled={isAdLoading}
+              >
+                {isAdLoading ? '⏳ Загрузка...' : '🚀 Ускорить заправку'}
+              </button>
+            )}
+          </div>
+          
+          {winStreak > 1 && (
+            <div className="win-streak">🔥 Серия побед: {winStreak}</div>
+          )}
+          <div className="race-stats">
+            Побед: {wins}/{totalRaces} ({totalRaces > 0 ? Math.round((wins/totalRaces) * 100) : 0}%)
+          </div>
+        </div>
+
+        <div className="race-participants-info">
+          <div className="race-participant">
+            <div className="race-participant-header">Ваша машина</div>
+            <div className="race-car-display">
+              <div className="race-car-image-container">
+                <img 
+                  src={playerCar?.imageUrl || '/placeholder-car.png'} 
+                  alt={playerCar?.name || 'Ваша машина'}
+                  className="race-car-image"
+                />
+              </div>
+              <div className="race-car-name">{playerCar?.name || 'Копейка'}</div>
+            </div>
+          </div>
+          
+          <div className="race-vs-divider">VS</div>
+          
+          <div className="race-participant">
+            <div className="race-participant-header">Соперник</div>
+            <div className="race-car-display">
+              <div className="race-car-image-container race-opponent-car-container">
+                <img 
+                  src={opponentCarImage} 
+                  alt="Машина соперника"
+                  className="race-car-image"
+                />
+              </div>
+              <div className="race-opponent-name">{opponentName}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="difficulty-selector">
+          <h4>Выберите сложность:</h4>
+          <div className="difficulty-buttons">
+            {Object.entries(difficulties).map(([key, diff]) => (
+              <button
+                key={key}
+                className={`${selectedDifficulty === key ? 'active' : ''}`}
+                onClick={() => setSelectedDifficulty(key)}
+                disabled={!canStartRace}
+              >
+                <div className="difficulty-name">{diff.name}</div>
+                <div className="difficulty-reward">
+                  {diff.reward} / {diff.penalty}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="race-animation-area">
+          <div className="race-track">
+            {raceState === 'countdown' && (
+              <div className="countdown-overlay">
+                <div className="countdown-number">{countdown}</div>
+              </div>
+            )}
+            
+            {raceState === 'racing' && (
+              <div className="speed-lines">
+                {[1,2,3,4,5].map(i => (
+                  <div key={i} className={`speed-line speed-line-${i}`}></div>
+                ))}
+              </div>
+            )}
+            
+            <div className="race-car player-car" ref={playerCarRef}>
+              <img src={playerCar?.imageUrl || '/placeholder-car.png'} alt="Player car" />
+            </div>
+            
+            <div className="race-car opponent-car" ref={opponentCarRef}>
+              <img src={opponentCarImage} alt="Opponent car" />
+            </div>
+            
+            <div className="finish-line"></div>
+          </div>
+        </div>
+
+        <div className="race-controls-area">
+          <button
+            className={`start-race-button ${raceState === 'countdown' ? 'countdown' : ''} ${raceState === 'racing' ? 'racing' : ''} ${!canStartRace ? 'disabled' : ''}`}
+            onClick={startCountdown}
+            disabled={!canStartRace}
+          >
+            {buttonText()}
+          </button>
+        </div>
+      </div>
+
+      {showResultModal && raceResult && (
+        <div className="result-modal-overlay">
+          <div className={`result-modal result-modal-${raceResult.result}`}>
+            <div className="result-modal-header">
+              <div className="result-modal-icon">
+                {raceResult.result === 'win' ? '🏆' : 
+                 raceResult.result === 'lose' ? '💔' : '❌'}
+              </div>
+              <h3>
+                {raceResult.result === 'win' ? 'Победа!' : 
+                 raceResult.result === 'lose' ? 'Поражение!' : 'Ошибка!'}
+              </h3>
+            </div>
+            <div className="result-modal-content">
+              <p>
+                {raceResult.result === 'win' 
+                  ? `Вы выиграли ${raceResult.reward?.coins} монет и ${raceResult.reward?.xp} XP!`
+                  : raceResult.result === 'lose'
+                  ? `Вы потеряли ${Math.abs(raceResult.reward?.coins || 0)} монет. Попробуйте еще раз!`
+                  : 'Произошла ошибка в гонке.'
+                }
+              </p>
+              {raceResult.result === 'lose' && (
+                <div className="result-modal-tip">
+                  💡 Совет: Улучшите свою машину в тюнинге для лучших результатов!
+                </div>
+              )}
+            </div>
+            <div className="result-modal-close" onClick={() => setShowResultModal(false)}>
+              ✕
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default RaceScreen;
