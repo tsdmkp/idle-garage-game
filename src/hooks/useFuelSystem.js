@@ -1,4 +1,4 @@
-// hooks/useFuelSystem.js - Управление топливной системой
+// hooks/useFuelSystem.js - Управление топливной системой (ИСПРАВЛЕНО!)
 import { useState, useCallback } from 'react';
 
 export const useFuelSystem = (saveGameState) => {
@@ -14,15 +14,36 @@ export const useFuelSystem = (saveGameState) => {
     return isNaN(timestamp) ? null : timestamp;
   }, []);
 
-  // ПРОВЕРКА 2: Функция проверки и восстановления топлива - КРИТИЧЕСКИ ВАЖНО, точно как в useGameState.js
+  // 🔥 ИСПРАВЛЕНИЕ: Функция проверки и восстановления топлива - КРИТИЧЕСКИ ВАЖНО!
   const checkAndRestoreFuel = useCallback((currentFuel, lastRace, refillTime) => {
+    console.log('🔍 Проверка топлива:', {
+      currentFuel,
+      lastRace: lastRace ? new Date(lastRace).toLocaleString() : 'нет',
+      refillTime: refillTime ? new Date(refillTime).toLocaleString() : 'нет'
+    });
+
+    // ✅ ВАЖНО: Если топливо полное - не трогаем
     if (currentFuel >= 5) return { fuel: currentFuel, shouldUpdate: false };
     
     const now = Date.now();
-    const timeToCheck = refillTime || (lastRace ? lastRace + (60 * 60 * 1000) : null);
     
+    // 🔥 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Правильная логика восстановления
+    let timeToCheck = null;
+    
+    // Если есть время заправки - используем его
+    if (refillTime) {
+      timeToCheck = refillTime;
+    } 
+    // Если нет времени заправки, но есть последняя гонка - считаем от неё
+    else if (lastRace) {
+      timeToCheck = lastRace + (60 * 60 * 1000); // +1 час от последней гонки
+    }
+    
+    console.log('⏰ Время проверки:', timeToCheck ? new Date(timeToCheck).toLocaleString() : 'нет');
+    
+    // ✅ ВАЖНО: Если время восстановления прошло - восстанавливаем топливо
     if (timeToCheck && now >= timeToCheck) {
-      console.log('⛽ Топливо должно быть восстановлено');
+      console.log('🎉 ТОПЛИВО ДОЛЖНО БЫТЬ ВОССТАНОВЛЕНО!');
       return { 
         fuel: 5, 
         shouldUpdate: true, 
@@ -31,11 +52,38 @@ export const useFuelSystem = (saveGameState) => {
       };
     }
     
+    // ✅ ДОБАВЛЯЕМ: Если топливо 0 и нет времени заправки - устанавливаем его
+    if (currentFuel === 0 && !refillTime && lastRace) {
+      const autoRefillTime = lastRace + (60 * 60 * 1000);
+      if (now >= autoRefillTime) {
+        console.log('🎉 АВТОВОССТАНОВЛЕНИЕ топлива по времени последней гонки!');
+        return { 
+          fuel: 5, 
+          shouldUpdate: true, 
+          newLastRaceTime: now, 
+          newRefillTime: null 
+        };
+      } else {
+        // Устанавливаем время заправки для корректного отображения таймера
+        return {
+          fuel: currentFuel,
+          shouldUpdate: true,
+          newRefillTime: autoRefillTime
+        };
+      }
+    }
+    
     return { fuel: currentFuel, shouldUpdate: false };
   }, []);
 
-  // ПРОВЕРКА 2: Функция загрузки топливных данных - точно как в useGameState.js
+  // 🔥 ИСПРАВЛЕНИЕ: Функция загрузки топливных данных - КРИТИЧЕСКИ ВАЖНО!
   const loadFuelData = useCallback((initialState, debouncedSave, userId) => {
+    console.log('📥 Загрузка топливных данных:', {
+      fuel_count: initialState.fuel_count,
+      last_race_time: initialState.last_race_time,
+      fuel_refill_time: initialState.fuel_refill_time
+    });
+
     // ПРОВЕРКА 3: Загрузка топливных данных с валидацией - точно как в useGameState.js
     const loadedFuelCount = Math.min(Math.max(Number(initialState.fuel_count) || 5, 0), 5);
     const loadedLastRaceTime = parseTimestamp(initialState.last_race_time);
@@ -47,26 +95,35 @@ export const useFuelSystem = (saveGameState) => {
       refillTime: loadedFuelRefillTime ? new Date(loadedFuelRefillTime).toLocaleString() : 'нет'
     });
     
-    // ПРОВЕРКА 3: Проверка восстановления топлива - точно как в useGameState.js
+    // 🔥 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Обязательная проверка восстановления при загрузке!
     const fuelResult = checkAndRestoreFuel(loadedFuelCount, loadedLastRaceTime, loadedFuelRefillTime);
     
+    console.log('🔄 Результат проверки топлива:', fuelResult);
+    
+    // ✅ Устанавливаем состояние
     setFuelCount(fuelResult.fuel);
     setLastRaceTime(fuelResult.newLastRaceTime || loadedLastRaceTime);
     setFuelRefillTime(fuelResult.newRefillTime !== undefined ? fuelResult.newRefillTime : loadedFuelRefillTime);
     
-    // ПРОВЕРКА 3: Отложенное сохранение восстановленного топлива - точно как в useGameState.js
+    // 🔥 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Сохраняем восстановленное состояние немедленно!
     if (fuelResult.shouldUpdate) {
-      console.log('⛽ Топливо восстановлено при загрузке!');
-      setTimeout(() => {
-        // ПРОВЕРКА 3: Используем правильный debouncedSave
-        const saveData = {
-          userId,
-          fuel_count: 5,
-          fuel_refill_time: null,
-          last_race_time: new Date(fuelResult.newLastRaceTime).toISOString()
-        };
+      console.log('💾 Сохраняем восстановленное топливо!');
+      
+      // Сохраняем немедленно, без таймаута
+      const saveData = {
+        userId,
+        fuel_count: fuelResult.fuel,
+        fuel_refill_time: fuelResult.newRefillTime ? new Date(fuelResult.newRefillTime).toISOString() : null,
+        last_race_time: fuelResult.newLastRaceTime ? new Date(fuelResult.newLastRaceTime).toISOString() : 
+                       (loadedLastRaceTime ? new Date(loadedLastRaceTime).toISOString() : null)
+      };
+      
+      // Используем немедленное сохранение
+      if (saveGameState) {
+        saveGameState(saveData);
+      } else {
         debouncedSave(saveData);
-      }, 2000);
+      }
     }
     
     return {
@@ -170,8 +227,10 @@ export const useFuelSystem = (saveGameState) => {
     }
   }, [getTimeUntilRefill]);
 
-  // ПРОВЕРКА 2: Функция потребления топлива (для гонок)
+  // 🔥 ИСПРАВЛЕНИЕ: Функция потребления топлива (для гонок) - КРИТИЧЕСКИ ВАЖНА!
   const consumeFuel = useCallback(() => {
+    console.log('🏁 Попытка потратить топливо, текущее:', fuelCount);
+    
     if (fuelCount > 0) {
       const newFuelCount = fuelCount - 1;
       const now = Date.now();
@@ -179,19 +238,29 @@ export const useFuelSystem = (saveGameState) => {
       setFuelCount(newFuelCount);
       setLastRaceTime(now);
       
-      // Если топливо закончилось, устанавливаем время восстановления
+      console.log('⛽ Топливо потрачено:', {
+        старое: fuelCount,
+        новое: newFuelCount,
+        время: new Date(now).toLocaleString()
+      });
+      
+      // 🔥 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Правильная логика установки времени заправки
       if (newFuelCount === 0) {
         const refillTime = now + (60 * 60 * 1000); // 1 час
         setFuelRefillTime(refillTime);
         
+        console.log('🚨 Топливо закончилось! Время заправки:', new Date(refillTime).toLocaleString());
+        
+        // ✅ ВАЖНО: Сохраняем немедленно, включая fuel_count = 0!
         if (saveGameState) {
           saveGameState({
-            fuel_count: newFuelCount,
+            fuel_count: newFuelCount, // 0!
             last_race_time: new Date(now).toISOString(),
             fuel_refill_time: new Date(refillTime).toISOString(),
           });
         }
       } else {
+        // Топливо еще есть
         if (saveGameState) {
           saveGameState({
             fuel_count: newFuelCount,
@@ -203,6 +272,7 @@ export const useFuelSystem = (saveGameState) => {
       return true; // Топливо успешно потрачено
     }
     
+    console.log('❌ Нет топлива для гонки!');
     return false; // Топлива нет
   }, [fuelCount, saveGameState]);
 
@@ -212,6 +282,12 @@ export const useFuelSystem = (saveGameState) => {
     const validFuelCount = Math.min(Math.max(Number(newFuelCount) || 0, 0), 5);
     const validLastRaceTime = newLastRaceTime ? Number(newLastRaceTime) : null;
     const validRefillTime = newRefillTime ? Number(newRefillTime) : null;
+    
+    console.log('🔄 Форсированное обновление топлива:', {
+      fuel: validFuelCount,
+      lastRace: validLastRaceTime ? new Date(validLastRaceTime).toLocaleString() : 'нет',
+      refillTime: validRefillTime ? new Date(validRefillTime).toLocaleString() : 'нет'
+    });
     
     setFuelCount(validFuelCount);
     setLastRaceTime(validLastRaceTime);
